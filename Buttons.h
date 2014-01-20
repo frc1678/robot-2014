@@ -1,3 +1,4 @@
 //Here we'll have all the joystick/button combinations.
-#define LEFT_JOYSTICK 1
-#define RIGHT_JOYSTICK 2
+// joystick comma button number
+#define kJBshiftUp driverL,1
+#define kJBshiftDown driverL,2

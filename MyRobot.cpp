@@ -33,8 +33,8 @@ public:
 	{
 		drivetrain = new RobotDrive(3, 4);
 		
-		driverL = new Joystick(LEFT_JOYSTICK);
-		driverR = new Joystick(RIGHT_JOYSTICK);
+		driverL = new Joystick(1);
+		driverR = new Joystick(2);
 		
 		talon1 = new Talon(1);
 		talon2 = new Talon(2);
@@ -42,8 +42,8 @@ public:
 		talon6 = new Talon(6);
 		
 		compressor = new Compressor(1,1);
-		shiftUp = new Solenoid(1); //TODO see which solenoids are actually up/down?
-		shiftDown = new Solenoid(2); //see previous TODO
+		gearUp = new Solenoid(1); //TODO see which solenoids are actually up/down?
+		gearDown = new Solenoid(2); //see previous TODO
 		
 		this->SetPeriod(0); 	//Set update period to sync with robot control packets (20ms nominal)
 	}
@@ -66,7 +66,7 @@ public:
 	void TeleopPeriodic(){
 		//Run drivetrain; drivetrain.h
 		runDrivetrain(driverL->GetY(), driverR->GetY(), drivetrain);
-		shiftGears(shiftUp, shiftDown, driverL, 1, driverL, 2); 
+		shiftGears(gearUp, gearDown, kJBshiftUp, kJBshiftDown); 
 		
 		talon1->Set(0.0);
 		talon2->Set(0.0);
