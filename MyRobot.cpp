@@ -1,4 +1,5 @@
 #include "WPILib.h"
+#include "IntakeSystem.h"
 
 /**
  * This is a demo program showing the use of the RobotBase class.
@@ -10,14 +11,32 @@ class Robot : public IterativeRobot
 	RobotDrive *drivetrain; // robot drive system
 	Joystick *stick; // only joystick
 	
-	//Talons.
-	Talon *talon1;
-	Talon *talon2;
-	Talon *talon5;
+	/*Talon *intakeRollerFront;
+	Talon *intakeRollerBack;
+	DigitalInput *intakeSensorFront;
+	DigitalInput *intakeSensorBack;
+	Solenoid *intakeFrontUp;
+	Solenoid *intakeFrontDown;
+	Solenoid *intakeBackUp;
+	Solenoid *intakeBackDown;
+	*/
+	IntakeSystem *frontIntake;
+	IntakeSystem *backIntake;
+	
+	//Skid.
+	Solenoid *skidUp;
+	Solenoid *skidDown;
+	
+	//Shooting
+	Talon *camTalon;
+	DigitalInput *camSensor;
+	Solenoid *shotAlignerUp;
+	Solenoid *shotAlignerDown;
+	
 	Talon *talon6;
 	
-	
 	Compressor *compressor;
+	
 	
 	//Gyro. http://playground.arduino.cc/Main/MPU-6050
 	I2C *testGyro;
@@ -31,29 +50,39 @@ class Robot : public IterativeRobot
 public:
 	Robot()
 	{
-		drivetrain = new RobotDrive(3, 4);
-		talon1 = new Talon(1);
-		talon2 = new Talon(2);
-		talon5 = new Talon(5);
+		printf("Robot INITIALIZATION\n");
+		//remove todos as the correct values are found
+		drivetrain = new RobotDrive(3, 4); //TODO
+		
+		stick = new Joystick(1); //TODO
+		
+		/*intakeRollerFront = new Talon(1); //TODO
+		intakeRollerBack = new Talon(2); //TODO
+		intakeSensorFront = new DigitalInput(1); //TODO
+		intakeSensorBack = new DigitalInput(2); //TODO
+		intakeFrontUp = new Solenoid (1);
+		intakeFrontDown = new Solenoid (2);
+		intakeBackUp = new Solenoid (3);
+		intakeBackDown = new Solenoid(4);
+		*/
+		frontIntake = new IntakeSystem (1, 1, 1, 2); //TODO
+		
+		//Skid.
+		skidUp = new Solenoid(5);
+		skidDown = new Solenoid(6);
+		
+		camTalon = new Talon(5);
+		camSensor = new DigitalInput(3); //TODO
+		shotAlignerUp = new Solenoid(7);
+		shotAlignerDown = new Solenoid(8);
+		
 		talon6 = new Talon(6);
 		
 		compressor = new Compressor(1,1);
-		dModule = DigitalModule::GetInstance(1);
-		testGyro = dModule->GetI2C(0xd0); //d0, 68
-		testGyro->Write(0x6B, 0);
-
-		printf("begin");
-		/*for(uint8_t i = 0x00; i< 0xFF; i++)
-		{
-			testGyro = dModule->GetI2C(i);
-			if(testGyro->AddressOnly() == 0)
-			{
-				printf("success! %x", i);
-			}
-		}*/
 		
-		//testGyro2 = dModule->GetI2C(2);
-		gyroOut = 0;
+		dModule = DigitalModule::GetInstance(1);
+		testGyro = dModule->GetI2C(0x68<<1);
+		testGyro->Write(0x6B, 0); //PWR_MGMT_1:=0
 		
 		this->SetPeriod(0); 	//Set update period to sync with robot control packets (20ms nominal)
 	}
@@ -66,59 +95,104 @@ public:
 	}
 	void AutonomousInit(){
 		
+		
+		
 	}
 	void AutonomousPeriodic(){
 		
 	}
 	void TeleopInit(){
 		compressor->Start();
-	
-		uint8_t gyroValue;
-		
-		printf("end");
-		printf("HELLO WORLD");
-		/*for(int addr=0;addr<=0xff;addr++) {
-			testGyro = dModule->GetI2C(0xd0); //d0 or 0x68
-		}*/
-		
-		testGyro->Write(0x6B, 0); //PWR_MGMT_1:=0
-		printf("%d:\n", gyroValue);
 
-		for(int i = 0x00; i < 0x80; i++)
-		{
-			testGyro->Read(i, sizeof(gyroValue),&gyroValue);
-			printf("%02X ", gyroValue); 
-			if (!(i%0x10))
-				printf("\n");
-			
-		}
+		
+		printf("TELEOP INIT\n");
+		
 	}
 	void TeleopPeriodic(){
 		drivetrain->TankDrive(0.0, 0.0);
-		talon1->Set(0.0);
-		talon2->Set(0.0);
-		talon5->Set(0.0);
+		//talon1->Set(0.0);
+		//intakeRollerBack->Set(0.0);
+		camTalon->Set(0.0);
 		talon6->Set(0.0);
 		
-		//printf("%f, %f, %f\n",testGyro->GetAcceleration(ADXL345_I2C::kAxis_X),testGyro->GetAcceleration(ADXL345_I2C::kAxis_Y),testGyro->GetAcceleration(ADXL345_I2C::kAxis_Z));
-		uint8_t gyroValue = 7;
-		//testGyro->Read(0x44, sizeof(gyroValue), &gyroValue);
-		//printf("%f\n",  (float)gyroValue);
-				
-		
-		for(int i = 0x00; i < 0x75; i++)
+		/*intakeRollerFront->Set(stick->GetY());
+		if(stick->GetRawButton(1))
 		{
-			uint8_t gyroValue = 7;
-			//printf("%d %d\n", sizeof(gyroValue), &gyroValue);
-			testGyro->Read(i, sizeof(gyroValue), &gyroValue);
-			printf("%d ", gyroValue); 
-			if (i % 16 == 15) {
-				printf("\n");
+			intakeFrontUp->Set(true);
+			intakeFrontDown->Set(false);
+		}
+		else if(stick->GetRawButton(2))
+		{
+			intakeFrontUp->Set(false);
+			intakeFrontDown->Set(true);
+		}*/
+		
+		uint8_t gyroValue = 7;
+		
+		//Pseudocode for robot
+		//Type out in outline form in comments to insert code later
+		//NB:Minimize air pressure for everything
+				
+		//Intake in the front and back of robot. Hold in ball until input signal 
+		//then stop or slow depending on instance.
+		//Based on button
+		
+		
+		
+		//Pickup (possibly seperate sequence for each side of robot) 
+		//Roll in until input signal. Using pneumatic trigger
+		
+		//Shut off roller, but pneumatic stays up. Save air. Not a lot of time either
+		
+		
+		//Run-into-wall skid using pneumatics, toggle/ish sequence
+		
+		
+		//Shooting
+		//Auto prime to fire. Fire moving CAM in one direction only
+		
+		//Sensor possibly to register degree of turn before a full revolution of the CAM
+		
+		//Fender shot with back intake down (maybe)
+		
+		//Range pneumatics for determining length of shot, possibly fingers up
+		
+		//Long shot with front intake down and range pneumatics in non-fender-shot-position
+		
+		
+		//Infrared and ball sensors could be used. Magnetic sensor of CAM 
+		
+		
+		
+	}
+	
+	void intakeHold(bool buttonInput, Talon *roller, DigitalInput *sensor, Solenoid *up, Solenoid *down)
+	{
+		if(buttonInput) //TODO change to toggle or click-to-run
+		{
+			if(!sensor->Get()) //TODO deal with sensor inputs: 0 or 1?
+			{
+				roller->Set(1.0); //TODO direction?
 			}
-		}	
-		//printf("%d\n", testGyro->AddressOnly());
-		//testGyro2->Read(67, 1, &gyroOut2);
-		//printf("Gyro2: %x\n", gyroOut2);	
+			else
+			{
+				roller->Set(0.5); //TODO split this up. May be different b/t front/back
+			}
+		}
+	}
+	void intakeReverse(bool buttonInput, Talon *roller)
+	{
+		if(buttonInput)
+		{
+			roller->Set(-1.0); //TODO direction?
+		} //TODO stop y/n?
+	}
+	void intakePickup(bool buttonInput, Talon *roller)
+	{
+		if(buttonInput) //TODO's are the same as intakeHold
+		{
+			//TODO timing: how to determine if sensor has already been triggered
+		}
 	}
 };
 
