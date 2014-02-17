@@ -1,15 +1,14 @@
 #include "WPILib.h"
 #include "IntakeSystem.h"
+#include "Drivetrain.h"
 
-/**
- * This is a demo program showing the use of the RobotBase class.
- * The IterativeRobot class is the base of a robot application that will automatically call your
- * Periodic methods for each packet based on the mode.
- */ 
 class Robot : public IterativeRobot
 {
 	RobotDrive *drivetrain; // robot drive system
-	Joystick *stick; // only joystick
+	Joystick *driverL;
+	Joystick *driverR;
+	Solenoid *gearUp;
+	Solenoid *gearDown;
 	
 	/*Talon *intakeRollerFront;
 	Talon *intakeRollerBack;
@@ -53,8 +52,11 @@ public:
 		printf("Robot INITIALIZATION\n");
 		//remove todos as the correct values are found
 		drivetrain = new RobotDrive(3, 4); //TODO
+		gearUp = new Solenoid(9); //TODO how many solenoids?
+		gearDown = new Solenoid (10); //TODO how many solenoids?
 		
-		stick = new Joystick(1); //TODO
+		driverL = new Joystick(1); //TODO
+		driverR = new Joystick(2);
 		
 		/*intakeRollerFront = new Talon(1); //TODO
 		intakeRollerBack = new Talon(2); //TODO
@@ -114,6 +116,11 @@ public:
 		//intakeRollerBack->Set(0.0);
 		camTalon->Set(0.0);
 		talon6->Set(0.0);
+		
+		//Drive.
+		runDrivetrain(driverL->GetY(),driverR->GetY(), drivetrain);
+		//Shift.
+		
 		
 		/*intakeRollerFront->Set(stick->GetY());
 		if(stick->GetRawButton(1))
