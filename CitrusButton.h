@@ -1,5 +1,9 @@
 #include "WPILib.h"
 
+//include guards
+#ifndef CITRUSBUTTON_H
+#define CITRUSBUTTON_H
+
 //Designed to get input from joysticks.
 class CitrusButton
 {
@@ -48,7 +52,6 @@ public:
 	{
 		if(button != 0)
 		{
-			printf("00680069");
 			return ButtonClicked(stick->GetRawButton(button));
 		}
 		return false;
@@ -120,3 +123,5 @@ bool Toggle(CitrusButton *button, bool input)
 	}
 	return input;
 }
+
+#endif //CITRUSBUTTON_H

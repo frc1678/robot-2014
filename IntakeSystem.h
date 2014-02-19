@@ -11,7 +11,6 @@ public:
 	Talon *intakeRoller;
 	DigitalInput *intakeSensor;
 	Solenoid *intakeUp;
-	Solenoid *skid;
 
 	//booleans and such for void Pickup()
 	bool readyToPickup;
@@ -19,19 +18,19 @@ public:
 	bool front;
 	Timer *pickupTimer;
 
-	IntakeSystem(int talonPort, int sensorPort, int upPort, bool front)
+	IntakeSystem(int talonPort, int sensorPort, Solenoid *tIntakeUp, bool front)
 	{
-		//Remove the correct inputs are found
-		intakeRoller = new Talon(talonPort); //TODO
-		intakeSensor = new DigitalInput(sensorPort); //TODO
-		intakeUp = new Solenoid (upPort);
+		intakeRoller = new Talon(talonPort);
+		intakeSensor = new DigitalInput(sensorPort);
+		intakeUp = tIntakeUp;
 
 		front = true;
 		readyToPickup = true;
 		sensorTriggered = false;
 		pickupTimer = new Timer();
 	}
-
+	//TODO add secondary rollers to methods. Have some internal ones
+	//then add to Pickup.
 	void Reverse() //Only call inside an if statement.
 	{
 		intakeRoller->Set(-1.0);
@@ -42,24 +41,24 @@ public:
 	}
 
 	//Internal: front roller grabbing onto ball, front roller holding ball, back roller grabbing onto ball, back roller holding ball, front roller reverse, back roller reverse
-	void FrontRollerInitialPickup()
+	void FrontRollerLoad()
 	{
 		intakeRoller->Set(1.0); //TODO numbers
 	}
 
-	void FrontRollerHold()
-	{
-		intakeRoller->Set(0.0); //TODO numbers
-	}
-
-	void BackRollerHold()
-	{
-		intakeRoller->Set(0.0); //TODO numbers
-	}
-
-	void BackRollerInitialPickup()
+	void BackRollerLoad()
 	{
 		intakeRoller->Set(1.0); //TODO numbers
+	}
+
+	void BackBumperHold()
+	{
+		intakeRoller->Set(0.0); //TODO numbers
+	}
+	
+	void FrontBumperHold()
+	{
+		intakeRoller->Set(0.0); //TODO numbers.
 	}
 
 	bool ProximityTriggered()
@@ -74,28 +73,29 @@ public:
 		}
 	}
 
-	void Hold() //TODO front versus back, change later
+	void Hold()
 	{
 		if (!ProximityTriggered())
 		{
 			if (front)
 			{
-				FrontRollerInitialPickup();
+				FrontRollerLoad();
 			}
 			else
 			{
-				BackRollerInitialPickup();
+				BackRollerLoad();
 			}
 		}
 		else
 		{
-			if (front)
+			printf("Proxy!\n");
+			if(front)
 			{
-				FrontRollerHold();
+				FrontBumperHold();
 			}
 			else
 			{
-				BackRollerHold();
+				BackBumperHold();
 			}
 		}
 	}
@@ -104,7 +104,7 @@ public:
 	{
 		if (!readyToPickup) //aka, I'm currently picking something up
 		{
-			if (ProximityTriggered()) //TODO which direction is which?
+			if (ProximityTriggered())
 			{
 				sensorTriggered = true;
 			}
@@ -112,23 +112,24 @@ public:
 			{
 				if (front)
 				{
-					FrontRollerInitialPickup();
+					FrontRollerLoad();
 				}
 				else
 				{
-					BackRollerInitialPickup();
+					BackRollerLoad();
 				}
 			}
+			//The below may be changed if another proximity sensor is added.
 			else if (sensorTriggered)
 			{
 				pickupTimer->Start(); //TODO eventually don't keep starting it.
 				if (front)
 				{
-					FrontRollerInitialPickup();
+					FrontRollerLoad();
 				}
 				else
 				{
-					BackRollerInitialPickup();
+					BackRollerLoad();
 				}
 			}
 			//To end the whole round.
@@ -146,5 +147,4 @@ public:
 			readyToPickup = false;
 		}
 	}
-
 };

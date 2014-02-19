@@ -1,0 +1,35 @@
+//Pseudocode for robot
+		//Type out in outline form in comments to insert code later
+		//NB:Minimize air pressure for everything
+				
+		//Intake in the front and back of robot. Hold in ball until input signal 
+		//then stop or slow depending on instance.
+		//Based on button
+		
+		
+		
+		//Pickup (possibly seperate sequence for each side of robot) 
+		//Roll in until input signal. Using pneumatic trigger
+		
+		//Shut off roller, but pneumatic stays up. Save air. Not a lot of time either
+		
+		
+		//Run-into-wall skid using pneumatics, toggle/ish sequence
+		
+		
+		//Shooting
+		//Auto prime to fire. Fire moving CAM in one direction only
+		
+		//Sensor possibly to register degree of turn before a full revolution of the CAM
+		
+		//Fender shot with back intake down (maybe)
+		
+		//Range pneumatics for determining length of shot, possibly fingers up
+		
+		//Long shot with front intake down and range pneumatics in non-fender-shot-position
+		
+		
+		//Infrared and ball sensors could be used. Magnetic sensor of CAM 
+		
+		
+		

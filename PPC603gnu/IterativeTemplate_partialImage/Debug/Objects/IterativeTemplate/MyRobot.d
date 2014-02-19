@@ -383,12 +383,12 @@ IterativeTemplate_partialImage/Debug/Objects/IterativeTemplate/MyRobot.o:  \
   C:/WindRiver/vxworks-6.3/target/h/WPILib/Vision/HSLImage.h \
   C:/WindRiver/vxworks-6.3/target/h/WPILib/Vision/ColorImage.h \
   C:/WindRiver/vxworks-6.3/target/h/WPILib/WPIErrors.h \
-  C:/WindRiver/workspace/IterativeTemplate/IntakeSystem.h \
   C:/WindRiver/workspace/IterativeTemplate/Drivetrain.h \
   C:/WindRiver/vxworks-6.3/target/h/math.h \
-  C:/WindRiver/workspace/IterativeTemplate/Skid.h \
-  C:/WindRiver/workspace/IterativeTemplate/Shooter.h \
-  C:/WindRiver/workspace/IterativeTemplate/CitrusButton.h
+  C:/WindRiver/workspace/IterativeTemplate/IntakeSystem.h \
+  C:/WindRiver/workspace/IterativeTemplate/HumanLoad.h \
+  C:/WindRiver/workspace/IterativeTemplate/CitrusButton.h \
+  C:/WindRiver/workspace/IterativeTemplate/ShooterSystem.h
 
 C:/WindRiver/vxworks-6.3/target/h/WPILib/WPILib.h:
 
@@ -1156,14 +1156,14 @@ C:/WindRiver/vxworks-6.3/target/h/WPILib/Vision/ColorImage.h:
 
 C:/WindRiver/vxworks-6.3/target/h/WPILib/WPIErrors.h:
 
-C:/WindRiver/workspace/IterativeTemplate/IntakeSystem.h:
-
 C:/WindRiver/workspace/IterativeTemplate/Drivetrain.h:
 
 C:/WindRiver/vxworks-6.3/target/h/math.h:
 
-C:/WindRiver/workspace/IterativeTemplate/Skid.h:
+C:/WindRiver/workspace/IterativeTemplate/IntakeSystem.h:
 
-C:/WindRiver/workspace/IterativeTemplate/Shooter.h:
+C:/WindRiver/workspace/IterativeTemplate/HumanLoad.h:
 
 C:/WindRiver/workspace/IterativeTemplate/CitrusButton.h:
+
+C:/WindRiver/workspace/IterativeTemplate/ShooterSystem.h:
