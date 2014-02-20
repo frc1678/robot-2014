@@ -92,8 +92,7 @@ void runDrivetrain(float stickLeftInput, float stickRightInput, RobotDrive *driv
 		
 	driveTrainValues(stickLeftInput, stickRightInput, thresh);
 	deadzone();
-	//printf("left: %f, right; %f\n", useleft, useright);
-	
+		
 	drivetrain->TankDrive(useleft, useright); 
 	// Inverted and negated the values to make the back of the robot the "front"
 	//drivetrain->TankDrive(-useright, -useleft); // Inverted and negated the values to make the back of the robot the "front"

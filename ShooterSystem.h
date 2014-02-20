@@ -91,7 +91,7 @@ public:
 				{
 					listenForSensor = true;
 				}
-				camTalon->Set(1.0);
+				camTalon->Set(1.0); //TODO direction
 			}
 			else
 			{

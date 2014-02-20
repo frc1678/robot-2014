@@ -1,3 +1,6 @@
+#ifndef INTAKESYSTEM_H
+#define INTAKESYSTEM_H
+
 class IntakeSystem
 {
 public:
@@ -11,6 +14,7 @@ public:
 	Talon *intakeRoller;
 	DigitalInput *intakeSensor;
 	Solenoid *intakeUp;
+	Talon *secondaryIntakeRoller;
 
 	//booleans and such for void Pickup()
 	bool readyToPickup;
@@ -18,9 +22,10 @@ public:
 	bool front;
 	Timer *pickupTimer;
 
-	IntakeSystem(int talonPort, int sensorPort, Solenoid *tIntakeUp, bool front)
+	IntakeSystem(int rollerTalonPort, Talon *tsecondaryIntakeRoller, int sensorPort, Solenoid *tIntakeUp, bool front)
 	{
-		intakeRoller = new Talon(talonPort);
+		intakeRoller = new Talon(rollerTalonPort);
+		secondaryIntakeRoller = tsecondaryIntakeRoller;
 		intakeSensor = new DigitalInput(sensorPort);
 		intakeUp = tIntakeUp;
 
@@ -38,6 +43,10 @@ public:
 	void Stop()
 	{
 		intakeRoller->Set(0.0);
+		sensorTriggered = false;
+		readyToPickup = true;
+		pickupTimer->Stop();
+		pickupTimer->Reset();
 	}
 
 	//Internal: front roller grabbing onto ball, front roller holding ball, back roller grabbing onto ball, back roller holding ball, front roller reverse, back roller reverse
@@ -60,7 +69,8 @@ public:
 	{
 		intakeRoller->Set(0.0); //TODO numbers.
 	}
-
+	
+	
 	bool ProximityTriggered()
 	{
 		if (intakeSensor->Get() == 1)
@@ -131,12 +141,14 @@ public:
 				{
 					BackRollerLoad();
 				}
+				secondaryIntakeRoller->Set(1.0); //TODO numbers
 			}
 			//To end the whole round.
 			if (pickupTimer->Get() > 1.0) //TODO change to correct amount of time
 			{
 				readyToPickup = true;
 				sensorTriggered = false;
+				secondaryIntakeRoller->Set(0.0); //TODO numbers
 				pickupTimer->Stop();
 			}
 		}
@@ -148,3 +160,5 @@ public:
 		}
 	}
 };
+
+#endif

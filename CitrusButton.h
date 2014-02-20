@@ -9,25 +9,28 @@ class CitrusButton
 {
 	bool output;
 	bool oldInput;
-	
+
 	//Optional.
 	Joystick *stick;
 	int button;
 public:
+	
 	CitrusButton(Joystick *tstick, int tbutton)
 	{
 		output = false;
 		oldInput = false;
 		stick = tstick;
-		button = tbutton;
+		button = tbutton;		
 	}
+
 	
+
 	//All of these have clones with generic input. If we ever end up needing a button that's not from a joystick.
-	
+
 	//Call at the end of every loop (once per loop)!
 	void Update(bool input)
 	{
-		oldInput = input;
+		oldInput = input; 
 	}
 	void Update()
 	{
@@ -38,7 +41,7 @@ public:
 		//Return true the first time input's true after being false
 		//false otherwise.
 		bool returnMe = false;
-		if(input != oldInput && input == true)
+		if (input != oldInput && input == true)
 		{
 			returnMe = true;
 		}
@@ -50,7 +53,7 @@ public:
 	}
 	bool ButtonClicked()
 	{
-		if(button != 0)
+		if (button > 0)
 		{
 			return ButtonClicked(stick->GetRawButton(button));
 		}
@@ -59,7 +62,7 @@ public:
 	bool ButtonReleased(bool input)
 	{
 		bool returnMe = false;
-		if(input != oldInput && input == false)
+		if (input != oldInput && input == false)
 		{
 			returnMe = true;
 		}
@@ -71,7 +74,7 @@ public:
 	}
 	bool ButtonReleased()
 	{
-		if(button!= 0)
+		if (button!= 0)
 		{
 			return ButtonReleased(stick->GetRawButton(button));
 		}
@@ -83,25 +86,26 @@ public:
 	}
 	bool ButtonPressed()
 	{
-		if(button!= 0)
+		if (button!= 0)
 		{
 			return ButtonPressed(stick->GetRawButton(button));
 		}
 		return false;
 	}
-	
+
 	//Reset to factory settings!
 	void Reset()
 	{
 		output = false;
 		oldInput = false;
 	}
+
 };
 
 //Use the following like: input = TurnOn(myButton); input = Toggle(myButton, input);
 bool TurnOn(CitrusButton *button)
 {
-	if(button->ButtonClicked())
+	if (button->ButtonClicked())
 	{
 		return true;
 	}
@@ -109,15 +113,15 @@ bool TurnOn(CitrusButton *button)
 }
 bool TurnOff(CitrusButton *button)
 {
-	if(button->ButtonClicked())
+	if (button->ButtonClicked())
 	{
 		return false;
 	}
 	return true;
 }
 bool Toggle(CitrusButton *button, bool input)
-{
-	if(button->ButtonClicked())
+{ 
+	if (button->ButtonClicked())
 	{
 		return !input;
 	}
