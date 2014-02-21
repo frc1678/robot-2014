@@ -10,14 +10,14 @@
 class Robot : public IterativeRobot
 {
 	RobotDrive *drivetrain; // robot drive system
-	Solenoid *gearUp;
+	Solenoid *gearUp; //compressed air
 	Solenoid *gearDown;
-	Encoder *leftEncoder;
+	Encoder *leftEncoder; //wheel rotation clicks
 	Encoder *rightEncoder;
 
 	Joystick *driverL;
 	Joystick *driverR;
-	Joystick *manipulator;
+	Joystick *manipulator; //gaming style controller
 
 	//Intakes.
 	Solenoid *frontIntakeDeploy;
@@ -51,12 +51,13 @@ class Robot : public IterativeRobot
 	CitrusButton *b_backIntakeDeployToggle;
 	CitrusButton *b_secondaryFrontIntake;
 	CitrusButton *b_secondaryBackIntake;
-	CitrusButton *b_shot;
+	CitrusButton *b_shoot;
 	CitrusButton *b_primeShortShot;
 	CitrusButton *b_primeLongShot;
 	CitrusButton *b_reverseIntake;
 	CitrusButton *b_humanLoad;
 	CitrusButton *b_hold;
+	CitrusButton *b_shooterSystemReset;
 
 public:
 	Robot()
@@ -75,24 +76,26 @@ public:
 		gyro = new MPU6050_I2C();
 
 		//Solenoids.
-		frontIntakeDeploy = new Solenoid (3);
+		frontIntakeDeploy = new Solenoid (3); //deploy = putdown
 		backIntakeDeploy = new Solenoid(4);
 
 		//Intake
-		secondaryIntake = new Talon (2); //TODO value?>
-		frontIntake = new IntakeSystem (6, secondaryIntake, 3, frontIntakeDeploy, true); //TODO numbers
-		backIntake = new IntakeSystem (1, secondaryIntake, 2, backIntakeDeploy, false); //TODO numbers
+		secondaryIntake = new Talon (10); //TODO value?>
+		frontIntake = new IntakeSystem (6, secondaryIntake, 3, 
+				frontIntakeDeploy, true); //TODO numbers
+		backIntake = new IntakeSystem (1, secondaryIntake, 2,
+				backIntakeDeploy, false); //TODO numbers
 
 		compressor = new Compressor(1,1);
 
 		leftEncoder = new Encoder(6,7);
 		rightEncoder = new Encoder(4,5);
 
-		//Shooter
-		shooter = new ShooterSystem(2, 8, shotAlignerUp, shotAlignerDown, armPiston, frontIntakeDeploy,backIntakeDeploy);
-		//TODO numbers
-		shortShot = false;
 		armPiston = new Solenoid (1); //TODO number?
+		//Shooter
+		shooter = new ShooterSystem(2, 5, 8, shotAlignerUp, shotAlignerDown,
+				armPiston, frontIntakeDeploy,backIntakeDeploy); //TODO numbers
+		shortShot = false;
 
 		frontIntakeToggle = false;
 		backIntakeToggle = false;
@@ -110,10 +113,10 @@ public:
 		b_hold = new CitrusButton (manipulator, 8);
 		b_humanLoad = new CitrusButton (manipulator, 4);
 		//Shooter buttons
-		b_shot = new CitrusButton (driverR, 1);
+		b_shoot = new CitrusButton (driverR, 1);
 		b_primeShortShot = new CitrusButton (manipulator, 5);
 		b_primeLongShot = new CitrusButton (manipulator, 7);
-
+		b_shooterSystemReset = new CitrusButton(manipulator, 9);
 	}
 
 	void UpdateAllButtons()
@@ -129,10 +132,10 @@ public:
 		b_hold->Update();
 		b_humanLoad->Update();
 		//shooter
-		b_shot->Update();
+		b_shoot->Update();
 		b_primeShortShot->Update();
 		b_primeLongShot->Update();
-		
+		b_shooterSystemReset->Update();
 	}
 
 	void DisabledInit()
@@ -142,6 +145,7 @@ public:
 
 		frontIntakeDeploy->Set(false);
 		backIntakeDeploy->Set(false);
+		b_shooterSystemReset->ButtonClicked();
 	}
 	void DisabledPeriodic()
 	{
@@ -175,13 +179,7 @@ public:
 	{
 		//printf("Left Encoder: %d Right Encoder: %d", leftEncoder->Get(), rightEncoder->Get());
 		//printf("Front prox: %d, back prox: %d\n", frontIntake->ProximityTriggered(), backIntake->ProximityTriggered());
-		for (int i = 0; i<60; i++)
-		{
-			if (manipulator->GetRawButton(i))
-			{
-				printf("%d", i);
-			}
-		}
+		
 		//Drive.
 		runDrivetrain(driverL->GetY(), driverR->GetY(), drivetrain);
 		//Shift.
@@ -252,7 +250,7 @@ public:
 			}
 		}
 		
-		if(b_shot->ButtonClicked())
+		if(b_shoot->ButtonClicked())
 		{
 			shooter->BeginShooterFire(); //if called then Fire runs
 		}
@@ -278,5 +276,4 @@ public:
 
 };
  
-START_ROBOT_CLASS(Robot)
-;
+START_ROBOT_CLASS(Robot);

@@ -1,5 +1,5 @@
 #ifndef INTAKESYSTEM_H
-#define INTAKESYSTEM_H
+#define INTAKESYSTEM_H //include protection
 
 class IntakeSystem
 {
@@ -120,7 +120,7 @@ public:
 			}
 			if (!sensorTriggered)
 			{
-				if (front)
+				if (front) //if front is false than we are using the back
 				{
 					FrontRollerLoad();
 				}
