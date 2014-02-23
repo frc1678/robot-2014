@@ -1,4 +1,5 @@
 #include "WPILib.h"
+#include "NetworkTables/NetworkTable.h"
 #include "Drivetrain.h"
 #include "IntakeSystem.h"
 #include "HumanLoad.h"
@@ -9,6 +10,8 @@
 
 class Robot : public IterativeRobot
 {
+	NetworkTable *dataTable;
+	
 	RobotDrive *drivetrain; // robot drive system
 	Solenoid *gearUp; //compressed air
 	Solenoid *gearDown;
@@ -52,6 +55,7 @@ class Robot : public IterativeRobot
 	CitrusButton *b_secondaryFrontIntake;
 	CitrusButton *b_secondaryBackIntake;
 	CitrusButton *b_shoot;
+	CitrusButton *b_return;
 	CitrusButton *b_primeShortShot;
 	CitrusButton *b_primeLongShot;
 	CitrusButton *b_reverseIntake;
@@ -63,6 +67,13 @@ public:
 	Robot()
 	{
 		printf("Robot INITIALIZATION\n");
+		
+		dataTable = NetworkTable::GetTable("TurnTable");
+		dataTable->PutNumber("degreeOfTurn", 90.0);
+		dataTable->PutNumber("kpError", 2);
+		dataTable->PutNumber("kiError", 0.05);
+		dataTable->PutNumber("kdError", 0.001);
+		
 		//remove todos as the correct values are found
 		drivetrain = new RobotDrive(3, 4);
 		gearUp = new Solenoid(8); //TODO which is which?
@@ -88,6 +99,7 @@ public:
 
 		compressor = new Compressor(1,1);
 
+		//TODO fix intake pointers in shooter?
 		leftEncoder = new Encoder(6,7);
 		rightEncoder = new Encoder(4,5);
 
@@ -114,6 +126,7 @@ public:
 		b_humanLoad = new CitrusButton (manipulator, 4);
 		//Shooter buttons
 		b_shoot = new CitrusButton (driverR, 1);
+		b_return = new CitrusButton (driverR, 3);
 		b_primeShortShot = new CitrusButton (manipulator, 5);
 		b_primeLongShot = new CitrusButton (manipulator, 7);
 		b_shooterSystemReset = new CitrusButton(manipulator, 9);
@@ -133,6 +146,7 @@ public:
 		b_humanLoad->Update();
 		//shooter
 		b_shoot->Update();
+		b_return->Update();
 		b_primeShortShot->Update();
 		b_primeLongShot->Update();
 		b_shooterSystemReset->Update();
@@ -145,7 +159,6 @@ public:
 
 		frontIntakeDeploy->Set(false);
 		backIntakeDeploy->Set(false);
-		b_shooterSystemReset->ButtonClicked();
 	}
 	void DisabledPeriodic()
 	{
@@ -153,8 +166,11 @@ public:
 	}
 	void AutonomousInit()
 	{
+		leftEncoder->Start();
+		rightEncoder->Start();
+		
 		//printf("AUTO INIT\n");
-		GyroTurn(gyro, 90.0, drivetrain);
+		GyroTurn(this, gyro, 90.0, drivetrain, leftEncoder, rightEncoder, dataTable);
 	}
 	void AutonomousPeriodic()
 	{
@@ -173,7 +189,6 @@ public:
 
 		gyro->Reset();
 		//printf("TELEOP INIT\n");
-
 	}
 	void TeleopPeriodic()
 	{
@@ -249,12 +264,28 @@ public:
 				backIntakeDeploy->Set(false);
 			}
 		}
-		
+
+		/*if(b_return->ButtonPressed())
+		{
+			shooter->ShooterReturn();
+		}
 		if(b_shoot->ButtonClicked())
 		{
 			shooter->BeginShooterFire(); //if called then Fire runs
 		}
-		shooter->ShooterFire();
+		shooter->ShooterFire();*/
+		if(driverR->GetRawButton(9))
+		{
+			shooter->RunTalons();
+		}
+		else if (driverR->GetRawButton(10))
+		{
+			shooter->ReverseTalons();
+		}
+		else
+		{
+			shooter->StopTalons();
+		}
 		
 		if(b_primeShortShot->ButtonClicked()) //primes for the short shot
 		{
@@ -273,7 +304,15 @@ public:
 
 		UpdateAllButtons();
 	}
-
+	void TestInit()
+	{
+		
+	}
+	void TestPeriodic()
+	{
+		printf("gyro: %f, gyroRate: %f\n", gyro->GetAngle(), gyro->GetRate());
+	}
+	
 };
  
 START_ROBOT_CLASS(Robot);

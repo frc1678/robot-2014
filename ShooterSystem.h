@@ -17,6 +17,7 @@ public:
 	bool currentlyShooting;
 	int numTimesSensorTriggered; //within one shooting cycle
 	Timer *camDelayTimer;
+	Timer *deadzoneTimer;
 
 	ShooterSystem(int camTalonPortA, int camTalonPortB, int camSensorPort,
 			Solenoid *tshotAlignerUp, Solenoid *tshotAlignerDown,
@@ -49,7 +50,7 @@ public:
 
 	void DeadzoneDelayRun()
 	{
-		if (camDelayTimer->Get() < 0.5)
+		if (deadzoneTimer->Get() < 0.5)//(camDelayTimer->Get() < 0.5)
 		{
 			StopTalons();
 		}
@@ -85,8 +86,13 @@ public:
 
 	void RunTalons()
 	{
-		camTalonA->Set(1.0); //facing opposite directions
-		camTalonB->Set(-1.0);
+		camTalonA->Set(.75); //facing opposite directions
+		camTalonB->Set(-.75);
+	}
+	void ReverseTalons()
+	{
+		camTalonA->Set(-1.0);
+		camTalonB->Set(1.0);
 	}
 	void StopTalons()
 	{
@@ -112,6 +118,8 @@ public:
 		currentlyShooting = true;
 		listenForSensor = false;
 		numTimesSensorTriggered = 0;
+		deadzoneTimer->Reset();
+		deadzoneTimer->Start();
 	}
 	void ShooterFire()
 	{
@@ -121,30 +129,29 @@ public:
 				numTimesSensorTriggered);
 		if (currentlyShooting)
 		{
-
 			if (!camPrimedToShoot)
 			{
-				//If we've gotten all the way around
-				if (listenForSensor && HallSensorTriggered()) //when does listenForSensor become true
+				if(deadzoneTimer->Get() < 0.1)
 				{
-					numTimesSensorTriggered++;
-					if (numTimesSensorTriggered == 1)
-					{
-
-					}
-					else
-					{
-						StopTalons();
-						listenForSensor = false;
-						camPrimedToShoot = true;
-						currentlyShooting = false;
-						camDelayTimer->Stop();
-						camDelayTimer->Reset();
-					}
+					RunTalons();
+				}
+				else
+				{
+					DeadzoneDelayRun();
+				}
+				//If we've gotten all the way around
+				if (listenForSensor && HallSensorTriggered() && deadzoneTimer->Get() > 0.1) //when does listenForSensor become true
+				{
+					StopTalons();
+					listenForSensor = false;
+					camPrimedToShoot = true;
+					currentlyShooting = false;
+					camDelayTimer->Stop();
+					camDelayTimer->Reset();
 				}
 				if (HallSensorTriggered())
 				{
-					if (numTimesSensorTriggered == 0)
+					/*if (numTimesSensorTriggered == 0)
 					{
 						RunTalons();
 					}
@@ -153,16 +160,23 @@ public:
 						camDelayTimer->Start();
 						DeadzoneDelayRun();
 					}
+					else
+					{
+						StopTalons();
+					}*/
 					listenForSensor = false;
 				}
-				//If we are in the middle: the catapult has not yet reset.
 				else
 				{
 					listenForSensor = true;
-					if (numTimesSensorTriggered == 1)
+					/*if (numTimesSensorTriggered == 1)
 					{
 						DeadzoneDelayRun();
 					}
+					else if(numTimesSensorTriggered == 2)
+					{
+						StopTalons();
+					}*/
 				}
 			}
 			else
@@ -171,6 +185,22 @@ public:
 			}
 		}
 		else
+		{
+			StopTalons();
+		}
+	}
+	//ONLY WHEN A BUTTON IS PRESSED.
+	void ShooterReturn()
+	{
+		if(HallSensorTriggered())
+		{
+			numTimesSensorTriggered++;
+		}
+		else if(numTimesSensorTriggered == 0)
+		{
+			RunTalons();
+		}
+		if(numTimesSensorTriggered != 0)
 		{
 			StopTalons();
 		}
