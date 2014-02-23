@@ -1,3 +1,4 @@
+#include "WPILib.h"
 #ifndef INTAKESYSTEM_H
 #define INTAKESYSTEM_H //include protection
 
@@ -14,7 +15,8 @@ public:
 	Talon *intakeRoller;
 	DigitalInput *intakeSensor;
 	Solenoid *intakeUp;
-	Talon *secondaryIntakeRoller;
+	Talon *secondaryIntakeRollerA;
+	Talon *secondaryIntakeRollerB;
 
 	//booleans and such for void Pickup()
 	bool readyToPickup;
@@ -22,10 +24,12 @@ public:
 	bool front;
 	Timer *pickupTimer;
 
-	IntakeSystem(int rollerTalonPort, Talon *tsecondaryIntakeRoller, int sensorPort, Solenoid *tIntakeUp, bool front)
+	IntakeSystem(int rollerTalonPort, Talon *tsecondaryIntakeRollerA, 
+			Talon *tsecondaryIntakeRollerB, int sensorPort, Solenoid *tIntakeUp, bool front)
 	{
 		intakeRoller = new Talon(rollerTalonPort);
-		secondaryIntakeRoller = tsecondaryIntakeRoller;
+		secondaryIntakeRollerA = tsecondaryIntakeRollerA;
+		secondaryIntakeRollerB = tsecondaryIntakeRollerB;
 		intakeSensor = new DigitalInput(sensorPort);
 		intakeUp = tIntakeUp;
 
@@ -47,6 +51,22 @@ public:
 		readyToPickup = true;
 		pickupTimer->Stop();
 		pickupTimer->Reset();
+	}
+	
+	void RunSecondaryRollers()
+	{
+		secondaryIntakeRollerA->Set(1.0);
+		secondaryIntakeRollerB->Set(-1.0);
+	}
+	void ReverseSecondaryRollers()
+	{
+		secondaryIntakeRollerA->Set(-1.0);
+		secondaryIntakeRollerB->Set(1.0);
+	}
+	void StopSecondaryRollers()
+	{
+		secondaryIntakeRollerA->Set(0.0);
+		secondaryIntakeRollerB->Set(0.0);
 	}
 
 	//Internal: front roller grabbing onto ball, front roller holding ball, back roller grabbing onto ball, back roller holding ball, front roller reverse, back roller reverse
@@ -141,14 +161,14 @@ public:
 				{
 					BackRollerLoad();
 				}
-				secondaryIntakeRoller->Set(1.0); //TODO numbers
+				RunSecondaryRollers();
 			}
 			//To end the whole round.
-			if (pickupTimer->Get() > 1.0) //TODO change to correct amount of time
+			if (pickupTimer->Get() > 2.0) //TODO change to correct amount of time
 			{
 				readyToPickup = true;
 				sensorTriggered = false;
-				secondaryIntakeRoller->Set(0.0); //TODO numbers
+				StopSecondaryRollers(); //TODO numbers
 				pickupTimer->Stop();
 			}
 		}
@@ -159,6 +179,7 @@ public:
 			readyToPickup = false;
 		}
 	}
+	
 };
 
 #endif

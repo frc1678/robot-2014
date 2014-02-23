@@ -140,7 +140,7 @@ public:
 					DeadzoneDelayRun();
 				}
 				//If we've gotten all the way around
-				if (listenForSensor && HallSensorTriggered() && deadzoneTimer->Get() > 0.1) //when does listenForSensor become true
+				if (listenForSensor && HallSensorTriggered() && deadzoneTimer->Get() > 0.3) //when does listenForSensor become true
 				{
 					StopTalons();
 					listenForSensor = false;

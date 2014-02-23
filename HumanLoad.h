@@ -1,7 +1,9 @@
 #include "WPILib.h"
 #include "CitrusButton.h"
 
-void HPReceive(CitrusButton *button, Solenoid *armPiston, Talon *secondaryRoller)
+//TODO incorporate into intake system to be able to use RunSecondaryRollers()
+
+void HPReceive(CitrusButton *button, Solenoid *armPiston, Talon *secondaryRollerA, Talon *secondaryRollerB)
 {
 	if(button->ButtonClicked())
 	{
@@ -9,12 +11,14 @@ void HPReceive(CitrusButton *button, Solenoid *armPiston, Talon *secondaryRoller
 	}
 	if(button->ButtonPressed())
 	{
-		secondaryRoller->Set(1.0); //TODO direction
+		secondaryRollerA->Set(1.0); //TODO direction
+		secondaryRollerB->Set(-1.0);
 	}
 	if(button->ButtonReleased())
 	{
 		armPiston->Set(false); //TODO direction; also can you get away with leaving
 		//them open?
-		secondaryRoller->Set(0.0);
+		secondaryRollerA->Set(0.0);
+		secondaryRollerB->Set(0.0);
 	}
 }

@@ -25,11 +25,10 @@ class Robot : public IterativeRobot
 	//Intakes.
 	Solenoid *frontIntakeDeploy;
 	Solenoid *backIntakeDeploy;
-	Talon *secondaryIntake;
+	Talon *secondaryRollerA;
+	Talon *secondaryRollerB;
 	IntakeSystem *frontIntake;
 	IntakeSystem *backIntake;
-	IntakeSystem *secondaryFrontIntake;
-	IntakeSystem *secondaryBackIntake;
 
 	//Gyro
 	MPU6050_I2C *gyro;
@@ -37,6 +36,8 @@ class Robot : public IterativeRobot
 	//Intake Toggle
 	bool frontIntakeToggle;
 	bool backIntakeToggle;
+	//Arm piston. Temporary.
+	bool tarmPistonToggle;
 	
 	//Shooting
 	ShooterSystem *shooter;
@@ -52,8 +53,6 @@ class Robot : public IterativeRobot
 	CitrusButton *b_IntakePickup;
 	CitrusButton *b_frontIntakeDeployToggle;
 	CitrusButton *b_backIntakeDeployToggle;
-	CitrusButton *b_secondaryFrontIntake;
-	CitrusButton *b_secondaryBackIntake;
 	CitrusButton *b_shoot;
 	CitrusButton *b_return;
 	CitrusButton *b_primeShortShot;
@@ -62,6 +61,7 @@ class Robot : public IterativeRobot
 	CitrusButton *b_humanLoad;
 	CitrusButton *b_hold;
 	CitrusButton *b_shooterSystemReset;
+	CitrusButton *b_tArmPistonToggle;
 
 public:
 	Robot()
@@ -91,10 +91,11 @@ public:
 		backIntakeDeploy = new Solenoid(4);
 
 		//Intake
-		secondaryIntake = new Talon (10); //TODO value?>
-		frontIntake = new IntakeSystem (6, secondaryIntake, 3, 
+		secondaryRollerA = new Talon (7); //TODO value?>
+		secondaryRollerB = new Talon(8);
+		frontIntake = new IntakeSystem (6, secondaryRollerA, secondaryRollerB, 3, 
 				frontIntakeDeploy, true); //TODO numbers
-		backIntake = new IntakeSystem (1, secondaryIntake, 2,
+		backIntake = new IntakeSystem (1, secondaryRollerA, secondaryRollerB, 2,
 				backIntakeDeploy, false); //TODO numbers
 
 		compressor = new Compressor(1,1);
@@ -103,7 +104,7 @@ public:
 		leftEncoder = new Encoder(6,7);
 		rightEncoder = new Encoder(4,5);
 
-		armPiston = new Solenoid (1); //TODO number?
+		armPiston = new Solenoid (3); //TODO number?
 		//Shooter
 		shooter = new ShooterSystem(2, 5, 8, shotAlignerUp, shotAlignerDown,
 				armPiston, frontIntakeDeploy,backIntakeDeploy); //TODO numbers
@@ -111,6 +112,7 @@ public:
 
 		frontIntakeToggle = false;
 		backIntakeToggle = false;
+		tarmPistonToggle = false;
 		
 		//Buttons. 
 		//NOTE: ALWAYS ADD NEW BUTTON TO UpdateAllButtons()
@@ -130,6 +132,8 @@ public:
 		b_primeShortShot = new CitrusButton (manipulator, 5);
 		b_primeLongShot = new CitrusButton (manipulator, 7);
 		b_shooterSystemReset = new CitrusButton(manipulator, 9);
+		//Temporary.
+		b_tArmPistonToggle = new CitrusButton (manipulator, 10);
 	}
 
 	void UpdateAllButtons()
@@ -150,6 +154,8 @@ public:
 		b_primeShortShot->Update();
 		b_primeLongShot->Update();
 		b_shooterSystemReset->Update();
+		//temp
+		b_tArmPistonToggle->Update();
 	}
 
 	void DisabledInit()
@@ -264,8 +270,22 @@ public:
 				backIntakeDeploy->Set(false);
 			}
 		}
+		
+		tarmPistonToggle = Toggle(b_tArmPistonToggle, tarmPistonToggle);
+		//Arm piston toggle
+		if(b_tArmPistonToggle->ButtonClicked())
+		{
+			if(tarmPistonToggle)
+			{
+				armPiston->Set(true);
+			}
+			else if(!tarmPistonToggle)
+			{
+				armPiston->Set(false);
+			}
+		}
 
-		/*if(b_return->ButtonPressed())
+		if(b_return->ButtonPressed())
 		{
 			shooter->ShooterReturn();
 		}
@@ -273,19 +293,7 @@ public:
 		{
 			shooter->BeginShooterFire(); //if called then Fire runs
 		}
-		shooter->ShooterFire();*/
-		if(driverR->GetRawButton(9))
-		{
-			shooter->RunTalons();
-		}
-		else if (driverR->GetRawButton(10))
-		{
-			shooter->ReverseTalons();
-		}
-		else
-		{
-			shooter->StopTalons();
-		}
+		shooter->ShooterFire();
 		
 		if(b_primeShortShot->ButtonClicked()) //primes for the short shot
 		{
@@ -299,8 +307,26 @@ public:
 			shooter->ShooterPrime(shortShot);
 		}
 		
-		HPReceive(b_humanLoad, armPiston, secondaryIntake); //opens side arms for
+		//HPReceive(b_humanLoad, armPiston, secondaryRollerA, secondaryRollerB); 
+		//opens side arms for
 		//hp intake
+		
+		
+		if(driverR->GetRawButton(9))
+		{
+			secondaryRollerA->Set(1.0);
+			secondaryRollerB->Set(-1.0);
+		}
+		else if(driverR->GetRawButton(10))
+		{
+			secondaryRollerA->Set(-1.0);
+			secondaryRollerB->Set(1.0);
+		}
+		else
+		{
+			secondaryRollerA->Set(0.0);
+			secondaryRollerB->Set(0.0);
+		} 
 
 		UpdateAllButtons();
 	}
