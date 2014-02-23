@@ -170,7 +170,7 @@ public:
 		rightEncoder->Start();
 		
 		//printf("AUTO INIT\n");
-		GyroTurn(this, gyro, 90.0, drivetrain, leftEncoder, rightEncoder, dataTable);
+		GyroTurnAngle(this, gyro, 90.0, drivetrain, leftEncoder, rightEncoder, dataTable);
 	}
 	void AutonomousPeriodic()
 	{

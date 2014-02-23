@@ -72,6 +72,56 @@ void GyroTurn(IterativeRobot *me, MPU6050_I2C *gyro, float tdegreeOfTurn, RobotD
 	drivetrain->TankDrive(0.0,0.0);
 }
 
+void GyroTurnAngle(IterativeRobot *me, MPU6050_I2C *gyro, float tdegreeOfTurn, RobotDrive *drivetrain,
+		Encoder *leftDT, Encoder *rightDT, NetworkTable *dataTable)
+
+{
+	printf("start\n");
+	float degreeOfTurn;
+	degreeOfTurn= dataTable->GetNumber("degreeOfTurn"); //TODO turn
+		//me back into a parameter
+	//degreeOfTurn = degreeOfTurn;
+	printf("others\n");
+	float kpError = dataTable->GetNumber("kpError");
+	float kiError = dataTable->GetNumber("kiError");
+	float kdError = dataTable->GetNumber("kdError");
+	printf("all\n");
+	
+	float integral = 0.0;
+	Wait(0.04);
+
+	float targetEndConstant = dataTable->GetNumber("targetEndConstant");
+	float minPower = dataTable->GetNumber("minPower");
+	
+	gyro->Reset();
+	printf("Gyro reset %f\n", gyro->GetAngle());
+	float differential = gyro->GetRate();
+	float oldError = degreeOfTurn-gyro->GetAngle();
+	while(amethyst(me) && gyro->GetAngle()<degreeOfTurn)
+	{
+		float angle = gyro->GetAngle();
+		float aError = degreeOfTurn - angle;
+		integral += aError;
+		differential = gyro->GetRate();
+		float leftDriveTrain = kpError*(aError)/100; // multiply by constant
+		leftDriveTrain += kiError*integral/100;
+		leftDriveTrain -= kdError*differential/100;
+		leftDriveTrain = (1 - targetEndConstant) * leftDriveTrain + targetEndConstant; 
+
+		if(leftDriveTrain < minPower)
+		{
+			leftDriveTrain = minPower;
+		}
+		
+		oldError = aError;
+		printf("Gyro: %f\n, LDT: %d, RDT: %d, leftDT: %f", gyro->GetAngle(), leftDT->Get(), rightDT->Get(),leftDriveTrain);
+
+		drivetrain->TankDrive(leftDriveTrain, -leftDriveTrain);
+
+	}
+	drivetrain->TankDrive(0.0,0.0);
+}
+
 void DriveStraight() //use CitrusPID here. can we also use it in gyroturn?
 {
 	
