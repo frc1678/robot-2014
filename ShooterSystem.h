@@ -78,10 +78,10 @@ public:
 			shotAlignerDown->Set(true);
 
 			//and front intake down
-			frontIntakeDeploy->Set(true); //make room for shot
+			//frontIntakeDeploy->Set(true); //make room for shot
 		}
 		//Back intake down
-		backIntakeDeploy->Set(true);
+		//backIntakeDeploy->Set(true);
 	}
 
 	void RunTalons()
@@ -123,15 +123,15 @@ public:
 	}
 	void ShooterFire()
 	{
-		printf(
+		/*printf(
 				"Hall sensor: %d, currentlyShooting: %d, Timer: %f, NumTimes: %d\n",
 				HallSensorTriggered(), currentlyShooting, camDelayTimer->Get(),
-				numTimesSensorTriggered);
+				numTimesSensorTriggered);*/
 		if (currentlyShooting)
 		{
 			if (!camPrimedToShoot)
 			{
-				if(deadzoneTimer->Get() < 0.1)
+				if(deadzoneTimer->Get() < 0.075)
 				{
 					RunTalons();
 				}

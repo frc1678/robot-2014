@@ -7,9 +7,11 @@
 #include "ShooterSystem.h"
 #include "CitrusButton.h"
 #include "Autonomous.h" 
+#include "CurrentSensor.h"
 
 class Robot : public IterativeRobot
 {
+	DriverStation * driverStation;
 	NetworkTable *dataTable;
 	
 	RobotDrive *drivetrain; // robot drive system
@@ -39,6 +41,7 @@ class Robot : public IterativeRobot
 	//Arm piston. Temporary.
 	bool tarmPistonToggle;
 	
+	Timer *turnTimer;
 	//Shooting
 	ShooterSystem *shooter;
 	Compressor *compressor;
@@ -46,6 +49,11 @@ class Robot : public IterativeRobot
 	Solenoid *shotAlignerDown;
 	Solenoid *armPiston;
 	bool shortShot;
+	
+	CurrentSensor *currSensA;
+	CurrentSensor *currSensB;
+	float maxA;
+	float maxB;
 
 	//Buttons!
 	CitrusButton *b_gearUp;
@@ -68,11 +76,13 @@ public:
 	{
 		printf("Robot INITIALIZATION\n");
 		
+		driverStation = DriverStation::GetInstance();
+		
 		dataTable = NetworkTable::GetTable("TurnTable");
 		dataTable->PutNumber("degreeOfTurn", 90.0);
-		dataTable->PutNumber("kpError", 2);
-		dataTable->PutNumber("kiError", 0.05);
-		dataTable->PutNumber("kdError", 0.001);
+		dataTable->PutNumber("kpError", 0.87); //use 0.8
+		dataTable->PutNumber("kiError", 0.027); //use 0.027
+		dataTable->PutNumber("kdError", 0.95); //use 0.078
 		
 		//remove todos as the correct values are found
 		drivetrain = new RobotDrive(3, 4);
@@ -99,13 +109,17 @@ public:
 				backIntakeDeploy, false); //TODO numbers
 
 		compressor = new Compressor(1,1);
+		turnTimer = new Timer();
 
+		
 		//TODO fix intake pointers in shooter?
 		leftEncoder = new Encoder(6,7);
 		rightEncoder = new Encoder(4,5);
 
-		armPiston = new Solenoid (3); //TODO number?
+		armPiston = new Solenoid (2); //TODO number?
 		//Shooter
+		shotAlignerUp = new Solenoid (5);
+		shotAlignerDown = new Solenoid(6);
 		shooter = new ShooterSystem(2, 5, 8, shotAlignerUp, shotAlignerDown,
 				armPiston, frontIntakeDeploy,backIntakeDeploy); //TODO numbers
 		shortShot = false;
@@ -113,6 +127,11 @@ public:
 		frontIntakeToggle = false;
 		backIntakeToggle = false;
 		tarmPistonToggle = false;
+		
+		currSensA = new CurrentSensor(1);
+		currSensB = new CurrentSensor(2);
+		maxA = 0;
+		maxB = 0;
 		
 		//Buttons. 
 		//NOTE: ALWAYS ADD NEW BUTTON TO UpdateAllButtons()
@@ -174,13 +193,18 @@ public:
 	{
 		leftEncoder->Start();
 		rightEncoder->Start();
+		//frontIntakeDeploy->Set(true);
+		//backIntakeDeploy->Set(true);
 		
 		//printf("AUTO INIT\n");
-		GyroTurnAngle(this, gyro, 90.0, drivetrain, leftEncoder, rightEncoder, dataTable);
+		turnTimer->Start();
+		turnTimer->Reset();
+		GyroTurnAngle(this, gyro, drivetrain, leftEncoder, rightEncoder, dataTable);
+		printf("*********    Time: %f    ********    ", turnTimer->Get());
 	}
 	void AutonomousPeriodic()
 	{
-		printf("Gyro: %f Gyro Rate: %f\n", gyro->GetAngle(), gyro->GetRate());
+		printf("Gyro: %f, Gyro Rate: %f\n", gyro->GetAngle(), gyro->GetRate());
 
 	}
 	void TeleopInit()
@@ -220,28 +244,38 @@ public:
 		if (b_hold->ButtonPressed())
 		{
 			//intakes to hold the ball using proxy sensors
-			frontIntake->Hold();
-			backIntake->Hold();
+			//frontIntake->Hold(manipulator);
+			frontIntake->FrontPickup(manipulator, driverStation); //TODO reorg
+			//backIntake->Hold(manipulator);
 		}
 		else if (b_reverseIntake->ButtonPressed())
 		{
 			//intake reverses
-			frontIntake->Reverse();
+			//frontIntake->Reverse();
 			backIntake->Reverse();
+		}
+		else if(b_humanLoad->ButtonPressed())
+		{
+
+			HPReceive(secondaryRollerA, secondaryRollerB, frontIntake, backIntake); 
 		}
 		//activates pickup for both intakes
 		else if(b_IntakePickup->ButtonPressed())  
 		{
 			//Pickup is here b/c we are unsure of how it'll interact w/ the stops
-			frontIntake->Pickup();
-			backIntake->Pickup();
+
+			printf("buttonpressed");
+			backIntake->Pickup(manipulator, driverStation);
 		}
 		else
 		{
+			//TODO: how will this affect the shooter?
 			frontIntake->Stop();
 			backIntake->Stop();
+			frontIntake->StopSecondaryRollers();
 		}
 
+		//backIntake->BackRollerLoad(manipulator);
 		frontIntakeToggle = Toggle(b_frontIntakeDeployToggle, frontIntakeToggle);
 		backIntakeToggle = Toggle(b_backIntakeDeployToggle, backIntakeToggle);
 		
@@ -285,6 +319,16 @@ public:
 			}
 		}
 
+		if(maxA < currSensA->Get())
+		{
+			maxA = currSensA->Get();
+		}
+		printf("MaxA %f, currA %f", maxA, currSensA->Get());
+		if(maxB < currSensB->Get())
+		{
+			maxB = currSensB->Get();
+		}
+		printf("MaxB %f, currB %f\n", maxB,currSensB->Get());
 		if(b_return->ButtonPressed())
 		{
 			shooter->ShooterReturn();
@@ -306,22 +350,21 @@ public:
 			shortShot = false; //So short shot isn't primed for
 			shooter->ShooterPrime(shortShot);
 		}
-		
-		//HPReceive(b_humanLoad, armPiston, secondaryRollerA, secondaryRollerB); 
 		//opens side arms for
 		//hp intake
 		
 		
-		if(driverR->GetRawButton(9))
+		if(manipulator->GetRawButton(9))
 		{
 			secondaryRollerA->Set(1.0);
 			secondaryRollerB->Set(-1.0);
-		}
-		else if(driverR->GetRawButton(10))
+		}/*
+		else if(manipulator->GetRawButton(10))
 		{
+			frontIntake->FrontRollerLoad(manipulator);
 			secondaryRollerA->Set(-1.0);
 			secondaryRollerB->Set(1.0);
-		}
+		}*/
 		else
 		{
 			secondaryRollerA->Set(0.0);
@@ -332,11 +375,13 @@ public:
 	}
 	void TestInit()
 	{
-		
+		gyro->CalibrateRate();
 	}
 	void TestPeriodic()
 	{
-		printf("gyro: %f, gyroRate: %f\n", gyro->GetAngle(), gyro->GetRate());
+		printf("gyro: %f, gyroRate: %f, gyroFiltRate: %f, gyroCalRate: %f\n", 
+				gyro->GetCalibratedAngle(), gyro->GetRate(), gyro->GetFilteredRate(), gyro->GetCalibratedRate());
+		
 	}
 	
 };

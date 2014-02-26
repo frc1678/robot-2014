@@ -393,7 +393,8 @@ IterativeTemplate_partialImage/Debug/Objects/IterativeTemplate/MyRobot.o:  \
   C:/WindRiver/workspace/IterativeTemplate/ShooterSystem.h \
   C:/WindRiver/workspace/IterativeTemplate/Autonomous.h \
   C:/WindRiver/workspace/IterativeTemplate/CitrusPID.h \
-  C:/WindRiver/vxworks-6.3/target/h/WPILib/WPIlib.h
+  C:/WindRiver/vxworks-6.3/target/h/WPILib/WPIlib.h \
+  C:/WindRiver/workspace/IterativeTemplate/CurrentSensor.h
 
 C:/WindRiver/vxworks-6.3/target/h/WPILib/WPILib.h:
 
@@ -1182,3 +1183,5 @@ C:/WindRiver/workspace/IterativeTemplate/Autonomous.h:
 C:/WindRiver/workspace/IterativeTemplate/CitrusPID.h:
 
 C:/WindRiver/vxworks-6.3/target/h/WPILib/WPIlib.h:
+
+C:/WindRiver/workspace/IterativeTemplate/CurrentSensor.h:
