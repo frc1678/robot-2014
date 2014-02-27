@@ -23,8 +23,10 @@ public:
 	bool sensorTriggered;
 	bool front;
 	Timer *pickupTimer;
-	bool intakePulled;
-
+	
+	//boolean for is intake deployed
+	bool intakeDeployed;
+	
 	IntakeSystem(int rollerTalonPort, Talon *tsecondaryIntakeRollerA, 
 			Talon *tsecondaryIntakeRollerB, int sensorPort, Solenoid *tIntakeUp, bool front)
 	{
@@ -38,7 +40,7 @@ public:
 		readyToPickup = true;
 		sensorTriggered = false;
 		pickupTimer = new Timer();
-		intakePulled = false;
+		intakeDeployed = false;
 	}
 	//TODO add secondary rollers to methods. Have some internal ones
 	//then add to Pickup.
@@ -53,9 +55,9 @@ public:
 		readyToPickup = true;
 		pickupTimer->Stop();
 		pickupTimer->Reset();
-		intakePulled = false;
 	}
 	
+	//TODO move these out? (maybe)
 	void RunSecondaryRollers()
 	{
 		secondaryIntakeRollerA->Set(1.0);
@@ -72,24 +74,31 @@ public:
 		secondaryIntakeRollerB->Set(0.0);
 	}
 	
+	//USE THESE TWO WHENEVER YOU WANT TO DEPLOY THE INTAKES.
 	void DeployIntake ()
 	{
+		intakeDeployed = true;
 		intakeUp->Set(true);
 	}
 	void UndeployIntake()
 	{
-		intakePulled = true;
+		intakeDeployed = false;
 		intakeUp->Set(false);
+	}
+	void ToggleIntake()
+	{
+		intakeDeployed = !intakeDeployed;
+		intakeUp->Set(intakeDeployed);
 	}
 
 	//Internal: front roller grabbing onto ball, front roller holding ball, back roller grabbing onto ball, back roller holding ball, front roller reverse, back roller reverse
-	void FrontRollerLoad(Joystick * stick)
+	void FrontRollerLoad()
 	{
 		intakeRoller->Set(1.0); //TODO numbers
 		//intakeRoller->Set(stick->GetTwist());
 	}
 
-	void BackRollerLoad(Joystick * stick)
+	void BackRollerLoad()
 	{
 		intakeRoller->Set(1.0); //TODO numbers
 		//intakeRoller->Set(stick->GetY());
@@ -124,11 +133,11 @@ public:
 		{
 			if (front)
 			{
-				FrontRollerLoad(stick);
+				FrontRollerLoad();
 			}
 			else
 			{
-				BackRollerLoad(stick);
+				BackRollerLoad();
 			}
 		}
 		else
@@ -163,18 +172,18 @@ public:
 		if(!sensorTriggered)
 		{
 			printf("running");
-			BackRollerLoad(stick);
+			BackRollerLoad();
 		}
 		else
 		{
 			pickupTimer->Start();
 			if(pickupTimer->Get() < m_ds->GetAnalogIn(1))
 			{
-				BackRollerLoad(stick);
+				BackRollerLoad();
 			}
 			else
 			{
-				if(!intakePulled)
+				if(intakeDeployed)
 				{
 					printf("undeploy");
 					UndeployIntake();
@@ -195,18 +204,18 @@ public:
 		if(!sensorTriggered)
 		{
 			printf("running");
-			FrontRollerLoad(stick);
+			FrontRollerLoad(); 
 		}
 		else
 		{
 			pickupTimer->Start();
 			if(pickupTimer->Get() < m_ds->GetAnalogIn(2))
 			{
-				FrontRollerLoad(stick);
+				FrontRollerLoad();
 			}
 			else
 			{
-				if(!intakePulled)
+				if(intakeDeployed)
 				{
 					printf("undeploy");
 					UndeployIntake();
@@ -216,75 +225,6 @@ public:
 			}
 		}
 	}
-	
-	/*void Pickup(Joystick *stick, DriverStation * m_ds) //Only call these inside an if statement. This one currently assumes
-	//that if it's called, the first run is where to start.
-	{
-		if (!readyToPickup) //aka, I'm currently picking something up
-		{
-			if (ProximityTriggered())
-			{
-				sensorTriggered = true;
-			}
-			if (!sensorTriggered)
-			{
-				if (front) //if front is false than we are using the back
-				{
-					FrontRollerLoad(stick);
-				}
-				else
-				{
-					BackRollerLoad(stick);
-				}
-			}
-			//The below may be changed if another proximity sensor is added.
-			else if (sensorTriggered)
-			{
-				pickupTimer->Start(); //TODO eventually don't keep starting it.
-				if(pickupTimer->Get() < m_ds->GetAnalogIn(1))
-				{
-					if (front)
-					{
-						FrontRollerLoad(stick);
-					}
-					else
-					{
-						BackRollerLoad(stick);
-					}
-				}
-				else
-				{
-					if(!intakePulled)
-					{
-						UndeployIntake();
-					}
-					if (front)
-					{
-						FrontRollerSlow();
-					}
-					else
-					{
-						BackRollerSlow();
-					}
-				}
-				//RunSecondaryRollers();
-			}
-			//To end the whole round.
-			if (pickupTimer->Get() > 2.0) //TODO change to correct amount of time
-			{
-				readyToPickup = true;
-				sensorTriggered = false;
-				//StopSecondaryRollers(); //TODO numbers
-				pickupTimer->Stop();
-			}
-		}
-		//To start the whole round.
-		if (readyToPickup)
-		{
-			pickupTimer->Reset();
-			readyToPickup = false;
-		}
-	}*/
 	
 };
 

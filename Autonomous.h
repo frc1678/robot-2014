@@ -9,75 +9,19 @@
 
 bool enabledInAutonomous(IterativeRobot *me)
 {
-	if(me->IsAutonomous() && !me->IsDisabled())
+	if (me->IsAutonomous() && !me->IsDisabled())
 	{
 		return true;
 	}
 	return false;
 }
 
-/*
-void GyroTurn(IterativeRobot *me, MPU6050_I2C *gyro, float tdegreeOfTurn, RobotDrive *drivetrain,
-		Encoder *leftDT, Encoder *rightDT, NetworkTable *dataTable)
-
-{
-	printf("start\n");
-	float degreeOfTurn;
-	degreeOfTurn= dataTable->GetNumber("degreeOfTurn"); //TODO turn
-		//me back into a parameter
-	//degreeOfTurn = degreeOfTurn + 1;
-	printf("others\n");
-	float kpError = dataTable->GetNumber("kpError");
-	float kiError = dataTable->GetNumber("kiError");
-	float kdError = dataTable->GetNumber("kdError");
-	printf("all\n");
-	
-	float integral = 0.0;
-	Wait(0.04);
-
-	float targetSlopeNum = dataTable->GetNumber("targetSlopeNum");
-	float targetSlopeDenom = dataTable->GetNumber("targetSlopeDenom");
-	float targetEndConstant = dataTable->GetNumber("targetEndConstant");
-	float minPower = dataTable->GetNumber("minPower");
-	float maxPower = dataTable->GetNumber("maxPower");
-	
-	gyro->Reset();
-	printf("Gyro reset %f\n", gyro->GetAngle());
-	float differential = 0.0;
-	float oldError = targetSlopeNum*(degreeOfTurn-gyro->GetAngle())/targetSlopeDenom - gyro->GetRate();
-	while(amethyst(me) && gyro->GetAngle()<degreeOfTurn-1)
-	{
-		float angle = gyro->GetAngle();
-		float aError = degreeOfTurn - angle;
-		float target = (targetSlopeNum*aError/targetSlopeDenom); 
-		//target velocity; change me!
-		float vError = target - gyro->GetRate();
-		integral += vError;
-		differential = oldError -vError;
-		float leftDriveTrain = kpError*(target+vError)/200; // multiply by constant
-		leftDriveTrain += kiError*integral/200;
-		leftDriveTrain -= kdError*differential/200;
-		leftDriveTrain = (1 - targetEndConstant) * leftDriveTrain + targetEndConstant; 
-		if(leftDriveTrain < minPower)
-		{
-			leftDriveTrain = minPower;
-		}
-		oldError = vError;
-		printf("Gyro: %f\n, LDT: %d, RDT: %d, Target:%f, leftDT: %f", gyro->GetAngle(), leftDT->Get(), rightDT->Get(), target, leftDriveTrain);
-
-		drivetrain->TankDrive(leftDriveTrain, -leftDriveTrain);
-
-	}
-	drivetrain->TankDrive(0.0,0.0);
-}
-
-*/
-bool fuchsia (float degreeOfTurn, MPU6050_I2C *gyro)
+bool fuchsia(float degreeOfTurn, MPU6050_I2C *gyro)
 {
 	bool returnMe = false;
-	if(degreeOfTurn > 0)
+	if (degreeOfTurn > 0)
 	{
-		if(gyro->GetAngle() < degreeOfTurn)
+		if (gyro->GetAngle() < degreeOfTurn)
 		{
 			returnMe = true;
 		}
@@ -88,7 +32,7 @@ bool fuchsia (float degreeOfTurn, MPU6050_I2C *gyro)
 	}
 	else
 	{
-		if(gyro->GetAngle() > degreeOfTurn)
+		if (gyro->GetAngle() > degreeOfTurn)
 		{
 			returnMe = true;
 		}
@@ -100,13 +44,14 @@ bool fuchsia (float degreeOfTurn, MPU6050_I2C *gyro)
 	return returnMe;
 }
 
-void GyroTurnAngle(IterativeRobot *me, MPU6050_I2C *gyro, RobotDrive *drivetrain,
-		Encoder *leftDT, Encoder *rightDT, NetworkTable *dataTable)
+void GyroTurnAngle(IterativeRobot *me, MPU6050_I2C *gyro,
+		RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT,
+		NetworkTable *dataTable)
 
 {
 	printf("start\n");
 	float degreeOfTurn;
-	degreeOfTurn= dataTable->GetNumber("degreeOfTurn"); 
+	degreeOfTurn= dataTable->GetNumber("degreeOfTurn");
 	printf("others\n");
 	//getting values from network table, the zero helps magically not get errors
 	double kpError = dataTable->GetNumber("kpError", 0);
@@ -123,8 +68,8 @@ void GyroTurnAngle(IterativeRobot *me, MPU6050_I2C *gyro, RobotDrive *drivetrain
 	printf("Gyro reset %f\n", gyro->GetCalibratedAngle());
 	float differential = gyro->GetCalibratedRate();
 	float oldError = degreeOfTurn-gyro->GetCalibratedAngle();
-//	while(amethyst(me) && gyro->GetAngle()<degreeOfTurn)
-	while(enabledInAutonomous(me) && fuchsia(degreeOfTurn, gyro))
+	//	while(amethyst(me) && gyro->GetAngle()<degreeOfTurn)
+	while (enabledInAutonomous(me) && fuchsia(degreeOfTurn, gyro))
 	{
 		float angle = gyro->GetCalibratedAngle();
 		float aError = degreeOfTurn - angle;
@@ -137,12 +82,12 @@ void GyroTurnAngle(IterativeRobot *me, MPU6050_I2C *gyro, RobotDrive *drivetrain
 		printf("left drive train2: %f\n", leftDriveTrain);
 		oldError = aError;
 		printf("differential: %f\n", differential);
-		
-		if(degreeOfTurn > 0.0 && leftDriveTrain < minPower)
+
+		if (degreeOfTurn > 0.0 && leftDriveTrain < minPower)
 		{
 			leftDriveTrain = minPower;
 		}
-		else if(degreeOfTurn < 0.0 && leftDriveTrain > minPower)
+		else if (degreeOfTurn < 0.0 && leftDriveTrain> minPower)
 		{
 			leftDriveTrain = minPower;
 		}
@@ -151,11 +96,11 @@ void GyroTurnAngle(IterativeRobot *me, MPU6050_I2C *gyro, RobotDrive *drivetrain
 			leftDriveTrain = -maxPower;
 		}
 		printf("Gyro: %f, leftDT: %f\n",
-				angle,leftDriveTrain);
+		angle,leftDriveTrain);
 		printf("__________________________________________________________\n\n");
 		//Drivetrain
 		drivetrain->TankDrive(leftDriveTrain, -leftDriveTrain);
-		
+
 	}
 
 	drivetrain->TankDrive(0.0,0.0);
@@ -163,6 +108,43 @@ void GyroTurnAngle(IterativeRobot *me, MPU6050_I2C *gyro, RobotDrive *drivetrain
 
 void DriveStraight() //use CitrusPID here. can we also use it in gyroturn?
 {
+
+}
+
+void aubergine(IntakeSystem *frontIntake, IntakeSystem *backIntake,
+		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *timer,
+		Solenoid *armPiston)
+{
+	timer->Start();
+
 	
+	
+		//Unfurling the flower
+		armPiston->Set(true);
+		backIntake->DeployIntake();
+		frontIntake->DeployIntake();
+
+		shooter->BeginShooterFire();
+
+		while(shooter->CurrentIsShooting(shooter->currentlyShooting))
+		{
+			shooter->ShooterFire();
+
+		}
+
+		if(timer->Get() > 0.5 )
+		{
+			frontIntake->FrontRollerLoad();
+			armPiston->Set(false);
+			frontIntake->RunSecondaryRollers();
+		}
+		
+		//Unfurling
+		armPiston->Set(true);
+		backIntake->DeployIntake();
+		frontIntake->DeployIntake();
+
+	
+
 }
 #endif	

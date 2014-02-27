@@ -10,19 +10,19 @@ public:
 	Solenoid *shotAlignerUp;
 	Solenoid *shotAlignerDown;
 	Solenoid *armPiston;
-	Solenoid *frontIntakeDeploy;
-	Solenoid *backIntakeDeploy;
 	bool listenForSensor;
 	bool camPrimedToShoot;
 	bool currentlyShooting;
 	int numTimesSensorTriggered; //within one shooting cycle
 	Timer *camDelayTimer;
 	Timer *deadzoneTimer;
+	
+	//ANY TIME YOU WANT TO DEPLOY INTAKES, MAKE A PARALLEL METHOD IN
+	//INTAKESYSTEM
 
 	ShooterSystem(int camTalonPortA, int camTalonPortB, int camSensorPort,
 			Solenoid *tshotAlignerUp, Solenoid *tshotAlignerDown,
-			Solenoid *tarmPiston, Solenoid *tfrontIntakeDeploy,
-			Solenoid *tbackIntakeDeploy)
+			Solenoid *tarmPiston)
 	{
 		camTalonA = new Talon(camTalonPortA);
 		camTalonB = new Talon(camTalonPortB);
@@ -30,13 +30,12 @@ public:
 		shotAlignerUp = tshotAlignerUp;
 		shotAlignerDown = tshotAlignerDown;
 		armPiston = tarmPiston;
-		frontIntakeDeploy = tfrontIntakeDeploy;
-		backIntakeDeploy = tbackIntakeDeploy;
 		listenForSensor = false;
 		camPrimedToShoot = false;
 		currentlyShooting = false;
 		numTimesSensorTriggered = 0;
 		camDelayTimer = new Timer();
+		deadzoneTimer = new Timer();
 	}
 
 	bool HallSensorTriggered()
@@ -56,7 +55,6 @@ public:
 		}
 		else
 		{
-			printf("Actually Running!");
 			RunTalons();
 		}
 	}
@@ -65,17 +63,17 @@ public:
 	{
 		//all the relevant solenoids
 		//Open up "arms"
-		armPiston->Set(true); //TODO what direction is which? am I double solenoid?
+		//armPiston->Set(true); //TODO what direction is which? am I double solenoid?
 		//Long/short toggle
 		if (shortShot)
 		{
-			shotAlignerUp->Set(true); //TODO which is short and which is long?
-			shotAlignerDown->Set(false);
+			shotAlignerUp->Set(false);
+			shotAlignerDown->Set(true);
 		}
 		else
 		{
-			shotAlignerUp->Set(false); //TODO which is short and which is long?
-			shotAlignerDown->Set(true);
+			shotAlignerUp->Set(true); 
+			shotAlignerDown->Set(false);
 
 			//and front intake down
 			//frontIntakeDeploy->Set(true); //make room for shot
@@ -113,7 +111,7 @@ public:
 	//then call shooterfire outside the if statement.
 	void BeginShooterFire() //on driver
 	{
-		RunTalons(); //Why do we do this here?
+		RunTalons(); 
 		camPrimedToShoot = false;
 		currentlyShooting = true;
 		listenForSensor = false;
@@ -137,7 +135,8 @@ public:
 				}
 				else
 				{
-					DeadzoneDelayRun();
+					//DeadzoneDelayRun();
+					RunTalons();
 				}
 				//If we've gotten all the way around
 				if (listenForSensor && HallSensorTriggered() && deadzoneTimer->Get() > 0.3) //when does listenForSensor become true
@@ -204,5 +203,10 @@ public:
 		{
 			StopTalons();
 		}
+	}
+	
+	bool CurrentIsShooting(bool currentlyShooting)
+	{
+		return currentlyShooting;
 	}
 };
