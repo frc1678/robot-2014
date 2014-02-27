@@ -12,6 +12,8 @@
 class Robot : public IterativeRobot
 {
 	DriverStation *driverStation;
+	DriverStationLCD *driverStationLCD;
+	
 	NetworkTable *dataTable;
 	
 	RobotDrive *drivetrain; // robot drive system
@@ -41,8 +43,8 @@ class Robot : public IterativeRobot
 	//Intake Toggle
 	bool frontIntakeToggle;
 	bool backIntakeToggle;
-	//Arm piston. Temporary.
-	bool tarmPistonToggle;
+	//Arm piston.
+	bool armPistonToggle;
 	
 	Timer *turnTimer;
 	//Shooting
@@ -52,11 +54,6 @@ class Robot : public IterativeRobot
 	Solenoid *shotAlignerDown;
 	Solenoid *armPiston;
 	bool shortShot;
-	
-	//CurrentSensor *currSensA;
-	//CurrentSensor *currSensB;
-	float maxA;
-	float maxB;
 
 	//Buttons!
 	CitrusButton *b_gearUp;
@@ -71,8 +68,8 @@ class Robot : public IterativeRobot
 	CitrusButton *b_reverseIntake;
 	CitrusButton *b_humanLoad;
 	CitrusButton *b_holdOrPickup;
-	CitrusButton *b_shooterSystemReset;
-	CitrusButton *b_tArmPistonToggle;
+	CitrusButton *b_ArmPistonToggle;
+	CitrusButton *b_runSecondary;
 	
 public:
 	Robot()
@@ -80,6 +77,7 @@ public:
 		printf("Robot INITIALIZATION\n");
 		
 		driverStation = DriverStation::GetInstance();
+		driverStationLCD = DriverStationLCD::GetInstance();
 		
 		dataTable = NetworkTable::GetTable("TurnTable");
 		dataTable->PutNumber("degreeOfTurn", 90.0);
@@ -133,13 +131,8 @@ public:
 
 		frontIntakeToggle = false;
 		backIntakeToggle = false;
-		tarmPistonToggle = false;
-		
-		//currSensA = new CurrentSensor(1); //temporarily commented
-		//currSensB = new CurrentSensor(2);
-		maxA = 0;
-		maxB = 0;
-		
+		armPistonToggle = false;
+				
 		//Buttons. 
 		//NOTE: ALWAYS ADD NEW BUTTON TO UpdateAllButtons()
 		//Gearshift buttons
@@ -154,12 +147,12 @@ public:
 		b_humanLoad = new CitrusButton (manipulator, 4);
 		//Shooter buttons
 		b_shoot = new CitrusButton (driverR, 1);
-		b_shooterPrime = new CitrusButton (driverR, 3);
+		b_shooterPrime = new CitrusButton (manipulator, 11);
 		b_shotAlignerToggle = new CitrusButton (manipulator, 5);
 		b_unfoldFlower = new CitrusButton (driverR, 2);
-		b_shooterSystemReset = new CitrusButton(manipulator, 9);
+		b_runSecondary = new CitrusButton (manipulator, 9);
 		//Temporary.
-		b_tArmPistonToggle = new CitrusButton (manipulator, 10);
+		b_ArmPistonToggle = new CitrusButton (manipulator, 10);
 	}
 
 	void UpdateAllButtons()
@@ -179,13 +172,13 @@ public:
 		b_shooterPrime->Update();
 		b_shotAlignerToggle->Update();
 		b_unfoldFlower->Update();
-		b_shooterSystemReset->Update();
 		//temp
-		b_tArmPistonToggle->Update();
+		b_ArmPistonToggle->Update();
 	}
 
 	void DisabledInit()
 	{
+		driverStationLCD->Clear();
 		//leftEncoder->Stop();
 		//rightEncoder->Stop();
 		drivetrain->TankDrive(0.0, 0.0);
@@ -202,11 +195,14 @@ public:
 		rightEncoder->Start();
 		//frontIntakeDeploy->Set(true);
 		//backIntakeDeploy->Set(true);
-		
-		turnTimer->Start();
-		turnTimer->Reset();
-		GyroTurnAngle(this, gyro, drivetrain, leftEncoder, rightEncoder, dataTable);
-		printf("*********    Time: %f    ********    ", turnTimer->Get());
+
+		aubergine(frontIntake, backIntake, shooter, drivetrain, autoTimer, 
+				armPiston, this);
+
+		//turnTimer->Start();
+		//turnTimer->Reset();
+		//GyroTurnAngle(this, gyro, drivetrain, leftEncoder, rightEncoder, dataTable);
+		//printf("*********    Time: %f    ********    ", turnTimer->Get());
 	}
 	void AutonomousPeriodic()
 	{
@@ -237,11 +233,13 @@ public:
 		{
 			gearUp->Set(true);
 			gearDown->Set(false);
+			driverStationLCD->PrintfLine((DriverStationLCD::Line)0, "High gear");
 		}
 		else if (b_gearDown->ButtonClicked())
 		{
 			gearUp->Set(false);
 			gearDown->Set(true);
+			driverStationLCD->PrintfLine((DriverStationLCD::Line)0, "Low gear ");
 		}
 
 		if (b_holdOrPickup->ButtonPressed())
@@ -288,21 +286,9 @@ public:
 			secondaryRollerB->Set(0.0);
 		}
 
-		//backIntake->BackRollerLoad(manipulator);
-		//frontIntakeToggle = Toggle(b_frontIntakeDeployToggle, frontIntakeToggle);
-		//backIntakeToggle = Toggle(b_backIntakeDeployToggle, backIntakeToggle);
-		
 		//toggles the front intake up and down
 		if (b_frontIntakeDeployToggle->ButtonClicked()) 
 		{
-			/*if (frontIntakeToggle)
-			{
-				frontIntakeDeploy->Set(true);
-			}
-			else if (!frontIntakeToggle)
-			{
-				frontIntakeDeploy->Set(false);
-			}*/
 			frontIntake->ToggleIntake();
 		}
 
@@ -312,31 +298,20 @@ public:
 			backIntake->ToggleIntake();
 		}
 		
-		tarmPistonToggle = Toggle(b_tArmPistonToggle, tarmPistonToggle);
+		armPistonToggle = Toggle(b_ArmPistonToggle, armPistonToggle);
 		//Arm piston toggle
-		if(b_tArmPistonToggle->ButtonClicked())
+		if(b_ArmPistonToggle->ButtonClicked())
 		{
-			if(tarmPistonToggle)
+			if(armPistonToggle)
 			{
 				armPiston->Set(true);
 			}
-			else if(!tarmPistonToggle)
+			else if(!armPistonToggle)
 			{
 				armPiston->Set(false);
 			}
 		}
-/*
-		if(maxA < currSensA->Get())
-		{
-			maxA = currSensA->Get();
-		}
-		printf("MaxA %f, currA %f", maxA, currSensA->Get());
-		if(maxB < currSensB->Get())
-		{
-			maxB = currSensB->Get();
-		}
-		printf("MaxB %f, currB %f\n", maxB,currSensB->Get());
-		*/
+
 		if(b_shooterPrime->ButtonPressed())
 		{
 			shooter->ShooterReturn();
@@ -347,10 +322,11 @@ public:
 		}
 		shooter->ShooterFire();
 		
-		if(b_shotAlignerToggle->ButtonClicked()) //primes for the short shot
+		if(b_shotAlignerToggle->ButtonClicked())
 		{
 			shortShot = !shortShot;
 			shooter->ShooterPrime(shortShot);
+			driverStationLCD->PrintfLine((DriverStationLCD::Line)1, "short: %d", shortShot);
 		}
 		
 		if(b_unfoldFlower->ButtonClicked()) //All solenoids down
@@ -371,7 +347,6 @@ public:
 	{
 		printf("gyro: %f, gyroRate: %f, gyroFiltRate: %f, gyroCalRate: %f\n", 
 				gyro->GetCalibratedAngle(), gyro->GetRate(), gyro->GetFilteredRate(), gyro->GetCalibratedRate());
-		
 	}
 	
 };

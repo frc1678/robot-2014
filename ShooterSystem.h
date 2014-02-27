@@ -193,19 +193,15 @@ public:
 	{
 		if(HallSensorTriggered())
 		{
-			numTimesSensorTriggered++;
+			StopTalons();
 		}
-		else if(numTimesSensorTriggered == 0)
+		else
 		{
 			RunTalons();
 		}
-		if(numTimesSensorTriggered != 0)
-		{
-			StopTalons();
-		}
 	}
 	
-	bool CurrentIsShooting(bool currentlyShooting)
+	bool CurrentlyShooting()
 	{
 		return currentlyShooting;
 	}
