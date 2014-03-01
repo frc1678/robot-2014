@@ -57,22 +57,7 @@ public:
 		pickupTimer->Reset();
 	}
 	
-	//TODO move these out? (maybe)
-	void RunSecondaryRollers()
-	{
-		secondaryIntakeRollerA->Set(1.0);
-		secondaryIntakeRollerB->Set(-1.0);
-	}
-	void ReverseSecondaryRollers()
-	{
-		secondaryIntakeRollerA->Set(-1.0);
-		secondaryIntakeRollerB->Set(1.0);
-	}
-	void StopSecondaryRollers()
-	{
-		secondaryIntakeRollerA->Set(0.0);
-		secondaryIntakeRollerB->Set(0.0);
-	}
+	
 	
 	//USE THESE TWO WHENEVER YOU WANT TO DEPLOY THE INTAKES.
 	void DeployIntake ()
@@ -104,7 +89,7 @@ public:
 		//intakeRoller->Set(stick->GetY());
 	}
 
-	void BackBumperHold()
+	void BackBumperHold() 
 	{
 		intakeRoller->Set(0.0); //TODO numbers
 	}
@@ -127,7 +112,7 @@ public:
 		}
 	}
 
-	void Hold(Joystick *stick)
+	void Hold()
 	{
 		if (!ProximityTriggered())
 		{

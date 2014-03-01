@@ -3,6 +3,7 @@
 #include "MPU6050_I2C.h"
 #include "CitrusPID.h"
 #include "NetworkTables/NetworkTable.h"
+#include "SecondaryRollerSystem.h"
 
 #ifndef AUTONOMOUS_H
 #define AUTONOMOUS_H
@@ -54,12 +55,14 @@ void GyroTurnAngle(IterativeRobot *me, MPU6050_I2C *gyro, RobotDrive *drivetrain
 	gyro->Reset();
 	printf("Gyro reset %f\n", gyro->GetCalibratedAngle());
 	float differential = gyro->GetCalibratedRate();
+	//float oldError = degreeOfTurn+gyro->GetCalibratedAngle();
 	float oldError = degreeOfTurn-gyro->GetCalibratedAngle();
 	//	while(amethyst(me) && gyro->GetAngle()<degreeOfTurn)
 	while (enabledInAutonomous(me) && TurnIncomplete(degreeOfTurn, gyro))
 	{
 		float angle = gyro->GetCalibratedAngle();
 		float aError = degreeOfTurn - angle;
+		//float aError = degreeOfTurn + angle;
 		integral += aError;
 		differential = gyro->GetCalibratedRate();
 		float leftDriveTrain = kpError*(aError)/100; // multiply by constant
@@ -69,7 +72,7 @@ void GyroTurnAngle(IterativeRobot *me, MPU6050_I2C *gyro, RobotDrive *drivetrain
 		printf("left drive train2: %f\n", leftDriveTrain);
 		oldError = aError;
 		printf("differential: %f\n", differential);
-
+/*
 		if (degreeOfTurn > 0.0 && leftDriveTrain < minPower)
 		{
 			leftDriveTrain = minPower;
@@ -82,6 +85,7 @@ void GyroTurnAngle(IterativeRobot *me, MPU6050_I2C *gyro, RobotDrive *drivetrain
 		{
 			leftDriveTrain = -maxPower;
 		}
+		*/
 		printf("Gyro: %f, leftDT: %f\n",
 		angle,leftDriveTrain);
 		printf("__________________________________________________________\n\n");
@@ -120,22 +124,23 @@ void DriveStraight() //use CitrusPID here. can we also use it in gyroturn?
 }
 
 //TODO put this in somewhere that implies not just autonomous.
-void OpenFlower(IntakeSystem *frontIntake, IntakeSystem *backIntake, Solenoid *armPiston)
+void OpenFlower(IntakeSystem *frontIntake, IntakeSystem *backIntake, SecondaryRollerSystem *secondaryRollers)
 {
 	//Unfurling the flower
-	armPiston->Set(true);
+	secondaryRollers->Deploy();
 	backIntake->DeployIntake();
 	frontIntake->DeployIntake();
 }
 
 void ShootAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
-		ShooterSystem *shooter, Timer *timer, Solenoid *armPiston,
+		ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers,
 		IterativeRobot *me)
 {
+	OpenFlower(frontIntake,backIntake, secondaryRollers);
+	shooter->ShooterPrime(false);
+	Wait(0.5);
 	timer->Reset();
 	timer->Start();
-	shooter->ShooterPrime(false);
-	OpenFlower(frontIntake,backIntake, armPiston);
 	shooter->BeginShooterFire();
 	while(shooter->CurrentlyShooting() && enabledInAutonomous(me))
 	{
@@ -144,75 +149,81 @@ void ShootAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 }
 
 void ShootLoadFrontAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
-		ShooterSystem *shooter, Timer *timer, Solenoid *armPiston,
+		ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers,
 		IterativeRobot *me)
 {
+
+	OpenFlower(frontIntake,backIntake, secondaryRollers);
+	shooter->ShooterPrime(false);
+	Wait(0.5);
 	timer->Reset();
 	timer->Start();
-
-	shooter->ShooterPrime(false);
-	OpenFlower(frontIntake, backIntake, armPiston);
+	
 	shooter->BeginShooterFire();
 
-	while(shooter->CurrentlyShooting() && enabledInAutonomous(me) && timer->Get() < 2.0) //TODO time condition for intake?
+	while(shooter->CurrentlyShooting() && enabledInAutonomous(me) && timer->Get() < 1.0+1.0) //TODO time condition for intake?
 	{
 		shooter->ShooterFire();
 
-		if(timer->Get() > 0.5 )
+		if(timer->Get() > 1.0 )
 		{
 			frontIntake->FrontRollerLoad();
-			armPiston->Set(false);
-			frontIntake->RunSecondaryRollers();
+			secondaryRollers->Undeploy();
+			secondaryRollers->Run();
 		}
 	}
 	frontIntake->Stop();
-	frontIntake->StopSecondaryRollers();
+	secondaryRollers->Stop();
 }
 
 void LoadBackAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
-		ShooterSystem *shooter, Timer *timer, Solenoid *armPiston,
+		ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers,
 		IterativeRobot *me)
 {
 	shooter->ShooterPrime(true);
-	armPiston->Set(false);
+	secondaryRollers->Undeploy();
 	timer->Reset();
 	timer->Start();
-	while(enabledInAutonomous(me) && timer->Get() < 2.0) //TODO end condition
+	while(enabledInAutonomous(me) && timer->Get() < 1.4) //TODO end condition
 	{
 		backIntake->BackRollerLoad();
-		backIntake->RunSecondaryRollers();
+		secondaryRollers->Run();
 	}
 	backIntake->Stop();
-	backIntake->StopSecondaryRollers();
+	secondaryRollers->Stop();
 }
 
 void aubergine(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *timer,
-		Solenoid *armPiston, IterativeRobot *me)
+		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me)
 {
-	ShootLoadFrontAuto(frontIntake, backIntake, shooter, timer, armPiston, me);
+	ShootLoadFrontAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
 	
 	//Shoot again.
-	ShootAuto(frontIntake, backIntake, shooter, timer, armPiston, me);
+	ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
 	
 	//Switch to "short shot" and load.
-	LoadBackAuto(frontIntake, backIntake, shooter, timer, armPiston, me);
+	LoadBackAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
 	
 	//Shoot again.
-	ShootAuto(frontIntake, backIntake, shooter, timer, armPiston, me);
+	ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
 }
 
 void heliotrope(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *timer,
-		Timer *goalTimer, Solenoid *armPiston, MPU6050_I2C *gyro, \
+		Timer *goalTimer, SecondaryRollerSystem *secondaryRollers, MPU6050_I2C *gyro, 
 		IterativeRobot *me)
 {
+	OpenFlower(frontIntake, backIntake, secondaryRollers);
+	Wait(0.5);
 	goalTimer->Reset();
 	goalTimer->Start();
-	GyroTurnAngle(me, gyro, drivetrain,-10.0, 2.0, 0.02, 0.65, 0.0, 1.0); 
+	GyroTurnAngle(me, gyro, drivetrain,10.0, 2.0, 0.345, 0.55, 0.0, 1.0);//TODO constents 
 	//TODO incorporate hot goal stuff.
-	ShootLoadFrontAuto(frontIntake, backIntake, shooter, timer, armPiston, me);
-	GyroTurnAngle(me, gyro, drivetrain, 20.0, 2.0, 0.02, 0.65, 0.0, 1.0);
+	ShootLoadFrontAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
+	ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
+	
+	GyroTurnAngle(me, gyro, drivetrain, -20.0, 2.0, 0.17, 0.585, 0.0, 1.0);//TODO constents
 	while(enabledInAutonomous(me))
 	{
 		if(goalTimer->Get() > 4.5)
@@ -220,11 +231,37 @@ void heliotrope(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 			break;
 		}
 	}
-	ShootAuto(frontIntake, backIntake, shooter, timer, armPiston, me);
-
-	LoadBackAuto(frontIntake, backIntake, shooter, timer, armPiston, me);
 	
-	ShootAuto(frontIntake, backIntake, shooter, timer, armPiston, me);
+	LoadBackAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
+	
+	ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
+}
+
+void wisteria(IntakeSystem *frontIntake, IntakeSystem *backIntake,
+		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *timer,
+		SecondaryRollerSystem *secondaryRollers, MPU6050_I2C *gyro,
+		IterativeRobot *me)
+{
+	//goalTimer->Reset();
+	//goalTimer->Start();
+	OpenFlower(frontIntake, backIntake, secondaryRollers);
+	GyroTurnAngle(me, gyro, drivetrain,-10.0, 2.0, 0.04, 0.65, 0.0, 1.0); 
+	//TODO incorporate hot goal stuff.
+	//ShootLoadFrontAuto(frontIntake, backIntake, shooter, timer, armPiston, me);
+	//ShootAuto(frontIntake, backIntake, shooter, timer, armPiston, me);
+	
+	GyroTurnAngle(me, gyro, drivetrain, 20.0, 2.0, 0.04, 0.65, 0.0, 1.0);
+	/*while(enabledInAutonomous(me))
+	{
+		if(goalTimer->Get() > 4.5)
+		{
+			break;
+		}
+	}*/
+	
+	//LoadBackAuto(frontIntake, backIntake, shooter, timer, armPiston, me);
+	
+	//ShootAuto(frontIntake, backIntake, shooter, timer, armPiston, me);
 }
 
 #endif	

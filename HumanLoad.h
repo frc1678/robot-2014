@@ -1,12 +1,13 @@
 #include "WPILib.h"
 #include "CitrusButton.h"
+#include "SecondaryRollerSystem.h"
 
 //TODO incorporate into intake system to be able to use RunSecondaryRollers()
 
-void HPReceive(Talon *secondaryRollerA, Talon *secondaryRollerB,
+void HPReceive(SecondaryRollerSystem *secondaryRollers,
 		IntakeSystem* front, IntakeSystem* back)
 {	
-		front->RunSecondaryRollers();
+		secondaryRollers->Run();
 		front->Reverse();
 		back->Reverse();
 }
