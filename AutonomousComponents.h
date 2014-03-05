@@ -171,7 +171,7 @@ void LoadBackAutoPrep(ShooterSystem *shooter, Timer *timer, SecondaryRollerSyste
  
 bool LoadBackAutoConditions(Timer *timer, IterativeRobot *me)
 {
-	if(enabledInAutonomous(me) && timer->Get() < 2.0)//1.4)
+	if(enabledInAutonomous(me) && timer->Get() < 1.8)//1.4)
 	{
 		return true;
 	}
@@ -181,8 +181,8 @@ bool LoadBackAutoConditions(Timer *timer, IterativeRobot *me)
 void LoadBackAutoDriveInLoop(IntakeSystem *backIntake, SecondaryRollerSystem *secondaryRollers, RobotDrive *drivetrain, Timer *timer)
 {
 	backIntake->BackRollerLoad();
-	//secondaryRollers->Pulse();
-	secondaryRollers->Run();
+	secondaryRollers->Pulse();
+	//secondaryRollers->Run();
 	if(timer->Get() < 0.25)
 	{
 		drivetrain->TankDrive(-0.5, -0.5);
@@ -192,11 +192,12 @@ void LoadBackAutoDriveInLoop(IntakeSystem *backIntake, SecondaryRollerSystem *se
 void LoadBackAutoInLoop(IntakeSystem *backIntake, SecondaryRollerSystem *secondaryRollers, RobotDrive *drivetrain, Timer *timer)
 {
 	backIntake->BackRollerLoad();
-	//secondaryRollers->Pulse();
-	secondaryRollers->Run();
-	/*if(timer->Get() < 0.25)
+	secondaryRollers->Pulse();
+	//secondaryRollers->Run();
+	//backIntake->Pickup();
+	/*if(timer->Get() > 0.8 && backIntake->intakeDeployed)
 	{
-		drivetrain->TankDrive(-0.5, -0.5);
+		backIntake->UndeployIntake();
 	}*/
 }
 
@@ -206,7 +207,9 @@ void LoadBackAutoEnd(IntakeSystem *backIntake, IntakeSystem *frontIntake, Second
 	secondaryRollers->Stop();
 	shooter->ShooterPrime(false);
 	frontIntake->DeployIntake();
-	Wait(3.0);//(0.5);
+	backIntake->DeployIntake();
+	//OpenFlower(frontIntake, backIntake, secondaryRollers);
+	Wait(1.0);//(0.5);
 	printf("Primed!\n");
 }
 
@@ -303,15 +306,17 @@ void LoadFrontAutoEnd(SecondaryRollerSystem *secondaryRollers, IntakeSystem *fro
 	drivetrain->TankDrive(0.0, 0.0);
 }
 
-void LoadTopAuto(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake, IntakeSystem *backIntake, Timer *timer)
+void LoadTopAuto(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake, IntakeSystem *backIntake, Timer *timer, ShooterSystem *shooter)
 {
 	timer->Reset();
 	timer->Start();
 	
+	shooter->ShooterPrime(false); 
+	
 	//secondaryRollers->Deploy();
 	//frontIntake->DeployIntake();
 	//backIntake->DeployIntake();
-	while(timer->Get() < 0.8)//1.0)//0.4)
+	while(timer->Get() < 0.8)//0.4)
 	{
 		frontIntake->Reverse();
 		backIntake->Reverse();
@@ -321,9 +326,12 @@ void LoadTopAuto(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontInt
 	secondaryRollers->Stop();
 	frontIntake->Stop();
 	backIntake->Stop();
-	OpenFlower(frontIntake, backIntake, secondaryRollers);
+	frontIntake->DeployIntake();
+	backIntake->DeployIntake();
+	//OpenFlower(frontIntake, backIntake, secondaryRollers);
 	//secondaryRollers->Undeploy();
-	Wait(2.0);
+	//Wait(1.0);
+	Wait(1.5);
 }
 
 float ReceiveVisionProcessing(NetworkTable *table)
@@ -361,7 +369,7 @@ void DriveForwardAutoPrep(Timer *timer, Encoder *rightDT)
 
 bool DriveForwardAutoConditions(Timer *timer, IterativeRobot *me, Encoder *rightDT)
 {
-	if(timer->Get() < 2.0 && enabledInAutonomous(me) && rightDT->Get() < 1000)//3000)
+	if(timer->Get() < 2.0 && enabledInAutonomous(me) && rightDT->Get() > - 1000)//3000)
 	{
 		return true;
 	}

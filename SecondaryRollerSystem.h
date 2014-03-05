@@ -66,6 +66,29 @@ public:
 		}
 	}
 	
+	void RunSlow()
+	{
+		secondaryRollerA->Set(-0.6);
+		secondaryRollerB->Set(0.6);
+	}
+	
+	void PulseSlow()
+	{
+		float time = pulseTimer->Get();
+		if(time <0.1)
+		{
+			RunSlow();
+		}
+		else
+		{
+			Stop();
+			if(time >= 0.2)
+			{
+				pulseTimer->Reset();
+			}
+		}
+	}
+	
 	void Deploy()
 	{
 		armPiston->Set(true);

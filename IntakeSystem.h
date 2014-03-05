@@ -150,7 +150,7 @@ public:
 		}
 		else
 		{
-			printf("Proxy!\n");
+			//printf("Proxy!\n");
 			if(front)
 			{
 				FrontBumperHold();
@@ -165,12 +165,12 @@ public:
 	{
 		if(ProximityTriggered())
 		{
-			printf("sensor");
+			//printf("sensor");
 			sensorTriggered = true;
 		}
 		if(!sensorTriggered)
 		{
-			printf("running");
+			//printf("running");
 			BackRollerLoad();
 		}
 		else
@@ -184,10 +184,10 @@ public:
 			{
 				if(intakeDeployed)
 				{
-					printf("undeploy");
+					//printf("undeploy");
 					UndeployIntake();
 				}
-				printf("slow");
+				//printf("slow");
 				BackRollerSlow();
 			}
 		}
@@ -197,12 +197,12 @@ public:
 	{
 		if(ProximityTriggered())
 		{
-			printf("sensor");
+			//printf("sensor");
 			sensorTriggered = true;
 		}
 		if(!sensorTriggered)
 		{
-			printf("running");
+			//printf("running");
 			FrontRollerLoad(); 
 		}
 		else
@@ -216,10 +216,10 @@ public:
 			{
 				if(intakeDeployed)
 				{
-					printf("undeploy");
+					//printf("undeploy");
 					UndeployIntake();
 				}
-				printf("slow");
+				//printf("slow");
 				FrontRollerSlow(m_ds);
 			}
 		}

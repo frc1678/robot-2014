@@ -101,6 +101,7 @@ void runDrivetrain(float stickLeftInput, float stickRightInput, RobotDrive *driv
 void runDrivetrain(float stickLeftInput, float stickRightInput, RobotDrive *drivetrain)
 {
 	runDrivetrain(stickLeftInput, stickRightInput, drivetrain, 0.2);
+	//runDrivetrain(stickLeftInput, stickRightInput, drivetrain, 0.1);
 }
 
 #endif

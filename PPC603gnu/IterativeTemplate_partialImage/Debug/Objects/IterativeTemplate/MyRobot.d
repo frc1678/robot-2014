@@ -390,8 +390,8 @@ IterativeTemplate_partialImage/Debug/Objects/IterativeTemplate/MyRobot.o:  \
   C:/WindRiver/workspace/IterativeTemplate/HumanLoad.h \
   C:/WindRiver/workspace/IterativeTemplate/CitrusButton.h \
   C:/WindRiver/workspace/IterativeTemplate/SecondaryRollerSystem.h \
-  C:/WindRiver/workspace/IterativeTemplate/MPU6050_I2C.h \
   C:/WindRiver/workspace/IterativeTemplate/ShooterSystem.h \
+  C:/WindRiver/workspace/IterativeTemplate/MPU6050_I2C.h \
   C:/WindRiver/workspace/IterativeTemplate/AutonomousRoutines.h \
   C:/WindRiver/workspace/IterativeTemplate/CitrusPID.h \
   C:/WindRiver/vxworks-6.3/target/h/WPILib/WPIlib.h \
@@ -1179,9 +1179,9 @@ C:/WindRiver/workspace/IterativeTemplate/CitrusButton.h:
 
 C:/WindRiver/workspace/IterativeTemplate/SecondaryRollerSystem.h:
 
-C:/WindRiver/workspace/IterativeTemplate/MPU6050_I2C.h:
-
 C:/WindRiver/workspace/IterativeTemplate/ShooterSystem.h:
+
+C:/WindRiver/workspace/IterativeTemplate/MPU6050_I2C.h:
 
 C:/WindRiver/workspace/IterativeTemplate/AutonomousRoutines.h:
 

@@ -17,7 +17,7 @@ public:
 	bool camPrimedToShoot;
 	bool currentlyShooting;
 	int numTimesSensorTriggered; //within one shooting cycle
-	Timer *camDelayTimer;
+	//Timer *camDelayTimer;
 	Timer *deadzoneTimer;
 	
 	//ANY TIME YOU WANT TO DEPLOY INTAKES, MAKE A PARALLEL METHOD IN
@@ -37,7 +37,7 @@ public:
 		camPrimedToShoot = false;
 		currentlyShooting = false;
 		numTimesSensorTriggered = 0;
-		camDelayTimer = new Timer();
+		//camDelayTimer = new Timer();
 		deadzoneTimer = new Timer();
 	}
 
@@ -56,9 +56,13 @@ public:
 		{
 			StopTalons();
 		}
-		else
+		else if(!HallSensorTriggered())
 		{
 			RunTalons();
+		}
+		else
+		{
+			StopTalons();
 		}
 	}
 
@@ -107,7 +111,7 @@ public:
 		camPrimedToShoot = false;
 		currentlyShooting = false;
 		numTimesSensorTriggered = 0;
-		camDelayTimer->Reset();
+		//camDelayTimer->Reset();
 	}
 
 	//call beginShooterFire on an if statement of buttonclicked
@@ -132,7 +136,7 @@ public:
 		{
 			if (!camPrimedToShoot)
 			{
-				if(deadzoneTimer->Get() < 0.35)// ||deadzoneTimer->Get() > 0.75)
+				if(deadzoneTimer->Get() < 0.3)// ||deadzoneTimer->Get() > 0.75)
 				{
 					RunTalons();
 				}
@@ -142,14 +146,14 @@ public:
 					//RunTalons();
 				}
 				//If we've gotten all the way around
-				if (listenForSensor && HallSensorTriggered() && deadzoneTimer->Get() > 0.35) //when does listenForSensor become true
+				if (listenForSensor && HallSensorTriggered() && deadzoneTimer->Get() > 0.3) //when does listenForSensor become true
 				{
 					StopTalons();
 					listenForSensor = false;
 					camPrimedToShoot = true;
 					currentlyShooting = false;
-					camDelayTimer->Stop();
-					camDelayTimer->Reset();
+					//camDelayTimer->Stop();
+					//camDelayTimer->Reset();
 				}
 				if (HallSensorTriggered())
 				{

@@ -257,6 +257,7 @@ public:
 		leftEncoder->Start();
 		rightEncoder->Start();
 		gearDown->Set(true);
+		gearUp->Set(false);
 
 		//wisteria(frontIntake, backIntake, shooter, drivetrain, autoTimer, 
 		//	secondaryRollers, gyro, this);
@@ -361,7 +362,7 @@ public:
 	void TeleopPeriodic()
 	{
 		dataTable->PutNumber("Enabled", 1);
-		printf("Left Encoder: %d Right Encoder: %d", leftEncoder->Get(), rightEncoder->Get());
+		//printf("Left Encoder: %d Right Encoder: %d", leftEncoder->Get(), rightEncoder->Get());
 		//printf("Front prox: %d, back prox: %d\n", frontIntake->ProximityTriggered(), backIntake->ProximityTriggered());
 		//printf("2 Proximity sensor: %d\n", frontIntake->ProximityTriggered());
 
@@ -373,12 +374,15 @@ public:
 		 shotAligner
 		 }*/
 		//Shift.
-		if (b_gearToggle->ButtonClicked())
+		/*if (b_gearToggle->ButtonClicked())
 		{
 			gearToggle = !gearToggle;
 			gearUp->Set(!gearToggle);
 			gearDown->Set(gearToggle);
-		}
+		}*/
+
+		if (driverL->GetRawButton(2)){gearUp->Set(false);gearDown->Set(true);}
+		if(driverR->GetRawButton(2)){gearUp->Set(true);gearDown->Set(false);}
 
 		if (b_frontIntakePickup->ButtonPressed())
 		{
@@ -438,7 +442,7 @@ public:
 		}
 		else if (b_humanLoad->ButtonPressed())
 		{
-			HPReceive(secondaryRollers, frontIntake, backIntake);
+			HPReceive(secondaryRollers, frontIntake, backIntake, shooter);
 		}
 		else if (b_runSecondary->ButtonPressed())
 		{
@@ -519,6 +523,12 @@ public:
 			//frontIntake->UndeployIntake();
 			//backIntake->UndeployIntake();
 			secondaryRollers->Undeploy();
+			//shooter->currentlyShooting = false;
+		}
+		
+		if(driverR->GetRawButton(8) || driverR->GetRawButton(9))
+		{
+			shooter->currentlyShooting = false; 
 		}
 
 		shooter->ShooterFire();
@@ -540,9 +550,9 @@ public:
 		if (b_unfoldFlower->ButtonClicked()) //All solenoids down
 		{
 			//Deploy side arms
-			secondaryRollers->Deploy();
+			/*secondaryRollers->Deploy();
 			backIntake->DeployIntake();
-			frontIntake->DeployIntake();
+			frontIntake->DeployIntake();*/
 		}
 		if (b_foldFlower->ButtonClicked())
 		{
@@ -556,22 +566,26 @@ public:
 	void TestInit()
 	{
 		gyro->CalibrateRate();
+		leftEncoder->Reset();
+		rightEncoder->Reset();
+		leftEncoder->Start();
+		rightEncoder->Start();
 	}
 	void TestPeriodic()
 	{
 		driverStationLCD->Printf((DriverStationLCD::Line)0,1,
-				"Front Proximity Sensor: %f", frontIntake->ProximityTriggered());
+				"Front Proximity Sensor: %d", frontIntake->ProximityTriggered());
 		driverStationLCD->Printf((DriverStationLCD::Line)1,1,
-				"Back Proximity Sensor: %f", backIntake->ProximityTriggered());
+				"Back Proximity Sensor: %d", backIntake->ProximityTriggered());
 		driverStationLCD->Printf((DriverStationLCD::Line)2,1,
-				"Hall Sensor: %f", shooter->HallSensorTriggered());
+				"Hall Sensor: %d", shooter->HallSensorTriggered());
 		driverStationLCD->Printf((DriverStationLCD::Line)3,1,
-				"Left Encoder: %f", leftEncoder->Get());
+				"Left Encoder: %d", leftEncoder->Get());
 		driverStationLCD->Printf((DriverStationLCD::Line)4,1,
-				"Right Encoder: %f", rightEncoder->Get());
-		printf("gyro: %f, gyroRate: %f, gyroFiltRate: %f, gyroCalRate: %f\n",
+				"Right Encoder: %d", rightEncoder->Get());
+		/*printf("gyro: %f, gyroRate: %f, gyroFiltRate: %f, gyroCalRate: %f\n",
 				gyro->GetCalibratedAngle(), gyro->GetRate(),
-				gyro->GetFilteredRate(), gyro->GetCalibratedRate());
+				gyro->GetFilteredRate(), gyro->GetCalibratedRate());*/
 		if (b_frontIntakeDeployToggle->ButtonClicked())
 		{
 			frontIntake->ToggleIntake();
@@ -591,13 +605,13 @@ public:
 			printf("Secondarys Deployed: %d", secondaryRollers->DeployState());
 		}
 
-		if (b_testGearToggle->ButtonClicked())
+		/*if (b_testGearToggle->ButtonClicked())
 		{
 			gearToggle = !gearToggle;
 			gearUp->Set(!gearToggle);
 			gearDown->Set(gearToggle);
 			printf("Gear Toggle: %d", gearToggle);
-		}
+		}*/
 		if (b_toggleShotAlign->ButtonClicked())
 		{
 			if (shortShot)
@@ -613,6 +627,7 @@ public:
 				shooter->ShooterPrime(shortShot);
 			}
 		}
+		driverStationLCD->UpdateLCD();
 	}
 
 };
