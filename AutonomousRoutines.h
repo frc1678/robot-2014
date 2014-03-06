@@ -72,6 +72,31 @@ void TwoShot(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	ShootDriveForwardAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain, rightDT);
 }
 
+void TwoShotWithVision(IntakeSystem *frontIntake, IntakeSystem *backIntake,
+		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *timer,
+		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *rightDT, NetworkTable *table)
+{
+	LoadTopAuto(secondaryRollers, frontIntake, backIntake, timer, shooter);
+	if(ReceiveVisionProcessing(table) == 2.0)
+	{
+		printf("Go to the right");
+	}
+	else if(ReceiveVisionProcessing(table) == 1.0)
+	{
+		printf("Go to the left");
+	}
+	else
+	{
+		printf("This should NOT have happened!");
+	}
+	ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
+	//LoadBackAutoDrive(frontIntake, backIntake, shooter, timer, secondaryRollers, drivetrain, me);
+	LoadBackAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, drivetrain, me);
+	printf("Done driving!");
+	//ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
+	ShootDriveForwardAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain, rightDT);
+}
+
 void OneShot(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *timer,
 		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *rightDT)

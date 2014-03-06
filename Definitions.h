@@ -3,7 +3,6 @@
 
 //BUTTONS!!
 //Gear Toggle
-#define k_bGearToggle driverL, 2
 #define k_btestGearToggle manipulator, 3
 //Shot toggle
 #define k_bshotAlignLong driverL, 1
@@ -22,7 +21,6 @@
 #define k_blongShoot driverL, 1
 #define k_bshooterPrime manipulator, 11
 #define k_bpulseSecondary manipulator, 5
-#define k_bunfoldFlower driverR, 2
 #define k_bfoldFlower manipulator, 7
 #define k_barmPistonToggle manipulator, 10
 #define k_bkillShotL driverL, 3

@@ -12,6 +12,7 @@ public:
 	Solenoid *armPiston;
 	Timer *pulseTimer;
 	bool armsDown;
+	float rollerK;
 	
 	SecondaryRollerSystem(Talon *tsecondaryRollerA, Talon *tsecondaryRollerB, Solenoid *tarmPiston)
 	{
@@ -23,30 +24,40 @@ public:
 		pulseTimer = new Timer();
 		pulseTimer->Reset();
 		pulseTimer->Start();
+		rollerK = 1.0;
 	}
 	
 	void Run()
 	{
-		secondaryRollerA->Set(-1.0);
-		secondaryRollerB->Set(1.0);
+		secondaryRollerA->Set(-1.0 * rollerK);
+		secondaryRollerB->Set(1.0 * rollerK);
 	}
 	
 	void Reverse()
 	{
-		secondaryRollerA->Set(1.0);
-		secondaryRollerB->Set(-1.0);
+		secondaryRollerA->Set(1.0 * rollerK);
+		secondaryRollerB->Set(-1.0 * rollerK);
 	}
 	
 	void ReverseSlow()
 	{
-		secondaryRollerA->Set(0.5);
-		secondaryRollerB->Set(-0.5);
+		secondaryRollerA->Set(0.5 * rollerK);
+		secondaryRollerB->Set(-0.5 * rollerK);
 	}
 	
 	void Stop()
 	{
 		secondaryRollerA->Set(0.0);
 		secondaryRollerB->Set(0.0);
+		pulseTimer->Stop();
+	}
+	
+	void Reset()
+	{
+		armsDown = false;
+		secondaryRollerA->Set(0.0);
+		secondaryRollerB->Set(0.0);
+		pulseTimer->Reset();
 	}
 	
 	void Pulse()
@@ -68,8 +79,8 @@ public:
 	
 	void RunSlow()
 	{
-		secondaryRollerA->Set(-0.6);
-		secondaryRollerB->Set(0.6);
+		secondaryRollerA->Set(-0.6 * rollerK);
+		secondaryRollerB->Set(0.6 * rollerK);
 	}
 	
 	void PulseSlow()

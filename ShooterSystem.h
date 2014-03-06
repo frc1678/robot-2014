@@ -17,8 +17,10 @@ public:
 	bool camPrimedToShoot;
 	bool currentlyShooting;
 	int numTimesSensorTriggered; //within one shooting cycle
-	//Timer *camDelayTimer;
+	float shooterAK;
+	float shooterBK;
 	Timer *deadzoneTimer;
+	Timer *camDelayTimer;
 	
 	//ANY TIME YOU WANT TO DEPLOY INTAKES, MAKE A PARALLEL METHOD IN
 	//INTAKESYSTEM
@@ -37,8 +39,9 @@ public:
 		camPrimedToShoot = false;
 		currentlyShooting = false;
 		numTimesSensorTriggered = 0;
-		//camDelayTimer = new Timer();
 		deadzoneTimer = new Timer();
+		shooterAK = 1.0;
+		shooterBK = -1.0;
 	}
 
 	bool HallSensorTriggered()
@@ -63,7 +66,7 @@ public:
 		else
 		{
 			StopTalons();
-		}
+ 		}
 	}
 
 	void ShooterPrime(bool shortShot) //on manipulator
@@ -91,13 +94,13 @@ public:
 
 	void RunTalons()
 	{
-		camTalonA->Set(.75); //facing opposite directions
-		camTalonB->Set(-.75);
+		camTalonA->Set(.75 * shooterAK); //facing opposite directions
+		camTalonB->Set(.75 * shooterBK); //-
 	}
 	void ReverseTalons()
 	{
-		camTalonA->Set(-1.0);
-		camTalonB->Set(1.0);
+		camTalonA->Set(-1.0 * shooterAK); //-
+		camTalonB->Set(-1.0 * shooterBK);
 	}
 	void StopTalons()
 	{

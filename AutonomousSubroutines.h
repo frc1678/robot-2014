@@ -217,7 +217,7 @@ void ShortShootDriveForwardAuto(IntakeSystem *frontIntake, IntakeSystem *backInt
 		IterativeRobot *me, RobotDrive *drivetrain, Encoder *rightDT)
 {
 	ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, true);
-	bool driveInit = false;
+
 	timer->Start();
 	timer->Reset();
 

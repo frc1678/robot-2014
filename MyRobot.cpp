@@ -76,7 +76,8 @@ class Robot : public IterativeRobot
 	bool shotKillSwitch;
 
 	//Buttons!
-	CitrusButton *b_gearToggle;
+	CitrusButton *b_gearUp;
+	CitrusButton *b_gearDown;
 	CitrusButton *b_testGearToggle;
 	CitrusButton *b_shotAlignLong;
 	CitrusButton *b_shotAlignShort;
@@ -88,7 +89,6 @@ class Robot : public IterativeRobot
 	CitrusButton *b_longShoot;
 	CitrusButton *b_shooterPrime;
 	CitrusButton *b_pulseSecondary;
-	CitrusButton *b_unfoldFlower;
 	CitrusButton *b_foldFlower;
 	CitrusButton *b_reverseIntake;
 	CitrusButton *b_humanLoad;
@@ -97,6 +97,8 @@ class Robot : public IterativeRobot
 	CitrusButton *b_killShotL;
 	CitrusButton *b_killShotR;
 	CitrusButton *b_toggleShotAlign;
+	CitrusButton *b_notShooting;
+	CitrusButton *b_notShooting2;
 
 	//Network Tables
 	float Hthresh;
@@ -180,7 +182,8 @@ public:
 		//Buttons! 
 		//NOTE: ALWAYS ADD NEW BUTTON TO UpdateAllButtons()
 		//Gearshift buttons 
-		b_gearToggle = new CitrusButton(k_bGearToggle);
+		b_gearUp = new CitrusButton (driverL, 2);
+		b_gearDown = new CitrusButton (driverR, 2);
 		b_testGearToggle = new CitrusButton(k_btestGearToggle);
 		//Intake buttons
 		b_frontIntakePickup = new CitrusButton (k_bfrontIntakePickup);
@@ -197,18 +200,20 @@ public:
 		b_shotAlignShort = new CitrusButton(k_bshotAlignShort);
 		b_shooterPrime = new CitrusButton (k_bshooterPrime);
 		b_pulseSecondary = new CitrusButton (k_bpulseSecondary);
-		b_unfoldFlower = new CitrusButton (k_bunfoldFlower);
 		b_foldFlower = new CitrusButton (k_bfoldFlower);
 		b_armPistonToggle = new CitrusButton (k_barmPistonToggle);
 		b_killShotL = new CitrusButton (k_bkillShotL);
 		b_killShotR = new CitrusButton (k_bkillShotR);
-		b_toggleShotAlign = new CitrusButton (k_btoggleShotAlign);	
+		b_toggleShotAlign = new CitrusButton (k_btoggleShotAlign);
+		b_notShooting = new CitrusButton (driverR, 8);
+		b_notShooting2 = new CitrusButton (driverR, 9);
 	}
 
 	void UpdateAllButtons()
 	{
 		//gearshift
-		b_gearToggle->Update();
+		b_gearUp->Update();
+		b_gearDown->Update();
 		b_testGearToggle->Update();
 		b_shotAlignLong->Update();
 		b_shotAlignShort->Update();
@@ -225,12 +230,13 @@ public:
 		b_longShoot->Update();
 		b_shooterPrime->Update();
 		b_pulseSecondary->Update();
-		b_unfoldFlower->Update();
 		b_foldFlower->Update();
 		b_armPistonToggle->Update();
 		b_killShotL->Update();
 		b_killShotR->Update();
 		b_toggleShotAlign->Update();
+		b_notShooting->Update();
+		b_notShooting2->Update();
 	}
 
 	void DisabledInit()
@@ -358,6 +364,10 @@ public:
 
 		//Photo to compare
 		table->PutNumber("Enabled", 1);
+		
+		//Stop Timers
+		autoTimer->Stop();
+		turnTimer->Stop();
 	}
 	void TeleopPeriodic()
 	{
@@ -381,8 +391,16 @@ public:
 			gearDown->Set(gearToggle);
 		}*/
 
-		if (driverL->GetRawButton(2)){gearUp->Set(false);gearDown->Set(true);}
-		if(driverR->GetRawButton(2)){gearUp->Set(true);gearDown->Set(false);}
+		if (b_gearUp->ButtonClicked())
+			{
+				gearUp->Set(false);
+				gearDown->Set(true);
+			}
+		if(b_gearDown->ButtonClicked())
+		{
+			gearUp->Set(true);
+			gearDown->Set(false);
+		}
 
 		if (b_frontIntakePickup->ButtonPressed())
 		{
@@ -526,7 +544,7 @@ public:
 			//shooter->currentlyShooting = false;
 		}
 		
-		if(driverR->GetRawButton(8) || driverR->GetRawButton(9))
+		if(b_notShooting->ButtonPressed() || b_notShooting2->ButtonPressed())
 		{
 			shooter->currentlyShooting = false; 
 		}
@@ -547,13 +565,6 @@ public:
 			secondaryRollers->Pulse();
 		}
 
-		if (b_unfoldFlower->ButtonClicked()) //All solenoids down
-		{
-			//Deploy side arms
-			/*secondaryRollers->Deploy();
-			backIntake->DeployIntake();
-			frontIntake->DeployIntake();*/
-		}
 		if (b_foldFlower->ButtonClicked())
 		{
 			secondaryRollers->Undeploy();
