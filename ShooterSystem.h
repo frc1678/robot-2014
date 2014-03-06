@@ -1,5 +1,8 @@
 #include "WPILib.h"
 
+#ifndef SHOOTERSYSTEM_H
+#define SHOOTERSYSTEM_H
+
 class ShooterSystem
 {
 public:
@@ -206,3 +209,6 @@ public:
 		return currentlyShooting;
 	}
 };
+
+#endif
+

@@ -1,6 +1,9 @@
 #include "WPILib.h"
 #include <math.h>
 
+#ifndef DRIVETRAIN_H
+#define DRIVETRAIN_H
+
 float oldStickLeftInput = 0.0;
 float oldStickRightInput = 0.0;
 float useleft = 0.0;
@@ -92,10 +95,12 @@ void runDrivetrain(float stickLeftInput, float stickRightInput, RobotDrive *driv
 	deadzone();
 	drivetrain->TankDrive(useleft, useright); 
 	// Inverted and negated the values to make the back of the robot the "front"
-	//printf("left: %f, right; %f\n", useleft, useright);
+	printf("left: %f, right; %f\n", useleft, useright);
 }
 
 void runDrivetrain(float stickLeftInput, float stickRightInput, RobotDrive *drivetrain)
 {
 	runDrivetrain(stickLeftInput, stickRightInput, drivetrain, 0.2);
 }
+
+#endif

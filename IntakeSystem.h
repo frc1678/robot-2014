@@ -36,7 +36,7 @@ public:
 		intakeSensor = new DigitalInput(sensorPort);
 		intakeUp = tIntakeUp;
 
-		front = true;
+		front = true; 
 		readyToPickup = true;
 		sensorTriggered = false;
 		pickupTimer = new Timer();
@@ -46,7 +46,9 @@ public:
 	//then add to Pickup.
 	void Reverse() //Only call inside an if statement.
 	{
-		intakeRoller->Set(-1.0);
+		//TODO When called with HumanLoad, front intake runs in pickup since 
+		//roller motors are set backward
+		intakeRoller->Set(-1.0); 
 	}
 	void Stop()
 	{
@@ -75,6 +77,11 @@ public:
 		intakeDeployed = !intakeDeployed;
 		intakeUp->Set(intakeDeployed);
 	}
+	
+	bool DeployState()
+	{
+		return intakeDeployed;
+	}
 
 	//Internal: front roller grabbing onto ball, front roller holding ball, back roller grabbing onto ball, back roller holding ball, front roller reverse, back roller reverse
 	void FrontRollerLoad()
@@ -85,7 +92,7 @@ public:
 
 	void BackRollerLoad()
 	{
-		intakeRoller->Set(1.0); //TODO numbers
+		intakeRoller->Set(1.0); //TODO numbers. Flipping for Fembots
 		//intakeRoller->Set(stick->GetY());
 	}
 
@@ -99,6 +106,14 @@ public:
 		intakeRoller->Set(0.0); //TODO numbers.
 	}
 	
+	void FrontRollerAutoSlow()
+	{
+		intakeRoller->Set(0.1);
+	}
+	void BackRollerAutoSlow()
+	{
+		intakeRoller->Set(0.1);
+	}
 	
 	bool ProximityTriggered()
 	{
@@ -140,11 +155,11 @@ public:
 	}
 	void FrontRollerSlow(DriverStation *m_ds)
 	{
-		intakeRoller->Set(m_ds->GetAnalogIn(3));
+		intakeRoller->Set(-0.5);
 	}
 	void BackRollerSlow()
 	{
-		intakeRoller->Set(0.5);
+		intakeRoller->Set(-0.5);
 	}
 	
 	void Pickup(Joystick * stick, DriverStation *m_ds)

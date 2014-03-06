@@ -27,14 +27,14 @@ public:
 	
 	void Run()
 	{
-		secondaryRollerA->Set(1.0);
-		secondaryRollerB->Set(-1.0);
+		secondaryRollerA->Set(-1.0);
+		secondaryRollerB->Set(1.0);
 	}
 	
 	void Reverse()
 	{
-		secondaryRollerA->Set(-1.0);
-		secondaryRollerB->Set(1.0);
+		secondaryRollerA->Set(1.0);
+		secondaryRollerB->Set(-1.0);
 	}
 	
 	void Stop()
@@ -46,14 +46,14 @@ public:
 	void Pulse()
 	{
 		float time = pulseTimer->Get();
-		if(time <0.4)
+		if(time <0.1)
 		{
 			Run();
 		}
 		else
 		{
 			Stop();
-			if(time >= 0.8)
+			if(time >= 0.2)
 			{
 				pulseTimer->Reset();
 			}
@@ -76,6 +76,11 @@ public:
 	{
 		armsDown = !armsDown;
 		armPiston->Set(armsDown);
+	}
+	
+	bool DeployState()
+	{
+		return armsDown;
 	}
 	
 };

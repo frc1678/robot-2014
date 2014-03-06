@@ -392,9 +392,12 @@ IterativeTemplate_partialImage/Debug/Objects/IterativeTemplate/MyRobot.o:  \
   C:/WindRiver/workspace/IterativeTemplate/SecondaryRollerSystem.h \
   C:/WindRiver/workspace/IterativeTemplate/MPU6050_I2C.h \
   C:/WindRiver/workspace/IterativeTemplate/ShooterSystem.h \
-  C:/WindRiver/workspace/IterativeTemplate/Autonomous.h \
+  C:/WindRiver/workspace/IterativeTemplate/AutonomousRoutines.h \
   C:/WindRiver/workspace/IterativeTemplate/CitrusPID.h \
-  C:/WindRiver/vxworks-6.3/target/h/WPILib/WPIlib.h
+  C:/WindRiver/vxworks-6.3/target/h/WPILib/WPIlib.h \
+  C:/WindRiver/workspace/IterativeTemplate/AutonomousSubroutines.h \
+  C:/WindRiver/workspace/IterativeTemplate/AutonomousComponents.h \
+  C:/WindRiver/workspace/IterativeTemplate/Definitions.h
 
 C:/WindRiver/vxworks-6.3/target/h/WPILib/WPILib.h:
 
@@ -1180,8 +1183,14 @@ C:/WindRiver/workspace/IterativeTemplate/MPU6050_I2C.h:
 
 C:/WindRiver/workspace/IterativeTemplate/ShooterSystem.h:
 
-C:/WindRiver/workspace/IterativeTemplate/Autonomous.h:
+C:/WindRiver/workspace/IterativeTemplate/AutonomousRoutines.h:
 
 C:/WindRiver/workspace/IterativeTemplate/CitrusPID.h:
 
 C:/WindRiver/vxworks-6.3/target/h/WPILib/WPIlib.h:
+
+C:/WindRiver/workspace/IterativeTemplate/AutonomousSubroutines.h:
+
+C:/WindRiver/workspace/IterativeTemplate/AutonomousComponents.h:
+
+C:/WindRiver/workspace/IterativeTemplate/Definitions.h:

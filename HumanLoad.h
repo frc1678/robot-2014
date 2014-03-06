@@ -4,6 +4,9 @@
 
 //TODO incorporate into intake system to be able to use RunSecondaryRollers()
 
+#ifndef HUMANLOAD_H
+#define HUMANLOAD_H
+
 void HPReceive(SecondaryRollerSystem *secondaryRollers,
 		IntakeSystem* front, IntakeSystem* back)
 {	
@@ -11,3 +14,5 @@ void HPReceive(SecondaryRollerSystem *secondaryRollers,
 		front->Reverse();
 		back->Reverse();
 }
+
+#endif
