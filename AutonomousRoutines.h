@@ -84,42 +84,47 @@ void CheckVision(IterativeRobot *me, NetworkTable *table)
 		printf("Go to the left\n");
 	}
 }
-
+void LoadBackWhileTurning(IntakeSystem *frontIntake, IntakeSystem *backIntake,
+		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *timer,
+		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me,
+		Encoder *leftDT, Encoder *rightDT, MPU6050_I2C *gyro, NetworkTable *table)
+{
+	
+}
 void TwoShotWithVision(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *timer,
-		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *rightDT, MPU6050_I2C *gyro, NetworkTable *table)
+		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *leftDT, Encoder *rightDT, MPU6050_I2C *gyro, NetworkTable *table)
 {
-	//LoadTopAuto(secondaryRollers, frontIntake, backIntake, timer, shooter);
-	Wait(1.0);
+	LoadTopAuto(secondaryRollers, frontIntake, backIntake, timer, shooter);
 	float visionResult = ReceiveVisionProcessing(table);
 	if(visionResult == 2.0)
 	{
 		printf("Go to the right");
-		GyroTurn(me, gyro, drivetrain, -10.0); //Positive is anticlock 
+		SpinAutoClock(52, drivetrain, leftDT, rightDT, me);
 	}
 	else if(visionResult == 1.0)
 	{
 		printf("Go to the left");
-		GyroTurn(me, gyro, drivetrain, 10.0);
+		SpinAutoAnti(52, drivetrain, leftDT, rightDT, me);
 	}
 	else
 	{
 		printf("This should NOT have happened!");
 	}
 	//printf("Teenage girls!");
-	//ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
+	ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
 	//TODO load back while turning.
-	//LoadBackAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, drivetrain, me);
+	LoadBackAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, drivetrain, me);
 	Wait(1.0);
 	if(visionResult == 2.0)
 	{
-		GyroTurn(me, gyro, drivetrain, 10.0); 
+		SpinAutoAnti(104, drivetrain, leftDT, rightDT, me); 
 	}
 	else if(visionResult == 1.0)
 	{
-		GyroTurn(me, gyro, drivetrain, -10.0);
+		SpinAutoClock(104, drivetrain, leftDT, rightDT, me);
 	}
-	//ShootDriveForwardAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain, rightDT);
+	ShootDriveForwardAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain, rightDT);
 }
 
 void OneShot(IntakeSystem *frontIntake, IntakeSystem *backIntake,

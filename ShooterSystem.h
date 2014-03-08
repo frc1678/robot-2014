@@ -21,6 +21,7 @@ public:
 	float shooterBK;
 	Timer *deadzoneTimer;
 	Timer *camDelayTimer;
+	double shooterWait;
 	
 	//ANY TIME YOU WANT TO DEPLOY INTAKES, MAKE A PARALLEL METHOD IN
 	//INTAKESYSTEM
@@ -41,7 +42,8 @@ public:
 		numTimesSensorTriggered = 0;
 		deadzoneTimer = new Timer();
 		shooterAK = 1.0;
-		shooterBK = -1.0;
+		shooterBK = 1.0;
+		shooterWait = 0.15;
 	}
 
 	bool HallSensorTriggered()
@@ -55,7 +57,7 @@ public:
 
 	void DeadzoneDelayRun()
 	{
-		if (deadzoneTimer->Get() < 0.7 && !HallSensorTriggered())//(camDelayTimer->Get() < 0.5)
+		if (deadzoneTimer->Get() < shooterWait + 0.4 && !HallSensorTriggered())//(camDelayTimer->Get() < 0.5)
 		{
 			StopTalons();
 		}
@@ -94,12 +96,12 @@ public:
 
 	void RunTalons()
 	{
-		camTalonA->Set(.75 * shooterAK); //facing opposite directions
-		camTalonB->Set(.75 * shooterBK); //-
+		camTalonA->Set(.75 * shooterAK);
+		camTalonB->Set(.75 * shooterBK); 
 	}
 	void ReverseTalons()
 	{
-		camTalonA->Set(-1.0 * shooterAK); //-
+		camTalonA->Set(-1.0 * shooterAK);
 		camTalonB->Set(-1.0 * shooterBK);
 	}
 	void StopTalons()
@@ -139,7 +141,7 @@ public:
 		{
 			if (!camPrimedToShoot)
 			{
-				if(deadzoneTimer->Get() < 0.3)// ||deadzoneTimer->Get() > 0.75)
+				if(deadzoneTimer->Get() < shooterWait)// ||deadzoneTimer->Get() > 0.75)
 				{
 					RunTalons();
 				}
@@ -149,7 +151,7 @@ public:
 					//RunTalons();
 				}
 				//If we've gotten all the way around
-				if (listenForSensor && HallSensorTriggered() && deadzoneTimer->Get() > 0.3) //when does listenForSensor become true
+				if (listenForSensor && HallSensorTriggered() && deadzoneTimer->Get() > shooterWait) //when does listenForSensor become true
 				{
 					StopTalons();
 					listenForSensor = false;

@@ -100,16 +100,6 @@ class Robot : public IterativeRobot
 	CitrusButton *b_notShooting;
 	CitrusButton *b_notShooting2;
 
-	//Network Tables
-	/*float Hthresh;
-	float Sthresh;
-	float Vthresh;
-	float Hthreshlow;
-	float Sthreshlow;
-	float Vthreshlow;
-	float startSide;
-	float autoDirection;*/
-
 public:
 	Robot()
 	{
@@ -158,9 +148,7 @@ public:
 		autoTimer = new Timer();
 		turnTimer = new Timer(); //starts && resets when we start gyroTurnAngle 
 		shotTimer = new Timer();
-		//Motors are on the wrong side of the intakes than we were expecting. 
-		//They're on the opposite sides than before, thus everything was backwards
-		//Ask Mike about it, but it is different from the other robot
+		
 		frontIntake = new IntakeSystem (6, secondaryRollerA, secondaryRollerB, 3,
 				frontIntakeDeploy, true); //TODO was talon port 6. Swicthed for Fembots
 		backIntake = new IntakeSystem (1, secondaryRollerA, secondaryRollerB, 2,
@@ -179,7 +167,7 @@ public:
 		shortShot = false;
 		shotKillSwitch = false;
 
-		//Buttons! 
+		//Buttons 
 		//NOTE: ALWAYS ADD NEW BUTTON TO UpdateAllButtons()
 		//Gearshift buttons 
 		b_gearUp = new CitrusButton (driverL, 2);
@@ -244,8 +232,6 @@ public:
 		//TODO return for camera work
 		table->PutNumber("Enabled", 0);
 		driverStationLCD->Clear();
-		//leftEncoder->Stop();
-		//rightEncoder->Stop();
 		drivetrain->TankDrive(0.0, 0.0);
 		frontIntakeDeploy->Set(frontIntake->DeployState());
 		backIntakeDeploy->Set(backIntake->DeployState());
@@ -264,18 +250,10 @@ public:
 		rightEncoder->Start();
 		gearDown->Set(true);
 		gearUp->Set(false);
-
-		//wisteria(frontIntake, backIntake, shooter, drivetrain, autoTimer, 
-		//	secondaryRollers, gyro, this);
-		TwoShotWithVision(frontIntake, backIntake, shooter, drivetrain, autoTimer, 
-				secondaryRollers, this, rightEncoder, gyro, table);
-		//Wait(1.0);
-		//CheckVision(this, table);
 		
 		if (driverStation->GetDigitalIn(1))//Three ball auto starting on the left
-		{ //TODO REDUCE TIME
-			//startSide = 1;
-			//table->PutNumber("Start Side", startSide);
+		{ 
+			//TODO REDUCE TIME
 			table->PutNumber("Enabled", 1);
 			//autoDirection = ReceiveVisionProcessing(table);
 			ThreeBallVisionRight(frontIntake, backIntake, shooter, drivetrain,
@@ -283,19 +261,14 @@ public:
 		}
 		else if (driverStation->GetDigitalIn(2))
 		{
-			//startSide = 2;
-			//table->PutNumber("Start Side", startSide);
-			//table->PutNumber("Enabled", 1);
-			//autoDirection = ReceiveVisionProcessing(table);
 			//TODO Right then left
 			heliotrope(frontIntake, backIntake, shooter, drivetrain, autoTimer,
 					turnTimer, secondaryRollers, gyro, 1.0, this);
 		}
 		else if (driverStation->GetDigitalIn(3))
 		{
-			//TODO Left then right
-			heliotrope(frontIntake, backIntake, shooter, drivetrain, autoTimer,
-					turnTimer, secondaryRollers, gyro, 2.0, this);
+			TwoShotWithVision(frontIntake, backIntake, shooter, drivetrain, autoTimer, secondaryRollers,
+					this, leftEncoder, rightEncoder, gyro, table);
 		}
 		else if (driverStation->GetDigitalIn(4))
 		{
@@ -311,17 +284,10 @@ public:
 		}
 		else if (driverStation->GetDigitalIn(6))
 		{
-
-			//wisteria(frontIntake, backIntake, shooter, drivetrain, autoTimer,
-			//		secondaryRollers, gyro, this);
-			//ShootThreeAndDriveV2(frontIntake, backIntake, shooter, drivetrain,
-			//		autoTimer, secondaryRollers, this, rightEncoder);
 			TwoShot(frontIntake, backIntake, shooter, drivetrain, autoTimer, secondaryRollers, this, rightEncoder);
 		}
 		else if (driverStation->GetDigitalIn(7))
 		{
-			//ShootTwoThenOne(frontIntake, backIntake, shooter, drivetrain,
-			//		autoTimer, turnTimer, secondaryRollers, this, rightEncoder);
 			OneShot(frontIntake, backIntake, shooter, drivetrain, autoTimer, secondaryRollers, this, rightEncoder);
 			
 		}
@@ -371,17 +337,7 @@ public:
 
 		//Drive.
 		runDrivetrain(driverL->GetY(), driverR->GetY(), drivetrain);
-		/*if(manipulator->GetRawButton(12))
-		 {
-		 shotAligner
-		 }*/
-		//Shift.
-		/*if (b_gearToggle->ButtonClicked())
-		{
-			gearToggle = !gearToggle;
-			gearUp->Set(!gearToggle);
-			gearDown->Set(gearToggle);
-		}*/
+
 
 		if (b_gearUp->ButtonClicked())
 			{
@@ -397,14 +353,11 @@ public:
 		if (b_frontIntakePickup->ButtonPressed())
 		{
 			//intakes to hold the ball using proxy sensors
-			//frontIntake->Hold(manipulator);
 			if (b_frontIntakePickup->ButtonClicked()
 					&& manipulator->GetRawAxis(5) == 0.0)
 			{
 				frontIntake->DeployIntake();
 			}
-			//secondaryRollerA->Set(1.0);
-			//secondaryRollerB->Set(-1.0);
 			if (manipulator->GetRawAxis(5)!=0.0)
 			{
 				frontIntake->FrontRollerLoad();
@@ -441,7 +394,6 @@ public:
 		else if (b_reverseIntake->ButtonPressed())
 		{
 			//intake reverses
-			//frontIntake->Reverse();
 			if (b_reverseIntake->ButtonClicked())
 			{
 				shortShot = true;
@@ -479,8 +431,6 @@ public:
 			backIntake->ToggleIntake();
 			secondaryRollers->Undeploy();
 		}
-
-		//armPistonToggle = Toggle(b_ArmPistonToggle, armPistonToggle);
 		//Arm piston toggle
 		if (b_armPistonToggle->ButtonClicked())
 		{
@@ -530,10 +480,7 @@ public:
 		if (b_killShotL->ButtonClicked() || b_killShotR->ButtonClicked())
 		{
 			shotKillSwitch = true;
-			//frontIntake->UndeployIntake();
-			//backIntake->UndeployIntake();
 			secondaryRollers->Undeploy();
-			//shooter->currentlyShooting = false;
 		}
 		
 		if(b_notShooting->ButtonPressed() || b_notShooting2->ButtonPressed())
@@ -607,14 +554,6 @@ public:
 			secondaryRollers->ToggleArms();
 			printf("Secondarys Deployed: %d", secondaryRollers->DeployState());
 		}
-
-		/*if (b_testGearToggle->ButtonClicked())
-		{
-			gearToggle = !gearToggle;
-			gearUp->Set(!gearToggle);
-			gearDown->Set(gearToggle);
-			printf("Gear Toggle: %d", gearToggle);
-		}*/
 		if (b_toggleShotAlign->ButtonClicked())
 		{
 			if (shortShot)

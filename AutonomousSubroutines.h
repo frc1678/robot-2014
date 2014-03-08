@@ -247,7 +247,7 @@ void GyroTurnLoadBackAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	while (GyroTurnAngleConditions(gyro, degreeOfTurn, me) && LoadBackAutoConditions(timer, me))
 	{
 		GyroTurnAngleInLoop(me, gyro, drivetrain,degreeOfTurn, kpError, kiError,
-		kdError, integral, differential, oldError);		
+		kdError, integral, differential, oldError);
 	}
 
 	GyroTurnAngleEnd(drivetrain);
