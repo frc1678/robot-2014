@@ -59,8 +59,6 @@ public:
 		pickupTimer->Reset();
 	}
 	
-	
-	
 	//USE THESE TWO WHENEVER YOU WANT TO DEPLOY THE INTAKES.
 	void DeployIntake ()
 	{
@@ -126,6 +124,16 @@ public:
 			return true;
 		}
 	}
+	
+	void FrontRollerSlow(DriverStation *m_ds)
+	{
+		intakeRoller->Set(0.5);
+	}
+	void BackRollerSlow()
+	{
+		intakeRoller->Set(0.5);
+	}
+	
 
 	void Hold()
 	{
@@ -153,15 +161,6 @@ public:
 			}
 		}
 	}
-	void FrontRollerSlow(DriverStation *m_ds)
-	{
-		intakeRoller->Set(-0.5);
-	}
-	void BackRollerSlow()
-	{
-		intakeRoller->Set(-0.5);
-	}
-	
 	void Pickup(Joystick * stick, DriverStation *m_ds)
 	{
 		if(ProximityTriggered())

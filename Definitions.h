@@ -4,6 +4,7 @@
 //BUTTONS!!
 //Gear Toggle
 #define k_bGearToggle driverL, 2
+#define k_btestGearToggle manipulator, 3
 //Shot toggle
 #define k_bshotAlignLong driverL, 1
 #define k_bshotAlignShort driverR, 1
@@ -26,6 +27,7 @@
 #define k_barmPistonToggle manipulator, 10
 #define k_bkillShotL driverL, 3
 #define k_bkillShotR driverR, 3
+#define k_btoggleShotAlign manipulator, 7
 		
 #endif //DEFINITIONS_H
 

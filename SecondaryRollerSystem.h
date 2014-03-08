@@ -37,6 +37,12 @@ public:
 		secondaryRollerB->Set(-1.0);
 	}
 	
+	void ReverseSlow()
+	{
+		secondaryRollerA->Set(0.5);
+		secondaryRollerB->Set(-0.5);
+	}
+	
 	void Stop()
 	{
 		secondaryRollerA->Set(0.0);

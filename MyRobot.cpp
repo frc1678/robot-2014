@@ -66,7 +66,7 @@ class Robot : public IterativeRobot
 	bool gearToggle;
 	bool frontIntakeToggle;
 	bool backIntakeToggle;
-	
+
 	//Arm piston.
 	bool armPistonToggle;
 
@@ -77,6 +77,7 @@ class Robot : public IterativeRobot
 
 	//Buttons!
 	CitrusButton *b_gearToggle;
+	CitrusButton *b_testGearToggle;
 	CitrusButton *b_shotAlignLong;
 	CitrusButton *b_shotAlignShort;
 	CitrusButton *b_frontIntakePickup;
@@ -95,7 +96,7 @@ class Robot : public IterativeRobot
 	CitrusButton *b_runSecondary;
 	CitrusButton *b_killShotL;
 	CitrusButton *b_killShotR;
-	
+	CitrusButton *b_toggleShotAlign;
 
 	//Network Tables
 	float Hthresh;
@@ -124,7 +125,7 @@ public:
 		dataTable->PutNumber("kpError", 2); //use 0.8 or 2
 		dataTable->PutNumber("kiError", 0.023); //use 0.027 or 0.023
 		dataTable->PutNumber("kdError", 0.5); //use 0.078 or 0.5
-		
+
 		table = NetworkTable::GetTable("datatable");
 		table->PutNumber("Enabled", 0);
 
@@ -162,13 +163,13 @@ public:
 				frontIntakeDeploy, true); //TODO was talon port 6. Swicthed for Fembots
 		backIntake = new IntakeSystem (1, secondaryRollerA, secondaryRollerB, 2,
 				backIntakeDeploy, false); //TODO was talon port 1. Switched for fembots
-		
+
 		gearToggle = false;
 		frontIntakeToggle = false;
 		backIntakeToggle = false;
 
 		armPistonToggle = false;
-		
+
 		//Shooter
 		shooter = new ShooterSystem(2, 5, 8, shotAlignerUp, shotAlignerDown,
 				armPiston);
@@ -180,6 +181,7 @@ public:
 		//NOTE: ALWAYS ADD NEW BUTTON TO UpdateAllButtons()
 		//Gearshift buttons 
 		b_gearToggle = new CitrusButton(k_bGearToggle);
+		b_testGearToggle = new CitrusButton(k_btestGearToggle);
 		//Intake buttons
 		b_frontIntakePickup = new CitrusButton (k_bfrontIntakePickup);
 		b_backIntakePickup = new CitrusButton (k_bbackIntakePickup);
@@ -200,12 +202,14 @@ public:
 		b_armPistonToggle = new CitrusButton (k_barmPistonToggle);
 		b_killShotL = new CitrusButton (k_bkillShotL);
 		b_killShotR = new CitrusButton (k_bkillShotR);
+		b_toggleShotAlign = new CitrusButton (k_btoggleShotAlign);	
 	}
 
 	void UpdateAllButtons()
 	{
 		//gearshift
 		b_gearToggle->Update();
+		b_testGearToggle->Update();
 		b_shotAlignLong->Update();
 		b_shotAlignShort->Update();
 		//intake
@@ -226,6 +230,7 @@ public:
 		b_armPistonToggle->Update();
 		b_killShotL->Update();
 		b_killShotR->Update();
+		b_toggleShotAlign->Update();
 	}
 
 	void DisabledInit()
@@ -252,18 +257,18 @@ public:
 		leftEncoder->Start();
 		rightEncoder->Start();
 		gearDown->Set(true);
- 
+
 		//wisteria(frontIntake, backIntake, shooter, drivetrain, autoTimer, 
 		//	secondaryRollers, gyro, this);
 		if (driverStation->GetDigitalIn(1))//Three ball auto starting on the left
-		{	//TODO REDUCE TIME
+		{ //TODO REDUCE TIME
 			startSide = 1;
 			table->PutNumber("Start Side", startSide);
 			table->PutNumber("Enabled", 1);
 			//autoDirection = ReceiveVisionProcessing(table);
-			ThreeBallVisionRight(frontIntake, backIntake, shooter, drivetrain, autoTimer, 
-					turnTimer, secondaryRollers, gyro, this, table);
-		}   
+			ThreeBallVisionRight(frontIntake, backIntake, shooter, drivetrain,
+					autoTimer, turnTimer, secondaryRollers, gyro, this, table);
+		}
 		else if (driverStation->GetDigitalIn(2))
 		{
 			//startSide = 2;
@@ -289,22 +294,22 @@ public:
 		}
 		else if (driverStation->GetDigitalIn(5))//Three ball auto starting on a side
 		{
-			ShootThreeAndDrive(frontIntake, backIntake, shooter, drivetrain, autoTimer, 
-					secondaryRollers, this);
+			ShootThreeAndDrive(frontIntake, backIntake, shooter, drivetrain,
+					autoTimer, secondaryRollers, this);
 		}
 		else if (driverStation->GetDigitalIn(6))
 		{
-		 
-			wisteria(frontIntake, backIntake, shooter, drivetrain, autoTimer, 
+
+			wisteria(frontIntake, backIntake, shooter, drivetrain, autoTimer,
 					secondaryRollers, gyro, this);
 		}
 		else if (driverStation->GetDigitalIn(7))
 		{
-			ShootTwoThenOne(frontIntake, backIntake, shooter, drivetrain, autoTimer, turnTimer,
-					secondaryRollers, this);
+			ShootTwoThenOne(frontIntake, backIntake, shooter, drivetrain,
+					autoTimer, turnTimer, secondaryRollers, this);
 		}
 		//TODO mobility function
-		  
+
 		//turnTimer->Start();
 		//turnTimer->Reset(); 
 		//frontIntake->DeployIntake();
@@ -315,13 +320,13 @@ public:
 		backIntake->BackRollerAutoSlow();
 		GyroTurnAngle(this, gyro, drivetrain, -10.0, 2.0, 0.5, 0.585);
 		Wait(2.0);
-//		frontIntake->FrontRollerAutoSlow();
-	//	backIntake->BackRollerAutoSlow();
+		//		frontIntake->FrontRollerAutoSlow();
+		//	backIntake->BackRollerAutoSlow();
 		GyroTurnAngle(this, gyro, drivetrain, 20.0, 2.0, 0.355, 0.55);
-		
+
 		//GyroTurnAngle(this, gyro, drivetrain, dataTable);
 		//printf("*********    Time: %f    ********    ", turnTimer->Get());
-		
+
 	}
 	void AutonomousPeriodic()
 	{
@@ -329,7 +334,7 @@ public:
 	}
 	void TeleopInit()
 	{
-		
+
 		compressor->Start();
 
 		leftEncoder->Reset();
@@ -343,7 +348,7 @@ public:
 		gearToggle = false;
 		gearUp->Set(!gearToggle);
 		gearDown->Set(gearToggle);
-		
+
 		//Photo to compare
 		table->PutNumber("Enabled", 1);
 	}
@@ -354,12 +359,13 @@ public:
 		//printf("Front prox: %d, back prox: %d\n", frontIntake->ProximityTriggered(), backIntake->ProximityTriggered());
 		//printf("2 Proximity sensor: %d\n", frontIntake->ProximityTriggered());
 
+
 		//Drive.
 		runDrivetrain(driverL->GetY(), driverR->GetY(), drivetrain);
 		/*if(manipulator->GetRawButton(12))
-		{
-			shotAligner
-		}*/
+		 {
+		 shotAligner
+		 }*/
 		//Shift.
 		if (b_gearToggle->ButtonClicked())
 		{
@@ -367,12 +373,13 @@ public:
 			gearUp->Set(!gearToggle);
 			gearDown->Set(gearToggle);
 		}
- 
+
 		if (b_frontIntakePickup->ButtonPressed())
 		{
 			//intakes to hold the ball using proxy sensors
 			//frontIntake->Hold(manipulator);
-			if (b_frontIntakePickup->ButtonClicked()&& manipulator->GetRawAxis(5) == 0.0)
+			if (b_frontIntakePickup->ButtonClicked()
+					&& manipulator->GetRawAxis(5) == 0.0)
 			{
 				frontIntake->DeployIntake();
 			}
@@ -393,7 +400,8 @@ public:
 		else if (b_backIntakePickup->ButtonPressed())
 		{
 			//Pickup is here b/c we are unsure of how it'll interact w/ the stops
-			if (b_backIntakePickup->ButtonClicked() && manipulator->GetRawAxis(5) == 0.0)
+			if (b_backIntakePickup->ButtonClicked()
+					&& manipulator->GetRawAxis(5) == 0.0)
 			{
 				shortShot = true;
 				shooter->ShooterPrime(shortShot);
@@ -419,7 +427,7 @@ public:
 				shortShot = true;
 				shooter->ShooterPrime(shortShot);
 			}
-			secondaryRollers->Reverse();
+			secondaryRollers->ReverseSlow();
 			backIntake->Reverse();
 		}
 		else if (b_humanLoad->ButtonPressed())
@@ -457,12 +465,8 @@ public:
 		if (b_armPistonToggle->ButtonClicked())
 		{
 			secondaryRollers->ToggleArms();
-		} 
-
-		if (b_shooterPrime->ButtonPressed())
-		{
-			shooter->ShooterReturn();
 		}
+
 		if (b_longShoot->ButtonClicked())
 		{
 			frontIntake->DeployIntake();
@@ -506,15 +510,21 @@ public:
 		if (b_killShotL->ButtonClicked() || b_killShotR->ButtonClicked())
 		{
 			shotKillSwitch = true;
-			frontIntake->UndeployIntake();
-			backIntake->UndeployIntake();
+			//frontIntake->UndeployIntake();
+			//backIntake->UndeployIntake();
+			secondaryRollers->Undeploy();
 		}
 
 		shooter->ShooterFire();
 
+		if (b_shooterPrime->ButtonPressed())
+		{
+			shooter->ShooterReturn();
+		}
+		
 		if (b_pulseSecondary->ButtonPressed())
 		{
-			if(b_pulseSecondary->ButtonClicked())
+			if (b_pulseSecondary->ButtonClicked())
 			{
 				secondaryRollers->Undeploy();
 			}
@@ -543,15 +553,60 @@ public:
 	}
 	void TestPeriodic()
 	{
+		driverStationLCD->Printf((DriverStationLCD::Line)0,1,
+				"Front Proximity Sensor: %f", frontIntake->ProximityTriggered());
+		driverStationLCD->Printf((DriverStationLCD::Line)1,1,
+				"Back Proximity Sensor: %f", backIntake->ProximityTriggered());
+		driverStationLCD->Printf((DriverStationLCD::Line)2,1,
+				"Hall Sensor: %f", shooter->HallSensorTriggered());
+		driverStationLCD->Printf((DriverStationLCD::Line)3,1,
+				"Left Encoder: %f", leftEncoder->Get());
+		driverStationLCD->Printf((DriverStationLCD::Line)4,1,
+				"Right Encoder: %f", rightEncoder->Get());
 		printf("gyro: %f, gyroRate: %f, gyroFiltRate: %f, gyroCalRate: %f\n",
 				gyro->GetCalibratedAngle(), gyro->GetRate(),
 				gyro->GetFilteredRate(), gyro->GetCalibratedRate());
-		drivetrain->TankDrive(0.0, 0.0); // robot drive system
-		secondaryRollerA->Set(1.0);
-		secondaryRollerB->Set(1.0);
-		frontIntake->FrontRollerLoad();
-		backIntake->BackRollerLoad();
-		shooter->StopTalons();
+		if (b_frontIntakeDeployToggle->ButtonClicked())
+		{
+			frontIntake->ToggleIntake();
+			secondaryRollers->Undeploy();
+			printf("Front Intake: %d", frontIntake->intakeDeployed);
+		}
+
+		if (b_backIntakeDeployToggle->ButtonClicked())
+		{
+			backIntake->ToggleIntake();
+			secondaryRollers->Undeploy();
+			printf("Back Intake: %d", backIntake->intakeDeployed);
+		}
+		if (b_armPistonToggle->ButtonClicked())
+		{
+			secondaryRollers->ToggleArms();
+			printf("Secondarys Deployed: %d", secondaryRollers->DeployState());
+		}
+
+		if (b_testGearToggle->ButtonClicked())
+		{
+			gearToggle = !gearToggle;
+			gearUp->Set(!gearToggle);
+			gearDown->Set(gearToggle);
+			printf("Gear Toggle: %d", gearToggle);
+		}
+		if (b_toggleShotAlign->ButtonClicked())
+		{
+			if (shortShot)
+			{
+				shortShot = false;
+				shooter->ShooterPrime(shortShot);
+				driverStationLCD->Printf((DriverStationLCD::Line)0,10,
+				"Shot Alignment: %f", shooter->shotAlignerUp); //TODO make work and fix spacing
+			}
+			else
+			{
+				shortShot = true;
+				shooter->ShooterPrime(shortShot);
+			}
+		}
 	}
 
 };
