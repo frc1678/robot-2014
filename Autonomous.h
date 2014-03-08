@@ -8,7 +8,7 @@
 #ifndef AUTONOMOUS_H
 #define AUTONOMOUS_H
 
-bool enabledInAutonomous(IterativeRobot *me)
+bool EnabledInAutonomous(IterativeRobot *me)
 {
 	if (me->IsAutonomous() && !me->IsDisabled())
 	{
@@ -58,7 +58,7 @@ void GyroTurnAngle(IterativeRobot *me, MPU6050_I2C *gyro, RobotDrive *drivetrain
 	//float oldError = degreeOfTurn+gyro->GetCalibratedAngle();
 	float oldError = degreeOfTurn-gyro->GetCalibratedAngle();
 	//	while(amethyst(me) && gyro->GetAngle()<degreeOfTurn)
-	while (enabledInAutonomous(me) && TurnIncomplete(degreeOfTurn, gyro))
+	while (EnabledInAutonomous(me) && TurnIncomplete(degreeOfTurn, gyro))
 	{
 		float angle = gyro->GetCalibratedAngle();
 		float aError = degreeOfTurn - angle;
@@ -117,7 +117,7 @@ void GyroTurnAngle(IterativeRobot *me, MPU6050_I2C *gyro,
 	GyroTurnAngle(me, gyro, drivetrain, 
 			degreeOfTurn, kpError, kiError, kdError, minPower, maxPower);
 }
-
+	
 void DriveStraight(RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT,
 		IterativeRobot *me) //use CitrusPID here. can we also use it in gyroturn?
 {
@@ -125,7 +125,7 @@ void DriveStraight(RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT,
 	rightDT->Reset();
 	leftDT->Start();
 	rightDT->Start();
-	while(leftDT->Get() < 300 && rightDT->Get() > -300 && enabledInAutonomous(me))
+	while(leftDT->Get() < 300 && rightDT->Get() > -300 && EnabledInAutonomous(me))
 	{
 		drivetrain->TankDrive(-1.0, -1.0);
 	}
@@ -150,7 +150,7 @@ void ShootAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	timer->Reset();
 	timer->Start();
 	shooter->BeginShooterFire();
-	while(shooter->CurrentlyShooting() && enabledInAutonomous(me))
+	while(shooter->CurrentlyShooting() && EnabledInAutonomous(me))
 	{
 		shooter->ShooterFire();
 	}
@@ -169,7 +169,7 @@ void ShootLoadFrontAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	
 	shooter->BeginShooterFire();
 
-	while(shooter->CurrentlyShooting() && enabledInAutonomous(me) && timer->Get() < 1.4+1.0) //TODO time condition for intake?
+	while(shooter->CurrentlyShooting() && EnabledInAutonomous(me) && timer->Get() < 1.4+1.0) //TODO time condition for intake?
 	{
 		shooter->ShooterFire();
 
@@ -192,7 +192,7 @@ void LoadBackAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	secondaryRollers->Undeploy();
 	timer->Reset();
 	timer->Start();
-	while(enabledInAutonomous(me) && timer->Get() < 2.0) //TODO end condition
+	while(EnabledInAutonomous(me) && timer->Get() < 2.0) //TODO end condition
 	{
 		backIntake->BackRollerLoad();
 		secondaryRollers->Run();
@@ -221,7 +221,7 @@ void GyroTurnLoadBackAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	float oldError = degreeOfTurn-gyro->GetCalibratedAngle();
 	//	while(amethyst(me) && gyro->GetAngle()<degreeOfTurn)
 	bool intakeUpped = false;
-	while (enabledInAutonomous(me) && TurnIncomplete(degreeOfTurn, gyro))
+	while (EnabledInAutonomous(me) && TurnIncomplete(degreeOfTurn, gyro))
 	{
 		float angle = gyro->GetCalibratedAngle();
 		float aError = degreeOfTurn - angle;
@@ -337,7 +337,7 @@ void heliotrope(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	{
 		GyroTurnAngle(me, gyro, drivetrain, -20.0, 2.0, 0.15, 0.585, 0.0, 1.0);//TODO constents
 	}
-	while(enabledInAutonomous(me))
+	while(EnabledInAutonomous(me))
 	{
 		if(goalTimer->Get() > 4.5)
 		{
@@ -390,7 +390,7 @@ void ThreeBallVisionRight(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		GyroTurnLoadBackAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, 
 				me, gyro, drivetrain, 20.0, 2.0, 0.14, 0.55, 0.0, 1.0);//TODO constents
 	}
-	while(enabledInAutonomous(me))
+	while(EnabledInAutonomous(me))
 	{
 		if(goalTimer->Get() > 4.5)
 		{

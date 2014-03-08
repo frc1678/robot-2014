@@ -10,6 +10,28 @@
 #ifndef AUTONOMOUSSUBROUTINES_H
 #define AUTONOMOUSSUBROUTINES_H
 
+//Positive is anticlock
+void GyroTurn(IterativeRobot *me, MPU6050_I2C *gyro, RobotDrive *drivetrain, float degreeOfTurn)
+{
+	printf("turn");
+	gyro->Reset();
+	while(GyroTurnAngleConditions(gyro, degreeOfTurn, me))
+	{
+		printf("in loop");
+		if(degreeOfTurn<0.0)
+		{
+			drivetrain->TankDrive(-0.5, 0.5); //TODO direction?
+		}
+		else
+		{
+			drivetrain->TankDrive(0.5, -0.5);
+		}
+	}
+	printf("end");
+	gyro->Stop();
+	drivetrain->TankDrive(0.0, 0.0);
+}
+
 void GyroTurnAngle(IterativeRobot *me, MPU6050_I2C *gyro, RobotDrive *drivetrain,
 		float degreeOfTurn, double kpError, double kiError, double kdError)
 {
@@ -49,7 +71,43 @@ void GyroTurnAngle(IterativeRobot *me, MPU6050_I2C *gyro,
 	GyroTurnAngle(me, gyro, drivetrain, degreeOfTurn, kpError, kiError, kdError);
 }
 
+void SpinAutoClock(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT, IterativeRobot *me)
+{
+	/*leftDT->Reset();
+	rightDT->Reset();
+	while (EnabledInAutonomous(me) && (leftDT->Get()>(0-numEncoderClicks)&& rightDT->Get()<(numEncoderClicks)))
+	{
+		drivetrain->TankDrive(-0.75, 0.75);
+	}
+	drivetrain->TankDrive(0.0, 0.0);*/
+	SpinAutoPrep(numEncoderClicks, drivetrain, leftDT, rightDT, me);
+	while(SpinAutoClockConditions(numEncoderClicks, drivetrain, leftDT, rightDT, me))
+	{
+		SpinAutoClockInLoop(numEncoderClicks, drivetrain, leftDT, rightDT, me);
+	}
+	SpinAutoEnd(numEncoderClicks, drivetrain, leftDT, rightDT, me);
+}
+	//Spin counterclockwise for (approximately) so many encoder clicks. Anti is shorter than counter.
+void SpinAutoAnti(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT, IterativeRobot *me)
+{
+	/*
+	leftDT->Reset();
+	rightDT->Reset();
+	while (EnabledInAutonomous(me) && (leftDT->Get()<(numEncoderClicks)
+			&& rightDT->Get()>(-numEncoderClicks)))
+	{
+		drivetrain->TankDrive(0.75, -0.75);
+	}
+	drivetrain->TankDrive(0.0, 0.0);*/
 
+	SpinAutoPrep(numEncoderClicks, drivetrain, leftDT, rightDT, me);
+	while(SpinAutoAntiConditions(numEncoderClicks, drivetrain, leftDT, rightDT, me))
+	{
+		SpinAutoAntiInLoop(numEncoderClicks, drivetrain, leftDT, rightDT, me);
+	}
+	SpinAutoEnd(numEncoderClicks, drivetrain, leftDT, rightDT, me);
+}
+	
 void ShootAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
 		ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers,
 		IterativeRobot *me)

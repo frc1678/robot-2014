@@ -101,14 +101,14 @@ class Robot : public IterativeRobot
 	CitrusButton *b_notShooting2;
 
 	//Network Tables
-	float Hthresh;
+	/*float Hthresh;
 	float Sthresh;
 	float Vthresh;
 	float Hthreshlow;
 	float Sthreshlow;
 	float Vthreshlow;
 	float startSide;
-	float autoDirection;
+	float autoDirection;*/
 
 public:
 	Robot()
@@ -194,10 +194,10 @@ public:
 		b_humanLoad = new CitrusButton (k_bhumanLoad);
 		b_runSecondary = new CitrusButton (k_brunSecondary);
 		//Shooter buttons
-		b_shortShoot = new CitrusButton (k_bshortShoot);
-		b_longShoot = new CitrusButton (k_blongShoot);
 		b_shotAlignLong = new CitrusButton(k_bshotAlignLong);
 		b_shotAlignShort = new CitrusButton(k_bshotAlignShort);
+		b_shortShoot = new CitrusButton (k_bshortShoot);
+		b_longShoot = new CitrusButton (k_blongShoot);
 		b_shooterPrime = new CitrusButton (k_bshooterPrime);
 		b_pulseSecondary = new CitrusButton (k_bpulseSecondary);
 		b_foldFlower = new CitrusButton (k_bfoldFlower);
@@ -242,7 +242,7 @@ public:
 	void DisabledInit()
 	{
 		//TODO return for camera work
-		//table->PutNumber("Enabled", 0);
+		table->PutNumber("Enabled", 0);
 		driverStationLCD->Clear();
 		//leftEncoder->Stop();
 		//rightEncoder->Stop();
@@ -253,7 +253,7 @@ public:
 	}
 	void DisabledPeriodic()
 	{
-		//table->PutNumber("Enabled", 0);
+		table->PutNumber("Enabled", 0);
 		drivetrain->TankDrive(0.0, 0.0);
 	}
 	void AutonomousInit()
@@ -267,10 +267,15 @@ public:
 
 		//wisteria(frontIntake, backIntake, shooter, drivetrain, autoTimer, 
 		//	secondaryRollers, gyro, this);
+		TwoShotWithVision(frontIntake, backIntake, shooter, drivetrain, autoTimer, 
+				secondaryRollers, this, rightEncoder, gyro, table);
+		//Wait(1.0);
+		//CheckVision(this, table);
+		
 		if (driverStation->GetDigitalIn(1))//Three ball auto starting on the left
 		{ //TODO REDUCE TIME
-			startSide = 1;
-			table->PutNumber("Start Side", startSide);
+			//startSide = 1;
+			//table->PutNumber("Start Side", startSide);
 			table->PutNumber("Enabled", 1);
 			//autoDirection = ReceiveVisionProcessing(table);
 			ThreeBallVisionRight(frontIntake, backIntake, shooter, drivetrain,
@@ -320,23 +325,10 @@ public:
 			OneShot(frontIntake, backIntake, shooter, drivetrain, autoTimer, secondaryRollers, this, rightEncoder);
 			
 		}
-		//turnTimer->Start();
-		//turnTimer->Reset(); 
-		//frontIntake->DeployIntake();
-		//backIntake->DeployIntake();
-		/*OpenFlower(frontIntake, backIntake, secondaryRollers);
-		Wait(0.5);
-		frontIntake->FrontRollerAutoSlow();
-		backIntake->BackRollerAutoSlow();
-		GyroTurnAngle(this, gyro, drivetrain, -10.0, 2.0, 0.5, 0.585);
-		Wait(2.0);
-		//		frontIntake->FrontRollerAutoSlow();
-		//	backIntake->BackRollerAutoSlow();
-		GyroTurnAngle(this, gyro, drivetrain, 20.0, 2.0, 0.355, 0.55);
-
-		//GyroTurnAngle(this, gyro, drivetrain, dataTable);
-		//printf("*********    Time: %f    ********    ", turnTimer->Get());
-		 */ 
+		else if (driverStation->GetDigitalIn(8))
+		{
+			TurnRightThenLeft(drivetrain, leftEncoder, rightEncoder, this);
+		}
 
 	}
 	void AutonomousPeriodic()

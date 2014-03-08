@@ -72,29 +72,54 @@ void TwoShot(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	ShootDriveForwardAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain, rightDT);
 }
 
+void CheckVision(IterativeRobot *me, NetworkTable *table)
+{
+	float visionResult = ReceiveVisionProcessing(table);
+	if(visionResult == 2.0)
+	{
+		printf("Go to the right\n");
+	}
+	else
+	{
+		printf("Go to the left\n");
+	}
+}
+
 void TwoShotWithVision(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *timer,
-		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *rightDT, NetworkTable *table)
+		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *rightDT, MPU6050_I2C *gyro, NetworkTable *table)
 {
-	LoadTopAuto(secondaryRollers, frontIntake, backIntake, timer, shooter);
-	if(ReceiveVisionProcessing(table) == 2.0)
+	//LoadTopAuto(secondaryRollers, frontIntake, backIntake, timer, shooter);
+	Wait(1.0);
+	float visionResult = ReceiveVisionProcessing(table);
+	if(visionResult == 2.0)
 	{
 		printf("Go to the right");
+		GyroTurn(me, gyro, drivetrain, -10.0); //Positive is anticlock 
 	}
-	else if(ReceiveVisionProcessing(table) == 1.0)
+	else if(visionResult == 1.0)
 	{
 		printf("Go to the left");
+		GyroTurn(me, gyro, drivetrain, 10.0);
 	}
 	else
 	{
 		printf("This should NOT have happened!");
 	}
-	ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
-	//LoadBackAutoDrive(frontIntake, backIntake, shooter, timer, secondaryRollers, drivetrain, me);
-	LoadBackAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, drivetrain, me);
-	printf("Done driving!");
+	//printf("Teenage girls!");
 	//ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
-	ShootDriveForwardAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain, rightDT);
+	//TODO load back while turning.
+	//LoadBackAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, drivetrain, me);
+	Wait(1.0);
+	if(visionResult == 2.0)
+	{
+		GyroTurn(me, gyro, drivetrain, 10.0); 
+	}
+	else if(visionResult == 1.0)
+	{
+		GyroTurn(me, gyro, drivetrain, -10.0);
+	}
+	//ShootDriveForwardAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain, rightDT);
 }
 
 void OneShot(IntakeSystem *frontIntake, IntakeSystem *backIntake,
@@ -120,7 +145,7 @@ void ShootTwoThenOne(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	
 	ShootLoadFrontAutoDrive(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain, rightDT);
 	
-	while(enabledInAutonomous(me))
+	while(EnabledInAutonomous(me))
 	{
 		if(shottimer->Get() > 4.5)
 		{
@@ -172,7 +197,7 @@ void heliotrope(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	{
 		GyroTurnAngle(me, gyro, drivetrain, -20.0, 2.0, 0.15, 0.585);//TODO constents
 	}
-	while(enabledInAutonomous(me))
+	while(EnabledInAutonomous(me))
 	{
 		if(goalTimer->Get() > 4.5)
 		{
@@ -186,6 +211,11 @@ void heliotrope(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	
 }
 
+void TurnRightThenLeft(RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT, IterativeRobot *me)
+{
+	SpinAutoClock(52, drivetrain, leftDT, rightDT, me);
+	SpinAutoAnti(104, drivetrain, leftDT, rightDT, me);
+}
 void ThreeBallVisionRight(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *timer,
 		Timer *goalTimer, SecondaryRollerSystem *secondaryRollers, MPU6050_I2C *gyro, 
@@ -226,7 +256,7 @@ void ThreeBallVisionRight(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		GyroTurnLoadBackAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, 
 				me, gyro, drivetrain, 20.0, 2.0, 0.14, 0.55);//TODO constents
 	}
-	while(enabledInAutonomous(me))
+	while(EnabledInAutonomous(me))
 	{
 		if(goalTimer->Get() > 4.5)
 		{

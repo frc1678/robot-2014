@@ -124,6 +124,11 @@ public:
 		gyroCalTimer->Reset();
 		return gyroCalAngle;
 	}
+	void Stop()
+	{
+		gyroTimer->Stop();
+		gyroCalTimer->Stop();
+	}
 };
 
 #endif

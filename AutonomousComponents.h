@@ -11,7 +11,7 @@
 #ifndef AUTONOMOUSCOMPONENTS_H
 #define AUTONOMOUSCOMPONENTS_H
 
-bool enabledInAutonomous(IterativeRobot *me)
+bool EnabledInAutonomous(IterativeRobot *me)
 {
 	if (me->IsAutonomous() && !me->IsDisabled())
 	{
@@ -65,7 +65,7 @@ void GyroTurnAnglePrep(IterativeRobot *me, MPU6050_I2C *gyro, RobotDrive *drivet
 
 bool GyroTurnAngleConditions(MPU6050_I2C *gyro, float degreeOfTurn, IterativeRobot *me)
 {
-	if(TurnIncomplete(degreeOfTurn, gyro) && enabledInAutonomous(me))
+	if(TurnIncomplete(degreeOfTurn, gyro) && EnabledInAutonomous(me))
 	{
 		return true;
 	}
@@ -100,6 +100,7 @@ void GyroTurnAngleInLoop(IterativeRobot *me, MPU6050_I2C *gyro, RobotDrive *driv
 void GyroTurnAngleEnd(RobotDrive *drivetrain)
 {
 	drivetrain->TankDrive(0.0,0.0);
+	//gyro->Stop();
 }
 
 
@@ -110,7 +111,7 @@ void DriveStraight(RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT,
 	rightDT->Reset();
 	leftDT->Start();
 	rightDT->Start();
-	while(leftDT->Get() < 300 && rightDT->Get() > -300 && enabledInAutonomous(me))
+	while(leftDT->Get() < 300 && rightDT->Get() > -300 && EnabledInAutonomous(me))
 	{
 		drivetrain->TankDrive(-1.0, -1.0);
 	}
@@ -143,7 +144,7 @@ void ShootAutoPrep(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 
 bool ShootAutoConditions(ShooterSystem *shooter, IterativeRobot *me)
 {
-	if(shooter->CurrentlyShooting() && enabledInAutonomous(me))
+	if(shooter->CurrentlyShooting() && EnabledInAutonomous(me))
 	{
 		return true;
 	}
@@ -171,7 +172,7 @@ void LoadBackAutoPrep(ShooterSystem *shooter, Timer *timer, SecondaryRollerSyste
  
 bool LoadBackAutoConditions(Timer *timer, IterativeRobot *me)
 {
-	if(enabledInAutonomous(me) && timer->Get() < 1.8)//1.4)
+	if(EnabledInAutonomous(me) && timer->Get() < 1.8)//1.4)
 	{
 		return true;
 	}
@@ -223,7 +224,7 @@ void LoadFrontAutoPrep(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 
 bool LoadFrontAutoConditions(IterativeRobot *me, Timer *timer)
 {
-	if(enabledInAutonomous(me) && timer->Get() < 1.4+1.0)
+	if(EnabledInAutonomous(me) && timer->Get() < 1.4+1.0)
 	{
 		return true;
 	}
@@ -334,6 +335,74 @@ void LoadTopAuto(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontInt
 	Wait(1.5);
 }
 
+
+void DriveForwardAutoPrep(Timer *timer, Encoder *rightDT)
+{
+	timer->Start();
+	timer->Reset();
+	rightDT->Reset();
+	rightDT->Start();
+}
+
+bool DriveForwardAutoConditions(Timer *timer, IterativeRobot *me, Encoder *rightDT)
+{
+	if(timer->Get() < 2.0 && EnabledInAutonomous(me) && rightDT->Get() > - 1000)//3000)
+	{
+		return true;
+	}
+	return false;
+}
+
+void DriveForwardAutoInLoop(RobotDrive *drivetrain)
+{
+	drivetrain->TankDrive(-0.75, -0.75);
+}
+
+void DriveForwardAutoEnd(RobotDrive *drivetrain)
+{
+	drivetrain->TankDrive(0.0, 0.0);
+}
+
+void SpinAutoPrep(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT, IterativeRobot *me)
+{
+	leftDT->Reset();
+	rightDT->Reset();
+}
+
+bool SpinAutoClockConditions(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT, IterativeRobot *me)
+{
+	if(EnabledInAutonomous(me) && (leftDT->Get()>(0-numEncoderClicks)&& rightDT->Get()<(numEncoderClicks)))
+	{
+		return true;
+	}
+	return false;
+}
+
+bool SpinAutoAntiConditions(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT, IterativeRobot *me)
+{
+	if (EnabledInAutonomous(me) && (leftDT->Get()<(numEncoderClicks)
+			&& rightDT->Get()>(-numEncoderClicks)))
+	{
+		return true;
+	}
+	return false;
+}
+
+void SpinAutoClockInLoop(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT, IterativeRobot *me)
+{
+	drivetrain->TankDrive(-0.75, 0.75);
+}
+
+void SpinAutoAntiInLoop(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT, IterativeRobot *me)
+{
+	drivetrain->TankDrive(0.75, -0.75);
+}
+
+void SpinAutoEnd(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT, IterativeRobot *me)
+{
+	drivetrain->TankDrive(0.0, 0.0);
+}
+
 float ReceiveVisionProcessing(NetworkTable *table)
 {
 	//table->PutNumber("Start Side", startSide);
@@ -353,39 +422,10 @@ float ReceiveVisionProcessing(NetworkTable *table)
 	}
 	else 
 	{
-		autoDirection = 1.0;
+		autoDirection = 0.0; //Testing.
 	}
 	
 	return autoDirection;
 }
-
-void DriveForwardAutoPrep(Timer *timer, Encoder *rightDT)
-{
-	timer->Start();
-	timer->Reset();
-	rightDT->Reset();
-	rightDT->Start();
-}
-
-bool DriveForwardAutoConditions(Timer *timer, IterativeRobot *me, Encoder *rightDT)
-{
-	if(timer->Get() < 2.0 && enabledInAutonomous(me) && rightDT->Get() > - 1000)//3000)
-	{
-		return true;
-	}
-	return false;
-}
-
-void DriveForwardAutoInLoop(RobotDrive *drivetrain)
-{
-	drivetrain->TankDrive(-0.75, -0.75);
-}
-
-void DriveForwardAutoEnd(RobotDrive *drivetrain)
-{
-	drivetrain->TankDrive(0.0, 0.0);
-}
-
-
 
 #endif	

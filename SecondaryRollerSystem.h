@@ -49,7 +49,7 @@ public:
 	{
 		secondaryRollerA->Set(0.0);
 		secondaryRollerB->Set(0.0);
-		pulseTimer->Stop();
+		//pulseTimer->Stop();
 	}
 	
 	void Reset()
