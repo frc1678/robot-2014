@@ -18,7 +18,7 @@ void ShootThreeAndDrive(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	frontIntake->FrontRollerAutoSlow();
 	backIntake->BackRollerAutoSlow();
 	
-	LoadTopAuto(secondaryRollers, frontIntake, backIntake, timer, shooter);
+	LoadTopAuto(secondaryRollers, frontIntake, backIntake, timer, shooter, me);
 	
 	ShootLoadFrontAutoDrive(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain, rightDT);
 	
@@ -42,7 +42,7 @@ void ShootThreeAndDriveV2(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	frontIntake->FrontRollerAutoSlow();
 	backIntake->BackRollerAutoSlow();
 	
-	LoadTopAuto(secondaryRollers, frontIntake, backIntake, timer, shooter);
+	LoadTopAuto(secondaryRollers, frontIntake, backIntake, timer, shooter, me);
 	
 	//Shoot again.
 	ShootAutoPrepBack(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain);
@@ -63,7 +63,7 @@ void TwoShot(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *timer,
 		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *rightDT)
 {
-	LoadTopAuto(secondaryRollers, frontIntake, backIntake, timer, shooter);
+	LoadTopAuto(secondaryRollers, frontIntake, backIntake, timer, shooter, me);
 	ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
 	//LoadBackAutoDrive(frontIntake, backIntake, shooter, timer, secondaryRollers, drivetrain, me);
 	LoadBackAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, drivetrain, me);
@@ -88,8 +88,8 @@ void TwoShotWithVision(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *timer,
 		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *leftDT, Encoder *rightDT, MPU6050_I2C *gyro, NetworkTable *table)
 {
-	//LoadTopAuto(secondaryRollers, frontIntake, backIntake, timer, shooter);
-	Wait(1.0);
+	LoadTopAuto(secondaryRollers, frontIntake, backIntake, timer, shooter, me);
+	//Wait(1.0);
 	float visionResult = ReceiveVisionProcessing(table);
 	if(visionResult == 2.0)
 	{
@@ -103,12 +103,12 @@ void TwoShotWithVision(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	}
 	else
 	{
+		SpinAutoAnti(52, drivetrain, leftDT, rightDT, me);
 		printf("This should NOT have happened!");
 	}
-	//printf("Teenage girls!");
-	//ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
+	ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
 	//TODO load back while turning.
-	//LoadBackAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, drivetrain, me);
+	LoadBackAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, drivetrain, me);
 	Wait(1.0);
 	if(visionResult == 2.0)
 	{
@@ -118,6 +118,11 @@ void TwoShotWithVision(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	{
 		SpinAutoClock(104, drivetrain, leftDT, rightDT, me);
 	}
+	else
+	{
+		SpinAutoAnti(104, drivetrain, leftDT, rightDT, me);
+		printf("This should NOT have happened!");
+	}
 	ShootDriveForwardAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain, rightDT);
 }
 
@@ -125,7 +130,7 @@ void OneShot(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *timer,
 		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *rightDT)
 {
-	LoadTopAuto(secondaryRollers, frontIntake, backIntake, timer, shooter);
+	LoadTopAuto(secondaryRollers, frontIntake, backIntake, timer, shooter, me);
 	ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
 	
 }
@@ -140,7 +145,7 @@ void ShootTwoThenOne(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 
 	backIntake->BackRollerAutoSlow();
 	
-	LoadTopAuto(secondaryRollers, frontIntake, backIntake, timer, shooter);
+	LoadTopAuto(secondaryRollers, frontIntake, backIntake, timer, shooter, me);
 	
 	ShootLoadFrontAutoDrive(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain, rightDT);
 	

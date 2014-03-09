@@ -306,34 +306,36 @@ void LoadFrontAutoEnd(SecondaryRollerSystem *secondaryRollers, IntakeSystem *fro
 	frontIntake->Stop();
 	drivetrain->TankDrive(0.0, 0.0);
 }
-
-void LoadTopAuto(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake, IntakeSystem *backIntake, Timer *timer, ShooterSystem *shooter)
+void LoadTopAutoPrep(Timer *timer, ShooterSystem *shooter)
 {
 	timer->Reset();
 	timer->Start();
-	
-	shooter->ShooterPrime(false); 
-	
-	//secondaryRollers->Deploy();
-	//frontIntake->DeployIntake();
-	//backIntake->DeployIntake();
-	while(timer->Get() < 0.8)//0.4)
+	shooter->ShooterPrime(false);
+}
+bool LoadTopAutoConditions(Timer *timer, IterativeRobot *me)
+{
+	if(timer->Get() < 0.8 && EnabledInAutonomous(me))
 	{
-		frontIntake->Reverse();
-		backIntake->Reverse();
-		//secondaryRollers->Pulse();
-		secondaryRollers->Run();
+		return true;
 	}
+	return false;
+}
+void LoadTopAutoInLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake, SecondaryRollerSystem *secondaryRollers)
+{
+	frontIntake->Reverse();
+	backIntake->Reverse();
+	secondaryRollers->Run();
+}
+void LoadTopAutoEnd(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake, IntakeSystem *backIntake)
+{
 	secondaryRollers->Stop();
 	frontIntake->Stop();
 	backIntake->Stop();
 	frontIntake->DeployIntake();
 	backIntake->DeployIntake();
-	//OpenFlower(frontIntake, backIntake, secondaryRollers);
-	//secondaryRollers->Undeploy();
-	//Wait(1.0);
 	Wait(1.5);
 }
+//Break this into compinents and make subroutine
 
 
 void DriveForwardAutoPrep(Timer *timer, Encoder *rightDT)

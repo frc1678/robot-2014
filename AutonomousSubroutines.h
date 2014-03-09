@@ -87,7 +87,7 @@ void SpinAutoClock(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT
 	}
 	SpinAutoEnd(numEncoderClicks, drivetrain, leftDT, rightDT, me);
 }
-	//Spin counterclockwise for (approximately) so many encoder clicks. Anti is shorter than counter.
+	//Spin counterclockwise for (approximately) so many encoder clicks. Anti is shorter than counter. Un is shorter than Anti.
 void SpinAutoAnti(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT, IterativeRobot *me)
 {
 	/*
@@ -202,7 +202,38 @@ void ShootDriveForwardAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	DriveForwardAutoEnd(drivetrain);
 	ShootAutoEnd();
 }
- 
+void LoadTopAuto(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake, IntakeSystem *backIntake, Timer *timer, ShooterSystem *shooter, IterativeRobot *me)
+{
+	/*timer->Reset();
+	timer->Start();
+	
+	shooter->ShooterPrime(false); 
+	
+	//secondaryRollers->Deploy();
+	//frontIntake->DeployIntake();
+	//backIntake->DeployIntake();*/
+	LoadTopAutoPrep(timer, shooter);
+	while(LoadTopAutoConditions(timer, me))//(timer->Get() < 0.8)//0.4)
+	{
+		/*frontIntake->Reverse();
+		backIntake->Reverse();
+		//secondaryRollers->Pulse();
+		secondaryRollers->Run();*/
+		LoadTopAutoInLoop(frontIntake, backIntake, secondaryRollers);
+	}
+	/*
+	secondaryRollers->Stop();
+	frontIntake->Stop();
+	backIntake->Stop();
+	frontIntake->DeployIntake();
+	backIntake->DeployIntake();
+	//OpenFlower(frontIntake, backIntake, secondaryRollers);
+	//secondaryRollers->Undeploy();
+	//Wait(1.0);
+	Wait(1.5);*/
+	LoadTopAutoEnd(secondaryRollers, frontIntake, backIntake);
+}
+
 void LoadBackAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
 		ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers,
 		RobotDrive *drivetrain, IterativeRobot *me)
