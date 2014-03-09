@@ -229,6 +229,43 @@ void LoadBackAutoDrive(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	drivetrain->TankDrive(0.0, 0.0);
 }
 
+void LoadBackSpin(IntakeSystem *frontIntake, IntakeSystem *backIntake,
+		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *timer,
+		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me,
+		Encoder *leftDT, Encoder *rightDT, MPU6050_I2C *gyro, NetworkTable *table,
+		bool isClockwise, int numEncoderClicks)
+{
+	LoadBackAutoPrep(shooter, timer, secondaryRollers, frontIntake);
+	
+	bool started = false;
+	while(LoadBackAutoConditions(timer, me))
+	{
+		LoadBackAutoInLoop(backIntake, secondaryRollers, drivetrain, timer);
+		if(timer->Get()> 0.5 &&!started)
+		{
+			started = true;
+			SpinAutoPrep(numEncoderClicks, drivetrain, leftDT, rightDT, me);
+		}
+		if(started && SpinAutoClockConditions(numEncoderClicks, drivetrain, leftDT, rightDT, me) && isClockwise)
+		{
+			SpinAutoClockInLoop(numEncoderClicks, drivetrain, leftDT, rightDT, me);
+		}
+		if(started && SpinAutoAntiConditions(numEncoderClicks, drivetrain, leftDT, rightDT, me) && !isClockwise)
+		{
+			SpinAutoAntiInLoop(numEncoderClicks, drivetrain, leftDT, rightDT, me);
+		}
+	}
+	LoadBackAutoEnd(backIntake, frontIntake, secondaryRollers, shooter);
+	while(SpinAutoClockConditions(numEncoderClicks, drivetrain, leftDT, rightDT, me) && isClockwise)
+	{
+		SpinAutoClockInLoop(numEncoderClicks, drivetrain, leftDT, rightDT, me);
+	}
+	while(SpinAutoAntiConditions(numEncoderClicks, drivetrain, leftDT, rightDT, me) && !isClockwise)
+	{
+		SpinAutoAntiInLoop(numEncoderClicks, drivetrain, leftDT, rightDT, me);
+	}
+	SpinAutoEnd(numEncoderClicks, drivetrain, leftDT, rightDT, me);
+}
 
 void GyroTurnLoadBackAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
 		ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers,

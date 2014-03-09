@@ -115,16 +115,16 @@ public:
 
 	void FrontRollerAutoSlow() {
 		if (front) {
-			intakeRoller->Set(1.0 * frontIntakeK);
+			intakeRoller->Set(0.1 * frontIntakeK);
 		} else {
-			intakeRoller->Set(1.0 * backIntakeK);
+			intakeRoller->Set(0.1 * backIntakeK);
 		}
 	}
 	void BackRollerAutoSlow() {
 		if (front) {
-			intakeRoller->Set(1.0 * frontIntakeK);
+			intakeRoller->Set(0.1 * frontIntakeK);
 		} else {
-			intakeRoller->Set(1.0 * backIntakeK);
+			intakeRoller->Set(0.1 * backIntakeK);
 		}
 	}
 
