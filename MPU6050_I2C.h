@@ -118,9 +118,9 @@ public:
 			currRate = 0.0;
 		}*/
 		gyroCalAngle += currRate*gyroCalTimer->Get();
-		printf("gyroCalAngle += currRate*gyroCalTimer->Get(): %f\n", gyroCalAngle);
-		printf("dModule->GetI2C(0x68<<1): %f\n", me);
-		printf("Cycle Time: %f\n", gyroCalTimer->Get());
+		//printf("gyroCalAngle += currRate*gyroCalTimer->Get(): %f\n", gyroCalAngle);
+		//printf("dModule->GetI2C(0x68<<1): %f\n", me);
+		//printf("Cycle Time: %f\n", gyroCalTimer->Get());
 		gyroCalTimer->Reset();
 		return gyroCalAngle;
 	}

@@ -126,16 +126,19 @@ void OpenFlower(IntakeSystem *frontIntake, IntakeSystem *backIntake, SecondaryRo
 }
 
 void ShootAutoPrep(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
-		ShooterSystem *shooter, SecondaryRollerSystem *secondaryRollers)
+		ShooterSystem *shooter, SecondaryRollerSystem *secondaryRollers, bool shortShot)
 {
-	OpenFlower(frontIntake, backIntake, secondaryRollers);
+	//OpenFlower(frontIntake, backIntake, secondaryRollers);
+	frontIntake->DeployIntake();
+	backIntake->DeployIntake();
+	
 	frontIntake->FrontRollerAutoSlow();
 	backIntake->BackRollerAutoSlow();
-	shooter->ShooterPrime(false);
-	Wait(0.5); //TODO how short can this be?
+	shooter->ShooterPrime(shortShot);
+	//Wait(0.3); //TODO how short can this be?
 	
+	secondaryRollers->Deploy();
 	shooter->BeginShooterFire();
-	
 }
 
 bool ShootAutoConditions(ShooterSystem *shooter, IterativeRobot *me)
@@ -168,7 +171,7 @@ void LoadBackAutoPrep(ShooterSystem *shooter, Timer *timer, SecondaryRollerSyste
  
 bool LoadBackAutoConditions(Timer *timer, IterativeRobot *me)
 {
-	if(enabledInAutonomous(me) && timer->Get() < 1.4)
+	if(enabledInAutonomous(me) && timer->Get() < 2.0)//1.4)
 	{
 		return true;
 	}
@@ -178,7 +181,8 @@ bool LoadBackAutoConditions(Timer *timer, IterativeRobot *me)
 void LoadBackAutoDriveInLoop(IntakeSystem *backIntake, SecondaryRollerSystem *secondaryRollers, RobotDrive *drivetrain, Timer *timer)
 {
 	backIntake->BackRollerLoad();
-	secondaryRollers->Pulse();
+	//secondaryRollers->Pulse();
+	secondaryRollers->Run();
 	if(timer->Get() < 0.25)
 	{
 		drivetrain->TankDrive(-0.5, -0.5);
@@ -188,18 +192,21 @@ void LoadBackAutoDriveInLoop(IntakeSystem *backIntake, SecondaryRollerSystem *se
 void LoadBackAutoInLoop(IntakeSystem *backIntake, SecondaryRollerSystem *secondaryRollers, RobotDrive *drivetrain, Timer *timer)
 {
 	backIntake->BackRollerLoad();
-	secondaryRollers->Pulse();
+	//secondaryRollers->Pulse();
+	secondaryRollers->Run();
 	/*if(timer->Get() < 0.25)
 	{
 		drivetrain->TankDrive(-0.5, -0.5);
 	}*/
 }
 
-void LoadBackAutoEnd(IntakeSystem *backIntake, SecondaryRollerSystem *secondaryRollers, ShooterSystem *shooter)
+void LoadBackAutoEnd(IntakeSystem *backIntake, IntakeSystem *frontIntake, SecondaryRollerSystem *secondaryRollers, ShooterSystem *shooter)
 {
 	backIntake->Stop();
 	secondaryRollers->Stop();
 	shooter->ShooterPrime(false);
+	frontIntake->DeployIntake();
+	Wait(3.0);//(0.5);
 	printf("Primed!\n");
 }
 
@@ -220,24 +227,52 @@ bool LoadFrontAutoConditions(IterativeRobot *me, Timer *timer)
 	return false;
 }
 
-void LoadFrontAutoDriveInLoop(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake,
-		Timer *timer, RobotDrive *drivetrain)
+void LoadFrontAutoDriveInLoopV2(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake,
+		Timer *timer, RobotDrive *drivetrain, Encoder *rightDT)
 {
-	if(timer->Get() > 0.75 )
+	frontIntake->FrontRollerLoad();
+	if(timer->Get() > 1.5 ) //0.75 and 1.0 for quick fire??
 	{
 		
-		frontIntake->FrontRollerLoad();
-		secondaryRollers->Pulse();
+		//secondaryRollers->Pulse();
+		secondaryRollers->Run();
 		secondaryRollers->Undeploy();
-		if(timer->Get() < 1.0)
+		
+	}
+	if(timer->Get() < 3.5 && timer->Get()>1.0 && rightDT->Get() < 3000) //number?
+	{
+		//drivetrain->TankDrive(0.5, 0.5);
+		//drivetrain->TankDrive(-0.5, -0.5);
+		drivetrain->TankDrive(-1.0,-1.0);
+	}
+	else
+	{
+		drivetrain->TankDrive(0.0, 0.0);
+	}
+}
+
+void LoadFrontAutoDriveInLoop(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake,
+		Timer *timer, RobotDrive *drivetrain, Encoder *rightDT)
+{
+	frontIntake->FrontRollerLoad();
+	if(timer->Get() > 1.5 ) //0.75 and 1.0 for quick cat
+	{
+		
+		//secondaryRollers->Pulse();
+		secondaryRollers->Run();
+		secondaryRollers->Undeploy();
+		if(timer->Get() < 3.5 && timer->Get()>1.0 && rightDT->Get() < 3000)
 		{
-			drivetrain->TankDrive(0.5, 0.5);
+			//drivetrain->TankDrive(0.5, 0.5);
+			drivetrain->TankDrive(-0.5, -0.5);
+			//drivetrain->TankDrive(-1.0,-1.0);
 		}
 		else
 		{
 			drivetrain->TankDrive(0.0, 0.0);
-		}
+		}	
 	}
+	
 }
 
 void LoadFrontAutoInLoop(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake,
@@ -247,7 +282,8 @@ void LoadFrontAutoInLoop(SecondaryRollerSystem *secondaryRollers, IntakeSystem *
 	{
 		
 		frontIntake->FrontRollerLoad();
-		secondaryRollers->Pulse();
+		//secondaryRollers->Pulse();
+		secondaryRollers->Run();
 		secondaryRollers->Undeploy();
 		/*if(timer->Get() < 1.25)
 		{
@@ -260,22 +296,34 @@ void LoadFrontAutoInLoop(SecondaryRollerSystem *secondaryRollers, IntakeSystem *
 	}
 }
 
-void LoadFrontAutoEnd(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake)
+void LoadFrontAutoEnd(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake, RobotDrive *drivetrain)
 {
 	secondaryRollers->Stop();
 	frontIntake->Stop();
+	drivetrain->TankDrive(0.0, 0.0);
 }
 
 void LoadTopAuto(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake, IntakeSystem *backIntake, Timer *timer)
 {
 	timer->Reset();
 	timer->Start();
-	while(timer->Get() < 0.7)
+	
+	//secondaryRollers->Deploy();
+	//frontIntake->DeployIntake();
+	//backIntake->DeployIntake();
+	while(timer->Get() < 0.8)//1.0)//0.4)
 	{
 		frontIntake->Reverse();
 		backIntake->Reverse();
-		secondaryRollers->Pulse();
+		//secondaryRollers->Pulse();
+		secondaryRollers->Run();
 	}
+	secondaryRollers->Stop();
+	frontIntake->Stop();
+	backIntake->Stop();
+	OpenFlower(frontIntake, backIntake, secondaryRollers);
+	//secondaryRollers->Undeploy();
+	Wait(2.0);
 }
 
 float ReceiveVisionProcessing(NetworkTable *table)
@@ -303,15 +351,17 @@ float ReceiveVisionProcessing(NetworkTable *table)
 	return autoDirection;
 }
 
-void DriveForwardAutoPrep(Timer *timer)
+void DriveForwardAutoPrep(Timer *timer, Encoder *rightDT)
 {
 	timer->Start();
 	timer->Reset();
+	rightDT->Reset();
+	rightDT->Start();
 }
 
-bool DriveForwardAutoConditions(Timer *timer, IterativeRobot *me)
+bool DriveForwardAutoConditions(Timer *timer, IterativeRobot *me, Encoder *rightDT)
 {
-	if(timer->Get() < 2.0 && enabledInAutonomous(me))
+	if(timer->Get() < 2.0 && enabledInAutonomous(me) && rightDT->Get() < 1000)//3000)
 	{
 		return true;
 	}

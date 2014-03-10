@@ -13,14 +13,14 @@
 
 void ShootThreeAndDrive(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *timer,
-		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me)
+		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *rightDT)
 {
 	frontIntake->FrontRollerAutoSlow();
 	backIntake->BackRollerAutoSlow();
 	
 	LoadTopAuto(secondaryRollers, frontIntake, backIntake, timer);
 	
-	ShootLoadFrontAutoDrive(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain);
+	ShootLoadFrontAutoDrive(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain, rightDT);
 	
 	//Shoot again.
 	ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
@@ -29,16 +29,61 @@ void ShootThreeAndDrive(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	LoadBackAutoDrive(frontIntake, backIntake, shooter, timer, secondaryRollers, drivetrain, me);
 	
 	//Shoot again.
-	ShootDriveForwardAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain);
+	ShootDriveForwardAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain, rightDT);
 	//ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
 
-	DriveForwardAuto(drivetrain, timer, me);
+	DriveForwardAuto(drivetrain, timer, me, rightDT);
 }
 
+void ShootThreeAndDriveV2(IntakeSystem *frontIntake, IntakeSystem *backIntake,
+		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *timer,
+		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *rightDT)
+{
+	frontIntake->FrontRollerAutoSlow();
+	backIntake->BackRollerAutoSlow();
+	
+	LoadTopAuto(secondaryRollers, frontIntake, backIntake, timer);
+	
+	//Shoot again.
+	ShootAutoPrepBack(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain);
+	
+	//Switch to "short shot" and load.
+	LoadBackAutoDrive(frontIntake, backIntake, shooter, timer, secondaryRollers, drivetrain, me);
+	
+	ShootLoadFrontAutoDrive(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain, rightDT);
+	
+	//Shoot again.
+	ShortShootDriveForwardAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain, rightDT);
+	//ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
+
+	//DriveForwardAuto(drivetrain, timer, me);	
+}
+
+void TwoShot(IntakeSystem *frontIntake, IntakeSystem *backIntake,
+		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *timer,
+		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *rightDT)
+{
+	LoadTopAuto(secondaryRollers, frontIntake, backIntake, timer);
+	ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
+	//LoadBackAutoDrive(frontIntake, backIntake, shooter, timer, secondaryRollers, drivetrain, me);
+	LoadBackAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, drivetrain, me);
+	printf("Done driving!");
+	ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
+	//ShootDriveForwardAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain, rightDT);
+}
+
+void OneShot(IntakeSystem *frontIntake, IntakeSystem *backIntake,
+		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *timer,
+		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *rightDT)
+{
+	LoadTopAuto(secondaryRollers, frontIntake, backIntake, timer);
+	ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
+	
+}
 void ShootTwoThenOne(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
 		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *timer,
 		Timer *shottimer,
-		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me)
+		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *rightDT)
 { 
 	shottimer->Reset();
 	shottimer->Start();
@@ -48,7 +93,7 @@ void ShootTwoThenOne(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	
 	LoadTopAuto(secondaryRollers, frontIntake, backIntake, timer);
 	
-	ShootLoadFrontAutoDrive(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain);
+	ShootLoadFrontAutoDrive(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain, rightDT);
 	
 	while(enabledInAutonomous(me))
 	{
@@ -66,9 +111,9 @@ void ShootTwoThenOne(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	
 	//Shoot again.
 	//ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
-	ShootDriveForwardAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain);
+	ShootDriveForwardAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain, rightDT);
 		
-	DriveForwardAuto(drivetrain, timer, me);
+	DriveForwardAuto(drivetrain, timer, me, rightDT);
 }
 
 void heliotrope(IntakeSystem *frontIntake, IntakeSystem *backIntake,

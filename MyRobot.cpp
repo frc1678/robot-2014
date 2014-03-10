@@ -295,26 +295,29 @@ public:
 		else if (driverStation->GetDigitalIn(5))//Three ball auto starting on a side
 		{
 			ShootThreeAndDrive(frontIntake, backIntake, shooter, drivetrain,
-					autoTimer, secondaryRollers, this);
+					autoTimer, secondaryRollers, this, rightEncoder);
 		}
 		else if (driverStation->GetDigitalIn(6))
 		{
 
-			wisteria(frontIntake, backIntake, shooter, drivetrain, autoTimer,
-					secondaryRollers, gyro, this);
+			//wisteria(frontIntake, backIntake, shooter, drivetrain, autoTimer,
+			//		secondaryRollers, gyro, this);
+			//ShootThreeAndDriveV2(frontIntake, backIntake, shooter, drivetrain,
+			//		autoTimer, secondaryRollers, this, rightEncoder);
+			TwoShot(frontIntake, backIntake, shooter, drivetrain, autoTimer, secondaryRollers, this, rightEncoder);
 		}
 		else if (driverStation->GetDigitalIn(7))
 		{
-			ShootTwoThenOne(frontIntake, backIntake, shooter, drivetrain,
-					autoTimer, turnTimer, secondaryRollers, this);
+			//ShootTwoThenOne(frontIntake, backIntake, shooter, drivetrain,
+			//		autoTimer, turnTimer, secondaryRollers, this, rightEncoder);
+			OneShot(frontIntake, backIntake, shooter, drivetrain, autoTimer, secondaryRollers, this, rightEncoder);
+			
 		}
-		//TODO mobility function
-
 		//turnTimer->Start();
 		//turnTimer->Reset(); 
 		//frontIntake->DeployIntake();
 		//backIntake->DeployIntake();
-		OpenFlower(frontIntake, backIntake, secondaryRollers);
+		/*OpenFlower(frontIntake, backIntake, secondaryRollers);
 		Wait(0.5);
 		frontIntake->FrontRollerAutoSlow();
 		backIntake->BackRollerAutoSlow();
@@ -326,6 +329,7 @@ public:
 
 		//GyroTurnAngle(this, gyro, drivetrain, dataTable);
 		//printf("*********    Time: %f    ********    ", turnTimer->Get());
+		 */ 
 
 	}
 	void AutonomousPeriodic()
@@ -335,6 +339,8 @@ public:
 	void TeleopInit()
 	{
 
+		shooter->Reset();
+		
 		compressor->Start();
 
 		leftEncoder->Reset();
@@ -355,7 +361,7 @@ public:
 	void TeleopPeriodic()
 	{
 		dataTable->PutNumber("Enabled", 1);
-		//printf("Left Encoder: %d Right Encoder: %d", leftEncoder->Get(), rightEncoder->Get());
+		printf("Left Encoder: %d Right Encoder: %d", leftEncoder->Get(), rightEncoder->Get());
 		//printf("Front prox: %d, back prox: %d\n", frontIntake->ProximityTriggered(), backIntake->ProximityTriggered());
 		//printf("2 Proximity sensor: %d\n", frontIntake->ProximityTriggered());
 

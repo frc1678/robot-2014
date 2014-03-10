@@ -54,7 +54,7 @@ void ShootAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers,
 		IterativeRobot *me)
 {
-	ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers);
+	ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, false);
 	while(ShootAutoConditions(shooter, me))
 	{
 		ShootAutoInLoop(shooter);
@@ -66,7 +66,7 @@ void ShootLoadFrontAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers,
 		IterativeRobot *me, RobotDrive *drivetrain)
 {
-	ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers);
+	ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, false);
 	LoadFrontAutoPrep(frontIntake, backIntake, secondaryRollers, timer);
 
 	while(ShootAutoConditions(shooter, me) || LoadFrontAutoConditions(me, timer)) //TODO time condition for intake?
@@ -75,42 +75,67 @@ void ShootLoadFrontAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		LoadFrontAutoInLoop(secondaryRollers, frontIntake, timer, drivetrain);
 	}
 	ShootAutoEnd();
-	LoadFrontAutoEnd(secondaryRollers, frontIntake);
+	LoadFrontAutoEnd(secondaryRollers, frontIntake, drivetrain);
 }
 
 void ShootLoadFrontAutoDrive(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
 		ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers,
-		IterativeRobot *me, RobotDrive *drivetrain)
+		IterativeRobot *me, RobotDrive *drivetrain, Encoder *rightDT)
 {
-	ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers);
+	ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, false);
 	LoadFrontAutoPrep(frontIntake, backIntake, secondaryRollers, timer);
 
 	while(ShootAutoConditions(shooter, me) || LoadFrontAutoConditions(me, timer)) //TODO time condition for intake?
 	{
 		ShootAutoInLoop(shooter);
-		LoadFrontAutoDriveInLoop(secondaryRollers, frontIntake, timer, drivetrain);
+		LoadFrontAutoDriveInLoop(secondaryRollers, frontIntake, timer, drivetrain, rightDT);
 	}
 	ShootAutoEnd();
-	LoadFrontAutoEnd(secondaryRollers, frontIntake);
+	LoadFrontAutoEnd(secondaryRollers, frontIntake, drivetrain);
+}
+
+void ShootAutoPrepBack(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
+		ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers,
+		IterativeRobot *me, RobotDrive *drivetrain)
+{
+	timer->Start();
+	timer->Reset();
+	bool secondary = false;
+	ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, false);
+	while(ShootAutoConditions(shooter, me))
+	{
+		ShootAutoInLoop(shooter);
+		if(timer->Get() > 1.0 && !secondary)
+		{
+			secondaryRollers->Undeploy();
+			shooter->ShooterPrime(true);
+		}
+		if(timer->Get() > 2.25)
+		{
+			LoadBackAutoInLoop(backIntake, secondaryRollers, drivetrain, timer);
+		}
+	}
+	ShootAutoEnd();
 }
 
 void ShootDriveForwardAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
 		ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers,
-		IterativeRobot *me, RobotDrive *drivetrain)
+		IterativeRobot *me, RobotDrive *drivetrain, Encoder *rightDT)
 {
-	ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers);
+	ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, false);
 	bool driveInit = false;
 	timer->Start();
 	timer->Reset();
 	
-	while(ShootAutoConditions(shooter, me) || DriveForwardAutoConditions(timer, me))
+	while(ShootAutoConditions(shooter, me) || DriveForwardAutoConditions(timer, me, rightDT))
 	{
 		if(!driveInit && timer->Get() > 1.0)
 		{
-			DriveForwardAutoPrep(timer);
+			DriveForwardAutoPrep(timer, rightDT);
 			driveInit = true;
+			backIntake->UndeployIntake();
 		}
-		if(driveInit)
+		if(driveInit && DriveForwardAutoConditions(timer, me, rightDT))
 		{
 			DriveForwardAutoInLoop(drivetrain);
 		}
@@ -127,9 +152,9 @@ void LoadBackAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	LoadBackAutoPrep(shooter, timer, secondaryRollers, frontIntake);
 	while(LoadBackAutoConditions(timer, me)) //TODO end condition
 	{
-		LoadBackAutoDriveInLoop(backIntake, secondaryRollers, drivetrain, timer);
+		LoadBackAutoInLoop(backIntake, secondaryRollers, drivetrain, timer);
 	}
-	LoadBackAutoEnd(backIntake, secondaryRollers, shooter);
+	LoadBackAutoEnd(backIntake, frontIntake, secondaryRollers, shooter);
 }
 
 void LoadBackAutoDrive(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
@@ -142,7 +167,7 @@ void LoadBackAutoDrive(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		LoadBackAutoDriveInLoop(backIntake, secondaryRollers, drivetrain, timer);
 		
 	}
-	LoadBackAutoEnd(backIntake, secondaryRollers, shooter);
+	LoadBackAutoEnd(backIntake, frontIntake, secondaryRollers, shooter);
 	drivetrain->TankDrive(0.0, 0.0);
 }
 
@@ -164,8 +189,7 @@ void GyroTurnLoadBackAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	while (GyroTurnAngleConditions(gyro, degreeOfTurn, me) && LoadBackAutoConditions(timer, me))
 	{
 		GyroTurnAngleInLoop(me, gyro, drivetrain,degreeOfTurn, kpError, kiError,
-		kdError, integral, differential, oldError);
-		
+		kdError, integral, differential, oldError);		
 	}
 
 	GyroTurnAngleEnd(drivetrain);
@@ -175,17 +199,37 @@ void GyroTurnLoadBackAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		LoadBackAutoInLoop(backIntake, secondaryRollers, drivetrain, timer); 
 	}
 	
-	LoadBackAutoEnd(backIntake, secondaryRollers, shooter);
+	LoadBackAutoEnd(backIntake, frontIntake, secondaryRollers, shooter);
 }
 
-void DriveForwardAuto(RobotDrive *drivetrain, Timer *timer, IterativeRobot *me)
+void DriveForwardAuto(RobotDrive *drivetrain, Timer *timer, IterativeRobot *me, Encoder *rightDT)
 {
-	DriveForwardAutoPrep(timer);
-	while(DriveForwardAutoConditions(timer, me))
+	DriveForwardAutoPrep(timer, rightDT);
+	while(DriveForwardAutoConditions(timer, me, rightDT))
 	{
 		DriveForwardAutoInLoop(drivetrain);
 	}
 	DriveForwardAutoEnd(drivetrain);
+}
+
+void ShortShootDriveForwardAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
+		ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers,
+		IterativeRobot *me, RobotDrive *drivetrain, Encoder *rightDT)
+{
+	ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, true);
+	bool driveInit = false;
+	timer->Start();
+	timer->Reset();
+
+	DriveForwardAutoPrep(timer, rightDT);
+	
+	while(ShootAutoConditions(shooter, me) || DriveForwardAutoConditions(timer, me, rightDT))
+	{	
+		DriveForwardAutoInLoop(drivetrain);
+		ShootAutoInLoop(shooter);
+	}
+	DriveForwardAutoEnd(drivetrain);
+	ShootAutoEnd();
 }
 
 #endif	

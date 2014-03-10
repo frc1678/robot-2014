@@ -52,7 +52,7 @@ public:
 
 	void DeadzoneDelayRun()
 	{
-		if (deadzoneTimer->Get() < 0.5)//(camDelayTimer->Get() < 0.5)
+		if (deadzoneTimer->Get() < 0.7 && !HallSensorTriggered())//(camDelayTimer->Get() < 0.5)
 		{
 			StopTalons();
 		}
@@ -132,17 +132,17 @@ public:
 		{
 			if (!camPrimedToShoot)
 			{
-				if(deadzoneTimer->Get() < 0.075)
+				if(deadzoneTimer->Get() < 0.35)// ||deadzoneTimer->Get() > 0.75)
 				{
 					RunTalons();
 				}
 				else
 				{
-					//DeadzoneDelayRun();
-					RunTalons();
+					DeadzoneDelayRun();
+					//RunTalons();
 				}
 				//If we've gotten all the way around
-				if (listenForSensor && HallSensorTriggered() && deadzoneTimer->Get() > 0.3) //when does listenForSensor become true
+				if (listenForSensor && HallSensorTriggered() && deadzoneTimer->Get() > 0.35) //when does listenForSensor become true
 				{
 					StopTalons();
 					listenForSensor = false;
