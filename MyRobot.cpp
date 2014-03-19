@@ -38,6 +38,8 @@ class Robot : public IterativeRobot
 	Solenoid *shotAlignerUp;
 	Solenoid *shotAlignerDown;
 	Solenoid *armPiston;
+	//TODO how am I? should I be a part of a system?
+	Solenoid *spitShortSwap;
 
 	//Sensors
 	Encoder *leftEncoder; //wheel rotation clicks
@@ -131,8 +133,10 @@ public:
 		shotAlignerUp = new Solenoid (5);
 		shotAlignerDown = new Solenoid(6);
 		armPiston = new Solenoid (2);
-		//Sensors
-		leftEncoder = new Encoder(6,7);
+		spitShortSwap = new Solenoid (1);
+		
+		//Sensors 
+		leftEncoder = new Encoder(7,6);//(6,7);
 		rightEncoder = new Encoder(4,5);
 
 		//gyro
@@ -244,6 +248,7 @@ public:
 	}
 	void AutonomousInit()
 	{
+		spitShortSwap->Set(true);
 		table->PutNumber("Enabled", 1);
 		table->PutString("Direction: ", "MERP");
 		leftEncoder->Start();
@@ -251,7 +256,7 @@ public:
 		gearDown->Set(true);
 		gearUp->Set(false);
 		
-		if (driverStation->GetDigitalIn(1))//Three ball auto starting on the left
+		/*if (driverStation->GetDigitalIn(1))//Three ball auto starting on the left
 		{ 
 			//TODO REDUCE TIME
 			table->PutNumber("Enabled", 1);
@@ -264,13 +269,15 @@ public:
 			//TODO Right then left
 			heliotrope(frontIntake, backIntake, shooter, drivetrain, autoTimer,
 					turnTimer, secondaryRollers, gyro, 1.0, this);
-		}
-		else if (driverStation->GetDigitalIn(3))
+		}*/
+		if (driverStation->GetDigitalIn(3))
 		{
-			TwoShotWithVision(frontIntake, backIntake, shooter, drivetrain, autoTimer, secondaryRollers,
-					this, leftEncoder, rightEncoder, gyro, table);
+			//TwoShotWithVision(frontIntake, backIntake, shooter, drivetrain, autoTimer, secondaryRollers,
+			//		this, leftEncoder, rightEncoder, gyro, table);
+			TwoShotShortLong(frontIntake, backIntake, shooter, drivetrain, autoTimer, 
+					spitShortSwap, secondaryRollers, this,  rightEncoder);
 		}
-		else if (driverStation->GetDigitalIn(4))
+		/*else if (driverStation->GetDigitalIn(4))
 		{
 			ShootLoadFrontAuto(frontIntake, backIntake, shooter, autoTimer,
 					secondaryRollers, this, drivetrain);
@@ -281,20 +288,64 @@ public:
 		{
 			ShootThreeAndDrive(frontIntake, backIntake, shooter, drivetrain,
 					autoTimer, secondaryRollers, this, rightEncoder);
-		}
+		}*/
 		else if (driverStation->GetDigitalIn(6))
 		{
-			TwoShot(frontIntake, backIntake, shooter, drivetrain, autoTimer, secondaryRollers, this, rightEncoder);
+			TwoShot(frontIntake, backIntake, shooter, drivetrain, autoTimer, secondaryRollers, spitShortSwap, this, rightEncoder);
 		}
+		else if(driverStation->GetDigitalIn(7))
+		{
+			TwoShotShortShort(frontIntake, backIntake, shooter, drivetrain, autoTimer, turnTimer, spitShortSwap, secondaryRollers, this, rightEncoder, driverStation);
+		}
+		/*
 		else if (driverStation->GetDigitalIn(7))
 		{
 			OneShot(frontIntake, backIntake, shooter, drivetrain, autoTimer, secondaryRollers, this, rightEncoder);
-			
 		}
 		else if (driverStation->GetDigitalIn(8))
 		{
-			TurnRightThenLeft(drivetrain, leftEncoder, rightEncoder, this);
-		}
+			OpenFlower(frontIntake, backIntake, secondaryRollers);
+			
+			frontIntake->FrontRollerAutoSlow();
+			backIntake->BackRollerAutoSlow();
+
+			Wait(1.0);
+			SpinAutoClock(52, drivetrain, leftEncoder, rightEncoder, this);
+			Wait(2.0);
+			
+			SpinAutoAnti(104, drivetrain, leftEncoder, rightEncoder, this);
+
+			autoTimer->Start();
+			autoTimer->Reset();
+			
+			while(EnabledInAutonomous(this))
+			{
+				if(DriveForwardAutoConditions(autoTimer, this, rightEncoder))
+				{
+					DriveForwardAutoInLoop(drivetrain);
+				}
+				if(autoTimer->Get() < 2.0)
+				{
+					backIntake->BackRollerLoad();
+				}
+				else
+				{
+					backIntake->BackRollerAutoSlow();
+				}
+				if(autoTimer->Get() > 3.0)
+				{
+					frontIntake->FrontRollerLoad();
+					if(!DriveForwardAutoConditions(autoTimer, this, rightEncoder))
+					{
+						drivetrain->TankDrive(0.4, 0.4);
+					}
+				}
+				else
+				{
+					frontIntake->FrontRollerAutoSlow();
+				}
+			}
+		}*/
 
 	}
 	void AutonomousPeriodic()
@@ -304,6 +355,7 @@ public:
 	void TeleopInit()
 	{
 
+		spitShortSwap->Set(true);
 		shooter->Reset();
 		
 		compressor->Start();
@@ -340,10 +392,10 @@ public:
 
 
 		if (b_gearUp->ButtonClicked())
-			{
-				gearUp->Set(false);
-				gearDown->Set(true);
-			}
+		{
+			gearUp->Set(false);
+			gearDown->Set(true);
+		}
 		if(b_gearDown->ButtonClicked())
 		{
 			gearUp->Set(true);
@@ -358,13 +410,17 @@ public:
 			{
 				frontIntake->DeployIntake();
 			}
+			if(b_frontIntakePickup->ButtonClicked())
+			{
+				spitShortSwap->Set(true);
+			}
 			if (manipulator->GetRawAxis(5)!=0.0)
 			{
 				frontIntake->FrontRollerLoad();
 			}
 			else
 			{
-				frontIntake->FrontPickup(manipulator, driverStation);
+				frontIntake->FrontPickup(driverStation);
 			}
 			secondaryRollers->Undeploy();
 			secondaryRollers->Run();
@@ -379,6 +435,8 @@ public:
 				shortShot = true;
 				shooter->ShooterPrime(shortShot);
 				backIntake->DeployIntake();
+
+				spitShortSwap->Set(true);
 			}
 			if (manipulator->GetRawAxis(5)!=0.0)
 			{
@@ -398,8 +456,12 @@ public:
 			{
 				shortShot = true;
 				shooter->ShooterPrime(shortShot);
+				spitShortSwap->Set(false);
 			}
-			secondaryRollers->ReverseSlow();
+			//secondaryRollers->ReverseSlow();
+			//secondaryRollers->Run();
+			secondaryRollerA->Set(1.0);
+			secondaryRollerB->Set(1.0);
 			backIntake->Reverse();
 		}
 		else if (b_humanLoad->ButtonPressed())
@@ -417,19 +479,32 @@ public:
 			backIntake->Stop();
 			secondaryRollers->Stop();
 		}
+		
+		//TODO where to put me?
+		if(b_reverseIntake->ButtonReleased())
+		{
+			spitShortSwap->Set(true);
+		}
 
 		//toggles the front intake up and down
 		if (b_frontIntakeDeployToggle->ButtonClicked())
 		{
 			frontIntake->ToggleIntake();
-			secondaryRollers->Undeploy();
+			//TODO - ?
+			if(!frontIntake->DeployState())
+			{
+				secondaryRollers->Undeploy();
+			}
 		}
 
 		//toggles the back intake up and down
 		if (b_backIntakeDeployToggle->ButtonClicked())
 		{
 			backIntake->ToggleIntake();
-			secondaryRollers->Undeploy();
+			if(!frontIntake->DeployState())
+			{
+				secondaryRollers->Undeploy();
+			}
 		}
 		//Arm piston toggle
 		if (b_armPistonToggle->ButtonClicked())
@@ -470,10 +545,12 @@ public:
 		{
 			shortShot = false;
 			shooter->ShooterPrime(shortShot);
+			spitShortSwap->Set(false);
 		}
 		if (b_shotAlignShort->ButtonClicked())
 		{
 			shortShot = true;
+			spitShortSwap->Set(true);
 			shooter->ShooterPrime(shortShot);
 		}
 
@@ -524,9 +601,9 @@ public:
 	void TestPeriodic()
 	{
 		driverStationLCD->Printf((DriverStationLCD::Line)0,1,
-				"Front Proximity Sensor: %d", frontIntake->ProximityTriggered());
+				"Front Prox: %d", frontIntake->ProximityTriggered());
 		driverStationLCD->Printf((DriverStationLCD::Line)1,1,
-				"Back Proximity Sensor: %d", backIntake->ProximityTriggered());
+				"Back Prox: %d", backIntake->ProximityTriggered());
 		driverStationLCD->Printf((DriverStationLCD::Line)2,1,
 				"Hall Sensor: %d", shooter->HallSensorTriggered());
 		driverStationLCD->Printf((DriverStationLCD::Line)3,1,

@@ -127,7 +127,8 @@ void OpenFlower(IntakeSystem *frontIntake, IntakeSystem *backIntake, SecondaryRo
 }
 
 void ShootAutoPrep(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
-		ShooterSystem *shooter, SecondaryRollerSystem *secondaryRollers, bool shortShot)
+		ShooterSystem *shooter, SecondaryRollerSystem *secondaryRollers,
+		Solenoid *spitShortSwap, bool shortShot)
 {
 	//OpenFlower(frontIntake, backIntake, secondaryRollers);
 	frontIntake->DeployIntake();
@@ -136,6 +137,7 @@ void ShootAutoPrep(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	frontIntake->FrontRollerAutoSlow();
 	backIntake->BackRollerAutoSlow();
 	shooter->ShooterPrime(shortShot);
+	spitShortSwap->Set(shortShot);
 	//Wait(0.3); //TODO how short can this be?
 	
 	secondaryRollers->Deploy();
@@ -210,7 +212,7 @@ void LoadBackAutoEnd(IntakeSystem *backIntake, IntakeSystem *frontIntake, Second
 	frontIntake->DeployIntake();
 	backIntake->DeployIntake();
 	//OpenFlower(frontIntake, backIntake, secondaryRollers);
-	Wait(1.0);//(0.5);
+	//Wait(1.0);//(0.5);
 	printf("Primed!\n");
 }
 
@@ -333,7 +335,7 @@ void LoadTopAutoEnd(SecondaryRollerSystem *secondaryRollers, IntakeSystem *front
 	backIntake->Stop();
 	frontIntake->DeployIntake();
 	backIntake->DeployIntake();
-	Wait(1.5);
+	//Wait(1.5);
 }
 //Break this into compinents and make subroutine
 
@@ -348,7 +350,18 @@ void DriveForwardAutoPrep(Timer *timer, Encoder *rightDT)
 
 bool DriveForwardAutoConditions(Timer *timer, IterativeRobot *me, Encoder *rightDT)
 {
-	if(timer->Get() < 2.0 && EnabledInAutonomous(me) && rightDT->Get() > - 1000)//3000)
+	//1000 for end condition.
+	if(timer->Get() < 2.0 && EnabledInAutonomous(me) && rightDT->Get() >- 1000)//3000)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool DriveForwardShootAutoConditions(Timer *timer, IterativeRobot *me, Encoder *rightDT)
+{
+	//1500 for moveshot.
+	if(EnabledInAutonomous(me) && rightDT->Get() >- 3000)
 	{
 		return true;
 	}
@@ -357,7 +370,8 @@ bool DriveForwardAutoConditions(Timer *timer, IterativeRobot *me, Encoder *right
 
 void DriveForwardAutoInLoop(RobotDrive *drivetrain)
 {
-	drivetrain->TankDrive(-0.75, -0.75);
+	//drivetrain->TankDrive(-0.75, -0.75);
+	drivetrain->TankDrive(-0.8, -0.8);
 }
 
 void DriveForwardAutoEnd(RobotDrive *drivetrain)

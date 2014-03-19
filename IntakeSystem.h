@@ -115,16 +115,17 @@ public:
 
 	void FrontRollerAutoSlow() {
 		if (front) {
-			intakeRoller->Set(0.1 * frontIntakeK);
+			intakeRoller->Set(0.3 * frontIntakeK);
 		} else {
-			intakeRoller->Set(0.1 * backIntakeK);
+			intakeRoller->Set(0.3 * backIntakeK);
 		}
 	}
 	void BackRollerAutoSlow() {
 		if (front) {
-			intakeRoller->Set(0.1 * frontIntakeK);
+			intakeRoller->Set(0.3 * frontIntakeK);
 		} else {
-			intakeRoller->Set(0.1 * backIntakeK);
+			//intakeRoller->Set(0.3 * backIntakeK);
+			intakeRoller->Set(0.3 * backIntakeK);
 		}
 	}
 
@@ -190,7 +191,7 @@ public:
 		}
 	}
 	//TODO make them in the same function.
-	void FrontPickup(Joystick * stick, DriverStation *m_ds) {
+	void FrontPickup( DriverStation *m_ds) {
 		if (ProximityTriggered()) {
 			//printf("sensor");
 			sensorTriggered = true;
