@@ -71,7 +71,7 @@ void GyroTurnAngle(IterativeRobot *me, MPU6050_I2C *gyro,
 	GyroTurnAngle(me, gyro, drivetrain, degreeOfTurn, kpError, kiError, kdError);
 }
 
-void SpinAutoClock(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT, IterativeRobot *me)
+void SpinAutoClock(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftEncoder, Encoder *rightEncoder, IterativeRobot *me)
 {
 	/*leftDT->Reset();
 	rightDT->Reset();
@@ -80,15 +80,15 @@ void SpinAutoClock(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT
 		drivetrain->TankDrive(-0.75, 0.75);
 	}
 	drivetrain->TankDrive(0.0, 0.0);*/
-	SpinAutoPrep(numEncoderClicks, drivetrain, leftDT, rightDT, me);
-	while(SpinAutoClockConditions(numEncoderClicks, drivetrain, leftDT, rightDT, me))
+	SpinAutoPrep(numEncoderClicks, drivetrain, leftEncoder, rightEncoder, me);
+	while(SpinAutoClockConditions(numEncoderClicks, drivetrain, leftEncoder, rightEncoder, me))
 	{
-		SpinAutoClockInLoop(numEncoderClicks, drivetrain, leftDT, rightDT, me);
+		SpinAutoClockInLoop(numEncoderClicks, drivetrain, leftEncoder, rightEncoder, me);
 	}
-	SpinAutoEnd(numEncoderClicks, drivetrain, leftDT, rightDT, me);
+	SpinAutoEnd(numEncoderClicks, drivetrain, leftEncoder, rightEncoder, me);
 }
 	//Spin counterclockwise for (approximately) so many encoder clicks. Anti is shorter than counter. Un is shorter than Anti.
-void SpinAutoAnti(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT, IterativeRobot *me)
+void SpinAutoAnti(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftEncoder, Encoder *rightEncoder, IterativeRobot *me)
 {
 	/*
 	leftDT->Reset();
@@ -100,12 +100,12 @@ void SpinAutoAnti(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT,
 	}
 	drivetrain->TankDrive(0.0, 0.0);*/
 
-	SpinAutoPrep(numEncoderClicks, drivetrain, leftDT, rightDT, me);
-	while(SpinAutoAntiConditions(numEncoderClicks, drivetrain, leftDT, rightDT, me))
+	SpinAutoPrep(numEncoderClicks, drivetrain, leftEncoder, rightEncoder, me);
+	while(SpinAutoAntiConditions(numEncoderClicks, drivetrain, leftEncoder, rightEncoder, me))
 	{
-		SpinAutoAntiInLoop(numEncoderClicks, drivetrain, leftDT, rightDT, me);
+		SpinAutoAntiInLoop(numEncoderClicks, drivetrain, leftEncoder, rightEncoder, me);
 	}
-	SpinAutoEnd(numEncoderClicks, drivetrain, leftDT, rightDT, me);
+	SpinAutoEnd(numEncoderClicks, drivetrain, leftEncoder, rightEncoder, me);
 }
 	
 void ShootAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
@@ -166,8 +166,7 @@ void ShootLoadFrontAutoDrive(IntakeSystem *frontIntake, IntakeSystem *backIntake
 
 void ShootAutoLoadBack(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
 		ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers,
-		Solenoid *spitShortSwap,
-		IterativeRobot *me, RobotDrive *drivetrain)
+		Solenoid *spitShortSwap,IterativeRobot *me, RobotDrive *drivetrain)
 {
 	timer->Start();
 	timer->Reset();
@@ -190,23 +189,23 @@ void ShootAutoLoadBack(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 }
 
 void ShootDriveForwardAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
-		ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers,
+		ShooterSystem *shooter, Timer *autoTimer, SecondaryRollerSystem *secondaryRollers,
 		Solenoid *spitShortSwap, IterativeRobot *me, RobotDrive *drivetrain, Encoder *rightEncoder)
 {
 	ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, spitShortSwap, false);
 	bool driveInit = false;
-	timer->Start();
-	timer->Reset();
+	autoTimer->Start();
+	autoTimer->Reset();
 	
-	while(ShootAutoConditions(shooter, me) || DriveForwardAutoConditions(timer, me, rightEncoder))
+	while(ShootAutoConditions(shooter, me) || DriveForwardAutoConditions(autoTimer, me, rightEncoder))
 	{
-		if(!driveInit && timer->Get() > 1.0)
+		if(!driveInit && autoTimer->Get() > 1.0)
 		{
-			DriveForwardAutoPrep(timer, rightEncoder);
+			DriveForwardAutoPrep(autoTimer, rightEncoder);
 			driveInit = true;
 			backIntake->UndeployIntake();
 		}
-		if(driveInit && DriveForwardAutoConditions(timer, me, rightEncoder))
+		if(driveInit && DriveForwardAutoConditions(autoTimer, me, rightEncoder))
 		{
 			DriveForwardAutoInLoop(drivetrain);
 		}
@@ -216,7 +215,7 @@ void ShootDriveForwardAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	ShootAutoEnd();
 }
 void LoadTopAuto(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake, 
-		IntakeSystem *backIntake, Timer *timer, ShooterSystem *shooter, 
+		IntakeSystem *backIntake, Timer *autoTimer, ShooterSystem *shooter, 
 		IterativeRobot *me)
 {
 	/*timer->Reset();
@@ -227,8 +226,8 @@ void LoadTopAuto(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontInt
 	//secondaryRollers->Deploy();
 	//frontIntake->DeployIntake();
 	//backIntake->DeployIntake();*/
-	LoadTopAutoPrep(timer, shooter);
-	while(LoadTopAutoConditions(timer, me))//(timer->Get() < 0.8)//0.4)
+	LoadTopAutoPrep(autoTimer, shooter);
+	while(LoadTopAutoConditions(autoTimer, me))//(timer->Get() < 0.8)//0.4)
 	{
 		/*frontIntake->Reverse();
 		backIntake->Reverse();
@@ -250,36 +249,36 @@ void LoadTopAuto(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontInt
 }
 
 void LoadBackAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
-		ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers,
+		ShooterSystem *shooter, Timer *autoTimer, SecondaryRollerSystem *secondaryRollers,
 		RobotDrive *drivetrain, IterativeRobot *me)
 {
-	LoadBackAutoPrep(shooter, timer, secondaryRollers, frontIntake);
-	while(LoadBackAutoConditions(timer, me)) //TODO end condition
+	LoadBackAutoPrep(shooter, autoTimer, secondaryRollers, frontIntake);
+	while(LoadBackAutoConditions(autoTimer, me)) //TODO end condition
 	{
-		LoadBackAutoInLoop(backIntake, secondaryRollers, drivetrain, timer);
+		LoadBackAutoInLoop(backIntake, secondaryRollers, drivetrain, autoTimer);
 	}
 	LoadBackAutoEnd(backIntake, frontIntake, secondaryRollers, shooter);
 }
 
 void LoadFrontAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
-		ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers,
+		ShooterSystem *shooter, Timer *autoTimer, SecondaryRollerSystem *secondaryRollers,
 		RobotDrive *drivetrain, IterativeRobot *me)
 {
-	LoadFrontAutoPrep(frontIntake, backIntake, secondaryRollers, timer);
-	while(LoadFrontAutoConditions(me, timer)) //TODO end condition
+	LoadFrontAutoPrep(frontIntake, backIntake, secondaryRollers, autoTimer);
+	while(LoadFrontAutoConditions(me, autoTimer)) //TODO end condition
 	{
-		LoadFrontAutoInLoop(secondaryRollers, frontIntake, timer, drivetrain);
+		LoadFrontAutoInLoop(secondaryRollers, frontIntake, autoTimer, drivetrain);
 	}
 	LoadFrontAutoEnd(secondaryRollers, frontIntake, drivetrain);
 }
 void LoadBackAutoDrive(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
-		ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers,
+		ShooterSystem *shooter, Timer *autoTimer, SecondaryRollerSystem *secondaryRollers,
 		RobotDrive *drivetrain, IterativeRobot *me)
 {
-	LoadBackAutoPrep(shooter, timer, secondaryRollers, frontIntake);
-	while(LoadBackAutoConditions(timer, me)) //TODO end condition
+	LoadBackAutoPrep(shooter, autoTimer, secondaryRollers, frontIntake);
+	while(LoadBackAutoConditions(autoTimer, me)) //TODO end condition
 	{
-		LoadBackAutoDriveInLoop(backIntake, secondaryRollers, drivetrain, timer);
+		LoadBackAutoDriveInLoop(backIntake, secondaryRollers, drivetrain, autoTimer);
 		
 	}
 	LoadBackAutoEnd(backIntake, frontIntake, secondaryRollers, shooter);
@@ -287,45 +286,45 @@ void LoadBackAutoDrive(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 }
 
 void LoadBackSpin(IntakeSystem *frontIntake, IntakeSystem *backIntake,
-		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *timer,
+		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *autoTimer,
 		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me,
-		Encoder *leftDT, Encoder *rightDT, MPU6050_I2C *gyro, NetworkTable *table,
+		Encoder *leftEncoder, Encoder *rightEncoder, MPU6050_I2C *gyro, NetworkTable *table,
 		bool isClockwise, int numEncoderClicks)
 {
-	LoadBackAutoPrep(shooter, timer, secondaryRollers, frontIntake);
+	LoadBackAutoPrep(shooter, autoTimer, secondaryRollers, frontIntake);
 	
 	bool started = false;
-	while(LoadBackAutoConditions(timer, me))
+	while(LoadBackAutoConditions(autoTimer, me))
 	{
-		LoadBackAutoInLoop(backIntake, secondaryRollers, drivetrain, timer);
-		if(timer->Get()> 0.5 &&!started)
+		LoadBackAutoInLoop(backIntake, secondaryRollers, drivetrain, autoTimer);
+		if(autoTimer->Get()> 0.5 &&!started)
 		{
 			started = true;
-			SpinAutoPrep(numEncoderClicks, drivetrain, leftDT, rightDT, me);
+			SpinAutoPrep(numEncoderClicks, drivetrain, leftEncoder, rightEncoder, me);
 		}
-		if(started && SpinAutoClockConditions(numEncoderClicks, drivetrain, leftDT, rightDT, me) && isClockwise)
+		if(started && SpinAutoClockConditions(numEncoderClicks, drivetrain, leftEncoder, rightEncoder, me) && isClockwise)
 		{
-			SpinAutoClockInLoop(numEncoderClicks, drivetrain, leftDT, rightDT, me);
+			SpinAutoClockInLoop(numEncoderClicks, drivetrain, leftEncoder, rightEncoder, me);
 		}
-		if(started && SpinAutoAntiConditions(numEncoderClicks, drivetrain, leftDT, rightDT, me) && !isClockwise)
+		if(started && SpinAutoAntiConditions(numEncoderClicks, drivetrain, leftEncoder, rightEncoder, me) && !isClockwise)
 		{
-			SpinAutoAntiInLoop(numEncoderClicks, drivetrain, leftDT, rightDT, me);
+			SpinAutoAntiInLoop(numEncoderClicks, drivetrain, leftEncoder, rightEncoder, me);
 		}
 	}
 	LoadBackAutoEnd(backIntake, frontIntake, secondaryRollers, shooter);
-	while(SpinAutoClockConditions(numEncoderClicks, drivetrain, leftDT, rightDT, me) && isClockwise)
+	while(SpinAutoClockConditions(numEncoderClicks, drivetrain, leftEncoder, rightEncoder, me) && isClockwise)
 	{
-		SpinAutoClockInLoop(numEncoderClicks, drivetrain, leftDT, rightDT, me);
+		SpinAutoClockInLoop(numEncoderClicks, drivetrain, leftEncoder, rightEncoder, me);
 	}
-	while(SpinAutoAntiConditions(numEncoderClicks, drivetrain, leftDT, rightDT, me) && !isClockwise)
+	while(SpinAutoAntiConditions(numEncoderClicks, drivetrain, leftEncoder, rightEncoder, me) && !isClockwise)
 	{
-		SpinAutoAntiInLoop(numEncoderClicks, drivetrain, leftDT, rightDT, me);
+		SpinAutoAntiInLoop(numEncoderClicks, drivetrain, leftEncoder, rightEncoder, me);
 	}
-	SpinAutoEnd(numEncoderClicks, drivetrain, leftDT, rightDT, me);
+	SpinAutoEnd(numEncoderClicks, drivetrain, leftEncoder, rightEncoder, me);
 }
 
 void GyroTurnLoadBackAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
-		ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers,
+		ShooterSystem *shooter, Timer *autoTimer, SecondaryRollerSystem *secondaryRollers,
 		IterativeRobot *me, MPU6050_I2C *gyro, RobotDrive *drivetrain,
 		float degreeOfTurn, double kpError, double kiError, double kdError)
 {
@@ -336,9 +335,9 @@ void GyroTurnLoadBackAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 
 	GyroTurnAnglePrep(me, gyro, drivetrain, degreeOfTurn, kpError, kiError, kdError, integral,
 			differential, oldError);
-	LoadBackAutoPrep(shooter, timer, secondaryRollers, frontIntake);
+	LoadBackAutoPrep(shooter, autoTimer, secondaryRollers, frontIntake);
 		
-	while (GyroTurnAngleConditions(gyro, degreeOfTurn, me) && LoadBackAutoConditions(timer, me))
+	while (GyroTurnAngleConditions(gyro, degreeOfTurn, me) && LoadBackAutoConditions(autoTimer, me))
 	{
 		GyroTurnAngleInLoop(me, gyro, drivetrain,degreeOfTurn, kpError, kiError,
 		kdError, integral, differential, oldError);
@@ -346,18 +345,18 @@ void GyroTurnLoadBackAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 
 	GyroTurnAngleEnd(drivetrain);
 	
-	while(timer->Get() < 1.5)
+	while(autoTimer->Get() < 1.5)
 	{
-		LoadBackAutoInLoop(backIntake, secondaryRollers, drivetrain, timer); 
+		LoadBackAutoInLoop(backIntake, secondaryRollers, drivetrain, autoTimer); 
 	}
 	
 	LoadBackAutoEnd(backIntake, frontIntake, secondaryRollers, shooter);
 }
 
-void DriveForwardAuto(RobotDrive *drivetrain, Timer *timer, IterativeRobot *me, Encoder *rightDT)
+void DriveForwardAuto(RobotDrive *drivetrain, Timer *autoTimer, IterativeRobot *me, Encoder *rightEncoder)
 {
-	DriveForwardAutoPrep(timer, rightDT);
-	while(DriveForwardAutoConditions(timer, me, rightDT))
+	DriveForwardAutoPrep(autoTimer, rightEncoder);
+	while(DriveForwardAutoConditions(autoTimer, me, rightEncoder))
 	{
 		DriveForwardAutoInLoop(drivetrain);
 	}
@@ -365,23 +364,22 @@ void DriveForwardAuto(RobotDrive *drivetrain, Timer *timer, IterativeRobot *me, 
 }
 
 void ShortShootDriveForwardAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
-		ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers,
-		Solenoid *spitShortSwap,
-		IterativeRobot *me, RobotDrive *drivetrain, Encoder *rightDT)
+		ShooterSystem *shooter, Timer *autoTimer, SecondaryRollerSystem *secondaryRollers,
+		Solenoid *spitShortSwap, IterativeRobot *me, RobotDrive *drivetrain, Encoder *rightEncoder)
 {
-	timer->Start();
-	timer->Reset();
+	autoTimer->Start();
+	autoTimer->Reset();
 
-	DriveForwardAutoPrep(timer, rightDT);
+	DriveForwardAutoPrep(autoTimer, rightEncoder);
 	
 	bool shootPrep = false;
 	
 	bool doneDriving = false;
 	bool doneShooting = false;
 	
-	while(ShootAutoConditions(shooter, me) || DriveForwardShootAutoConditions(timer, me, rightDT))
+	while(ShootAutoConditions(shooter, me) || DriveForwardShootAutoConditions(autoTimer, me, rightEncoder))
 	{	
-		if(DriveForwardShootAutoConditions(timer, me, rightDT))
+		if(DriveForwardShootAutoConditions(autoTimer, me, rightEncoder))
 		{
 			DriveForwardAutoInLoop(drivetrain);
 		}
@@ -390,7 +388,7 @@ void ShortShootDriveForwardAuto(IntakeSystem *frontIntake, IntakeSystem *backInt
 			DriveForwardAutoEnd(drivetrain);
 			doneDriving = true;
 		}
-		if(!shootPrep && rightDT->Get() <- 1500) //3 feet forward? TODO number
+		if(!shootPrep && rightEncoder->Get() <- 1500) //3 feet forward? TODO number
 		{
 			ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, spitShortSwap, true);
 			shootPrep = true;
@@ -409,23 +407,23 @@ void ShortShootDriveForwardAuto(IntakeSystem *frontIntake, IntakeSystem *backInt
 }
 
 void ShortShootTwoForwardAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
-		ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers,
-		Solenoid *spitShortSwap,
-		IterativeRobot *me, RobotDrive *drivetrain, Encoder *rightDT)
+		ShooterSystem *shooter, Timer *autoTimer, SecondaryRollerSystem *secondaryRollers,
+		Solenoid *spitShortSwap, IterativeRobot *me, RobotDrive *drivetrain,
+		Encoder *rightEncoder)
 {
-	timer->Start();
-	timer->Reset();
+	autoTimer->Start();
+	autoTimer->Reset();
 
-	DriveForwardAutoPrep(timer, rightDT);
+	DriveForwardAutoPrep(autoTimer, rightEncoder);
 	
 	bool shootPrep = false;
 	
 	bool doneDriving = false;
 	bool doneShooting = false;
 	
-	while(ShootAutoConditions(shooter, me) || DriveForwardShootAutoConditions(timer, me, rightDT))
+	while(ShootAutoConditions(shooter, me) || DriveForwardShootAutoConditions(autoTimer, me, rightEncoder))
 	{	
-		if(DriveForwardShootAutoConditions(timer, me, rightDT))
+		if(DriveForwardShootAutoConditions(autoTimer, me, rightEncoder))
 		{
 			DriveForwardAutoInLoop(drivetrain);
 		}
@@ -434,7 +432,7 @@ void ShortShootTwoForwardAuto(IntakeSystem *frontIntake, IntakeSystem *backIntak
 			DriveForwardAutoEnd(drivetrain);
 			doneDriving = true;
 		}
-		if(!shootPrep && rightDT->Get() <- 1500) //3 feet forward? TODO number
+		if(!shootPrep && rightEncoder->Get() <- 1500) //3 feet forward? TODO number
 		{
 			ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, spitShortSwap, true);
 			shootPrep = true;
@@ -452,9 +450,9 @@ void ShortShootTwoForwardAuto(IntakeSystem *frontIntake, IntakeSystem *backIntak
 	ShootAutoEnd();
 }
 void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
-		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *timer,Timer *timer2,
+		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *autoTimer, Timer *shotTimer,
 		SecondaryRollerSystem *secondaryRollers, Solenoid *spitShortSwap,
-		IterativeRobot *me, Encoder *rightDT, DriverStation *driverStation)
+		IterativeRobot *me, Encoder *rightEncoder, DriverStation *driverStation)
 {
 	bool shootPrep = false;
 	bool doneDriving = false;
@@ -465,10 +463,10 @@ void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	bool backintakeup = false;
 	bool stopSecondary = false;
 			
-	while(MultiAutoConditions(shooter, allDone, timer, rightDT, me))
+	while(MultiAutoConditions(shooter, allDone, autoTimer, rightEncoder, me))
 	{
 		//first
-		if(rightDT->Get() > -500)
+		if(rightEncoder->Get() > -500)
 		{
 			secondaryRollers->Pulse();
 		}
@@ -479,10 +477,10 @@ void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		}
 		
 		//second
-		if(!shootPrep && rightDT->Get() <- 2300) //3 feet forward? TODO number
+		if(!shootPrep && rightEncoder->Get() <- 2300) //3 feet forward? TODO number
 		{
-			timer2->Start();
-			timer2->Reset();
+			shotTimer->Start();
+			shotTimer->Reset();
 			ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, spitShortSwap, true);
 			shootPrep = true;
 		}
@@ -495,7 +493,7 @@ void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 			ShootAutoEnd();
 		}
 		//third
-		if(timer2->Get() > 1.9) //rename timer2
+		if(shotTimer->Get() > 1.9) 
 		{
 			if(!backintakeup)
 			{
@@ -511,7 +509,7 @@ void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		}
 		
 		//First
-		else if(rightDT->Get() > -3300)//DriveForwardShootAutoConditions(timer, me, rightDT))
+		else if(rightEncoder->Get() > -3300)//DriveForwardShootAutoConditions(timer, me, rightEncoder))
 		{
 			DriveForwardAutoInLoop(drivetrain);
 		}
@@ -520,7 +518,7 @@ void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 			DriveForwardAutoEnd(drivetrain);
 			doneDriving = true;
 		}
-		if(timer2->Get() > 4.2)
+		if(shotTimer->Get() > 4.2)
 		{
 			secondaryRollers->Stop();
 			DriveForwardAutoEnd(drivetrain);
