@@ -49,8 +49,8 @@ bool TurnIncomplete(float degreeOfTurn, MPU6050_I2C *gyro)
 }
 
 void GyroTurnAnglePrep(IterativeRobot *me, MPU6050_I2C *gyro, RobotDrive *drivetrain,
-		float degreeOfTurn, double kpError, double kiError, double kdError, float integral, 
-		float differential, float oldError)
+		float degreeOfTurn, double kpError, double kiError, double kdError, 
+		float integral, float differential, float oldError)
 {
 	gyro->CalibrateRate(); //DO NOT BE MOVING
 	integral = 0.0;
@@ -104,21 +104,22 @@ void GyroTurnAngleEnd(RobotDrive *drivetrain)
 }
 
 
-void DriveStraight(RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT,
+void DriveStraight(RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightEncoder,
 		IterativeRobot *me) //use CitrusPID here. can we also use it in gyroturn?
 {
 	leftDT->Reset();
-	rightDT->Reset();
+	rightEncoder->Reset();
 	leftDT->Start();
-	rightDT->Start();
-	while(leftDT->Get() < 300 && rightDT->Get() > -300 && EnabledInAutonomous(me))
+	rightEncoder->Start();
+	while(leftDT->Get() < 300 && rightEncoder->Get() > -300 && EnabledInAutonomous(me))
 	{
 		drivetrain->TankDrive(-1.0, -1.0);
 	}
 }
 
 //TODO put this in somewhere that implies not just autonomous.
-void OpenFlower(IntakeSystem *frontIntake, IntakeSystem *backIntake, SecondaryRollerSystem *secondaryRollers)
+void OpenFlower(IntakeSystem *frontIntake, IntakeSystem *backIntake,
+		SecondaryRollerSystem *secondaryRollers)
 {
 	//Unfurling the flower
 	secondaryRollers->Deploy();
@@ -163,7 +164,8 @@ void ShootAutoEnd()
 	
 }
 
-void LoadBackAutoPrep(ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake)
+void LoadBackAutoPrep(ShooterSystem *shooter, Timer *timer, 
+		SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake)
 {
 	frontIntake->UndeployIntake();
 	shooter->ShooterPrime(true);
@@ -181,7 +183,8 @@ bool LoadBackAutoConditions(Timer *timer, IterativeRobot *me)
 	return false;
 }
 
-void LoadBackAutoDriveInLoop(IntakeSystem *backIntake, SecondaryRollerSystem *secondaryRollers, RobotDrive *drivetrain, Timer *timer)
+void LoadBackAutoDriveInLoop(IntakeSystem *backIntake,
+		SecondaryRollerSystem *secondaryRollers, RobotDrive *drivetrain, Timer *timer)
 {
 	backIntake->BackRollerLoad();
 	secondaryRollers->Pulse();
@@ -192,7 +195,8 @@ void LoadBackAutoDriveInLoop(IntakeSystem *backIntake, SecondaryRollerSystem *se
 	}
 }
 
-void LoadBackAutoInLoop(IntakeSystem *backIntake, SecondaryRollerSystem *secondaryRollers, RobotDrive *drivetrain, Timer *timer)
+void LoadBackAutoInLoop(IntakeSystem *backIntake,
+		SecondaryRollerSystem *secondaryRollers, RobotDrive *drivetrain, Timer *timer)
 {
 	backIntake->BackRollerLoad();
 	secondaryRollers->Pulse();
@@ -204,7 +208,8 @@ void LoadBackAutoInLoop(IntakeSystem *backIntake, SecondaryRollerSystem *seconda
 	}*/
 }
 
-void LoadBackAutoEnd(IntakeSystem *backIntake, IntakeSystem *frontIntake, SecondaryRollerSystem *secondaryRollers, ShooterSystem *shooter)
+void LoadBackAutoEnd(IntakeSystem *backIntake, IntakeSystem *frontIntake,
+		SecondaryRollerSystem *secondaryRollers, ShooterSystem *shooter)
 {
 	backIntake->Stop();
 	secondaryRollers->Stop();
@@ -233,8 +238,9 @@ bool LoadFrontAutoConditions(IterativeRobot *me, Timer *timer)
 	return false;
 }
 
-void LoadFrontAutoDriveInLoopV2(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake,
-		Timer *timer, RobotDrive *drivetrain, Encoder *rightDT)
+void LoadFrontAutoDriveInLoopV2(SecondaryRollerSystem *secondaryRollers, 
+		IntakeSystem *frontIntake,
+		Timer *timer, RobotDrive *drivetrain, Encoder *rightEncoder)
 {
 	frontIntake->FrontRollerLoad();
 	if(timer->Get() > 1.5 ) //0.75 and 1.0 for quick fire??
@@ -245,7 +251,7 @@ void LoadFrontAutoDriveInLoopV2(SecondaryRollerSystem *secondaryRollers, IntakeS
 		secondaryRollers->Undeploy();
 		
 	}
-	if(timer->Get() < 3.5 && timer->Get()>1.0 && rightDT->Get() < 3000) //number?
+	if(timer->Get() < 3.5 && timer->Get()>1.0 && rightEncoder->Get() < 3000) //number?
 	{
 		//drivetrain->TankDrive(0.5, 0.5);
 		//drivetrain->TankDrive(-0.5, -0.5);
@@ -257,8 +263,9 @@ void LoadFrontAutoDriveInLoopV2(SecondaryRollerSystem *secondaryRollers, IntakeS
 	}
 }
 
-void LoadFrontAutoDriveInLoop(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake,
-		Timer *timer, RobotDrive *drivetrain, Encoder *rightDT)
+void LoadFrontAutoDriveInLoop(SecondaryRollerSystem *secondaryRollers, 
+		IntakeSystem *frontIntake,
+		Timer *timer, RobotDrive *drivetrain, Encoder *rightEncoder)
 {
 	frontIntake->FrontRollerLoad();
 	if(timer->Get() > 1.5 ) //0.75 and 1.0 for quick cat
@@ -267,7 +274,7 @@ void LoadFrontAutoDriveInLoop(SecondaryRollerSystem *secondaryRollers, IntakeSys
 		//secondaryRollers->Pulse();
 		secondaryRollers->Run();
 		secondaryRollers->Undeploy();
-		if(timer->Get() < 3.5 && timer->Get()>1.0 && rightDT->Get() < 3000)
+		if(timer->Get() < 3.5 && timer->Get()>1.0 && rightEncoder->Get() < 3000)
 		{
 			//drivetrain->TankDrive(0.5, 0.5);
 			drivetrain->TankDrive(-0.5, -0.5);
@@ -281,8 +288,8 @@ void LoadFrontAutoDriveInLoop(SecondaryRollerSystem *secondaryRollers, IntakeSys
 	
 }
 
-void LoadFrontAutoInLoop(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake,
-		Timer *timer, RobotDrive *drivetrain)
+void LoadFrontAutoInLoop(SecondaryRollerSystem *secondaryRollers, 
+		IntakeSystem *frontIntake,Timer *timer, RobotDrive *drivetrain)
 {
 	if(timer->Get() > 1.0 )
 	{
@@ -302,7 +309,8 @@ void LoadFrontAutoInLoop(SecondaryRollerSystem *secondaryRollers, IntakeSystem *
 	}
 }
 
-void LoadFrontAutoEnd(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake, RobotDrive *drivetrain)
+void LoadFrontAutoEnd(SecondaryRollerSystem *secondaryRollers,
+		IntakeSystem *frontIntake, RobotDrive *drivetrain)
 {
 	secondaryRollers->Stop();
 	frontIntake->Stop();
@@ -322,13 +330,15 @@ bool LoadTopAutoConditions(Timer *timer, IterativeRobot *me)
 	}
 	return false;
 }
-void LoadTopAutoInLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake, SecondaryRollerSystem *secondaryRollers)
+void LoadTopAutoInLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
+		SecondaryRollerSystem *secondaryRollers)
 {
 	frontIntake->Reverse();
 	backIntake->Reverse();
 	secondaryRollers->Run();
 }
-void LoadTopAutoEnd(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake, IntakeSystem *backIntake)
+void LoadTopAutoEnd(SecondaryRollerSystem *secondaryRollers,
+		IntakeSystem *frontIntake, IntakeSystem *backIntake)
 {
 	secondaryRollers->Stop();
 	frontIntake->Stop();
@@ -340,28 +350,28 @@ void LoadTopAutoEnd(SecondaryRollerSystem *secondaryRollers, IntakeSystem *front
 //Break this into compinents and make subroutine
 
 
-void DriveForwardAutoPrep(Timer *timer, Encoder *rightDT)
+void DriveForwardAutoPrep(Timer *timer, Encoder *rightEncoder)
 {
 	timer->Start();
 	timer->Reset();
-	rightDT->Reset();
-	rightDT->Start();
+	rightEncoder->Reset();
+	rightEncoder->Start();
 }
 
-bool DriveForwardAutoConditions(Timer *timer, IterativeRobot *me, Encoder *rightDT)
+bool DriveForwardAutoConditions(Timer *timer, IterativeRobot *me, Encoder *rightEncoder)
 {
 	//1000 for end condition.
-	if(timer->Get() < 2.0 && EnabledInAutonomous(me) && rightDT->Get() >- 1000)//3000)
+	if(timer->Get() < 2.0 && EnabledInAutonomous(me) && rightEncoder->Get() >- 1000)//3000)
 	{
 		return true;
 	}
 	return false;
 }
 
-bool DriveForwardShootAutoConditions(Timer *timer, IterativeRobot *me, Encoder *rightDT)
+bool DriveForwardShootAutoConditions(Timer *timer, IterativeRobot *me, Encoder *rightEncoder)
 {
 	//1500 for moveshot.
-	if(EnabledInAutonomous(me) && rightDT->Get() >- 3000)
+	if(EnabledInAutonomous(me) && rightEncoder->Get() >- 3000)
 	{
 		return true;
 	}
@@ -379,42 +389,49 @@ void DriveForwardAutoEnd(RobotDrive *drivetrain)
 	drivetrain->TankDrive(0.0, 0.0);
 }
 
-void SpinAutoPrep(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT, IterativeRobot *me)
+void SpinAutoPrep(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT, 
+		Encoder *rightEncoder, IterativeRobot *me)
 {
 	leftDT->Reset();
-	rightDT->Reset();
+	rightEncoder->Reset();
 }
 
-bool SpinAutoClockConditions(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT, IterativeRobot *me)
+bool SpinAutoClockConditions(int numEncoderClicks, RobotDrive *drivetrain,
+		Encoder *leftDT, Encoder *rightEncoder, IterativeRobot *me)
 {
-	if(EnabledInAutonomous(me) && (leftDT->Get()>(0-numEncoderClicks)&& rightDT->Get()<(numEncoderClicks)))
+	if(EnabledInAutonomous(me) && (leftDT->Get()>(0-numEncoderClicks)&& 
+			rightEncoder->Get()<(numEncoderClicks)))
 	{
 		return true;
 	}
 	return false;
 }
 
-bool SpinAutoAntiConditions(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT, IterativeRobot *me)
+bool SpinAutoAntiConditions(int numEncoderClicks, RobotDrive *drivetrain, 
+		Encoder *leftDT, Encoder *rightEncoder, IterativeRobot *me)
 {
 	if (EnabledInAutonomous(me) && (leftDT->Get()<(numEncoderClicks)
-			&& rightDT->Get()>(-numEncoderClicks)))
+			&& rightEncoder->Get()>(-numEncoderClicks)))
 	{
 		return true;
 	}
 	return false;
 }
 
-void SpinAutoClockInLoop(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT, IterativeRobot *me)
+void SpinAutoClockInLoop(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT,
+		Encoder *rightEncoder, IterativeRobot *me)
 {
 	drivetrain->TankDrive(-0.75, 0.75);
 }
 
-void SpinAutoAntiInLoop(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT, IterativeRobot *me)
+void SpinAutoAntiInLoop(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT,
+		Encoder *rightEncoder, IterativeRobot *me)
 {
 	drivetrain->TankDrive(0.75, -0.75);
 }
 
-void SpinAutoEnd(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightDT, IterativeRobot *me)
+void SpinAutoEnd(int numEncoderClicks, RobotDrive *drivetrain, Encoder *leftDT, 
+		Encoder *rightEncoder, IterativeRobot *me)
 {
 	drivetrain->TankDrive(0.0, 0.0);
 }
@@ -444,9 +461,10 @@ float ReceiveVisionProcessing(NetworkTable *table)
 	return autoDirection;
 }
 
-bool MultiAutoConditions(ShooterSystem *shooter, bool allDone, Timer *timer, Encoder *rightDT, IterativeRobot *me)
+bool MultiAutoConditions(ShooterSystem *shooter, bool allDone, Timer *timer, Encoder *rightEncoder,
+		IterativeRobot *me)
 {
-	if(ShootAutoConditions(shooter, me) || DriveForwardShootAutoConditions(timer, me, rightDT) || !allDone)
+	if(ShootAutoConditions(shooter, me) || DriveForwardShootAutoConditions(timer, me, rightEncoder) || !allDone)
 	{
 		return true;
 	}
