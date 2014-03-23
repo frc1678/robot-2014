@@ -84,7 +84,7 @@ class Robot : public IterativeRobot
 	CitrusButton *b_shotAlignLong;
 	CitrusButton *b_shotAlignShort;
 	CitrusButton *b_frontIntakePickup;
-	CitrusButton *b_backIntakePickup;
+	CitrusButton *b_backIntakePickup; 
 	CitrusButton *b_frontIntakeDeployToggle;
 	CitrusButton *b_backIntakeDeployToggle;
 	CitrusButton *b_shortShoot;
@@ -249,12 +249,20 @@ public:
 	void AutonomousInit()
 	{
 		spitShortSwap->Set(true);
+		printf("secondaries set true");
 		table->PutNumber("Enabled", 1);
+		printf("Data put in table");
 		table->PutString("Direction: ", "MERP");
+		printf("Data put in table again");
 		leftEncoder->Start(); //TODO sometimes called leftDT, currently commented, fix if you use.
 		rightEncoder->Start();
+		printf("Encoders started");
 		gearDown->Set(true);
+		printf("Gear down set true");
 		gearUp->Set(false);
+		printf("Gear up set false");
+		
+		//printf("day off")
 		
 		/*if (driverStation->GetDigitalIn(1))//Three ball auto starting on the left
 		{ 
@@ -274,35 +282,65 @@ public:
 		{
 			//TwoShotWithVision(frontIntake, backIntake, shooter, drivetrain, autoTimer, secondaryRollers,
 			//		this, leftEncoder, rightEncoder, gyro, table);
+			printf("In GetDigitalIn 3");
 			TwoShotShortLong(frontIntake, backIntake, shooter, drivetrain, autoTimer, 
 					spitShortSwap, secondaryRollers, this,  rightEncoder);
 			
 		}
-		/*else if (driverStation->GetDigitalIn(4))
+		else if (driverStation->GetDigitalIn(4))
 		{
-			ShootLoadFrontAuto(frontIntake, backIntake, shooter, autoTimer,
-					secondaryRollers, this, drivetrain);
-			ShootAuto(frontIntake, backIntake, shooter, autoTimer,
-					secondaryRollers, this);
+			printf("In GetDigitalIn 4");
+			OneShotShort(frontIntake, backIntake, shooter, drivetrain, autoTimer, turnTimer, 
+					spitShortSwap, secondaryRollers, this, rightEncoder, driverStationLCD, table,
+					1.0);
+			//ShootLoadFrontAuto(frontIntake, backIntake, shooter, autoTimer,
+			//		secondaryRollers, this, drivetrain);
+			//ShootAuto(frontIntake, backIntake, shooter, autoTimer,
+			//		secondaryRollers, this);
 		}
 		else if (driverStation->GetDigitalIn(5))//Three ball auto starting on a side
 		{
-			ShootThreeAndDrive(frontIntake, backIntake, shooter, drivetrain,
-					autoTimer, secondaryRollers, this, rightEncoder);
-		}*/
+			printf("Accessed digitalin 5\n");
+			ThreeShotShort(frontIntake, backIntake, shooter, drivetrain, driverStation, autoTimer, turnTimer, secondaryRollers, 
+					spitShortSwap, this, rightEncoder, table, 1.0);
+			//ShootThreeAndDrive(frontIntake, backIntake, shooter, drivetrain,
+			//		autoTimer, secondaryRollers, this, rightEncoder);
+		}
 		else if (driverStation->GetDigitalIn(6))
 		{
+			printf("In GetDigitalIn 6");
 			TwoShot(frontIntake, backIntake, shooter, drivetrain, autoTimer, secondaryRollers, spitShortSwap, this, rightEncoder);
 		}
 		else if(driverStation->GetDigitalIn(7))
 		{
+			printf("In GetDigitalIn 7");
 			TwoShotShortShort(frontIntake, backIntake, shooter, drivetrain, autoTimer, shotTimer, spitShortSwap, secondaryRollers, this, rightEncoder, driverStation);
 		}
-		/*
-		else if (driverStation->GetDigitalIn(7))
+		else if(driverStation->GetDigitalIn(8))
 		{
-			OneShot(frontIntake, backIntake, shooter, drivetrain, autoTimer, secondaryRollers, this, rightEncoder);
+			printf(" getdigitalin 8");
+			spitShortSwap->Set(false);
+			LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, this);
+			
+			Wait(0.5);
+			ShootAuto(frontIntake, backIntake, shooter, autoTimer, secondaryRollers, spitShortSwap, this);
+			//LoadBackAutoDrive(frontIntake, backIntake, shooter, timer, secondaryRollers, drivetrain, me);
+			spitShortSwap->Set(true);
+			Wait(0.2);
+			LoadBackAutoDrive(frontIntake, backIntake, shooter, autoTimer, secondaryRollers, drivetrain, this);
+			printf("Done driving!");
+			
+			MultiAutoLoop(frontIntake, backIntake, shooter, drivetrain, 
+						autoTimer, turnTimer, secondaryRollers, spitShortSwap, this, rightEncoder,
+						driverStation);
+			frontIntake->DeployIntake();
+			backIntake->DeployIntake(); 
+			Wait(0.5);
+			
+			ShootShortAuto(frontIntake, backIntake, shooter, autoTimer, secondaryRollers, spitShortSwap, this);
+
 		}
+		/*
 		else if (driverStation->GetDigitalIn(8))
 		{
 			OpenFlower(frontIntake, backIntake, secondaryRollers);
@@ -347,11 +385,12 @@ public:
 				}
 			}
 		}*/
+		printf("Out of digitalin if statements");
 
 	}
 	void AutonomousPeriodic()
 	{
-		printf("Gyro: %f, Gyro Rate: %f\n", gyro->GetAngle(), gyro->GetRate());
+		//printf("Gyro: %f, Gyro Rate: %f\n", gyro->GetAngle(), gyro->GetRate());
 	}
 	void TeleopInit()
 	{
@@ -379,6 +418,8 @@ public:
 		//Stop Timers
 		autoTimer->Stop();
 		turnTimer->Stop();
+		frontIntake->UndeployIntake();
+		backIntake->UndeployIntake();
 	}
 	void TeleopPeriodic()
 	{

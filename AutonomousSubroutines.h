@@ -233,7 +233,7 @@ void LoadTopAuto(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontInt
 		backIntake->Reverse();
 		//secondaryRollers->Pulse();
 		secondaryRollers->Run();*/
-		LoadTopAutoInLoop(frontIntake, backIntake, secondaryRollers);
+		LoadTopAutoInLoop(frontIntake, backIntake, secondaryRollers, autoTimer);
 	}
 	/*
 	secondaryRollers->Stop();
@@ -454,6 +454,21 @@ void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		SecondaryRollerSystem *secondaryRollers, Solenoid *spitShortSwap,
 		IterativeRobot *me, Encoder *rightEncoder, DriverStation *driverStation)
 {
+	/*
+	 * 1. Prep
+	 * 2. pulse secondarys until -500 encoder clicks then stop 
+	 * pulsing if not alredy stopped pulsing && drive forward until -3300 encoder clicks
+	 * then stop if not already stopped && when we hit start and reset shot timer and
+	 * do shoot auto prep
+	 * 3. when that is done shoot and do shoot auto end
+	 * when shot timer hits 1.9, if the back intake is down then put up 
+	 * secondarys and back intake, regardless drive forward slowly, front pickup and pulse secondarys
+	 * 
+	 * DISCLAIMER: this loop is very confusing, I probably spelled many things wrong in 
+	 * this comment
+	 * 
+	 * --Bryton 
+	 */
 	bool shootPrep = false;
 	bool doneDriving = false;
 	bool doneShooting = false;
@@ -465,8 +480,9 @@ void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 			
 	while(MultiAutoConditions(shooter, allDone, autoTimer, rightEncoder, me))
 	{
+		printf("In multiauto loop");
 		//first
-		if(rightEncoder->Get() > -500)
+		if(rightEncoder->Get() > -1000)
 		{
 			secondaryRollers->Pulse();
 		}
@@ -493,7 +509,7 @@ void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 			ShootAutoEnd();
 		}
 		//third
-		if(shotTimer->Get() > 1.9) 
+		if(shotTimer->Get() > 1.0)//1.9) 
 		{
 			if(!backintakeup)
 			{
@@ -518,14 +534,16 @@ void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 			DriveForwardAutoEnd(drivetrain);
 			doneDriving = true;
 		}
-		if(shotTimer->Get() > 4.2)
+		if(shotTimer->Get() > 3.0)//4.2)
 		{
+			printf("Shot timer > 4.2");
 			secondaryRollers->Stop();
 			DriveForwardAutoEnd(drivetrain);
 			allDone = true;
 			break;
 		}
 	}
+	printf("out of loop");
 }
 
 #endif	

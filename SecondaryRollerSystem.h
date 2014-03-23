@@ -79,8 +79,8 @@ public:
 	
 	void RunSlow()
 	{
-		secondaryRollerA->Set(-0.6 * rollerK);
-		secondaryRollerB->Set(0.6 * rollerK);
+		secondaryRollerA->Set(-0.4 * rollerK);
+		secondaryRollerB->Set(0.4 * rollerK);
 	}
 	
 	void PulseSlow()

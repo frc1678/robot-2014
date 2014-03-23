@@ -167,7 +167,7 @@ void ShootAutoEnd()
 void LoadBackAutoPrep(ShooterSystem *shooter, Timer *timer, 
 		SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake)
 {
-	frontIntake->UndeployIntake();
+	//frontIntake->UndeployIntake();
 	shooter->ShooterPrime(true);
 	secondaryRollers->Undeploy();
 	timer->Reset();
@@ -176,7 +176,7 @@ void LoadBackAutoPrep(ShooterSystem *shooter, Timer *timer,
  
 bool LoadBackAutoConditions(Timer *timer, IterativeRobot *me)
 {
-	if(EnabledInAutonomous(me) && timer->Get() < 1.8)//1.4)
+	if(EnabledInAutonomous(me) && timer->Get() < 1.0)//1.8)
 	{
 		return true;
 	}
@@ -189,10 +189,11 @@ void LoadBackAutoDriveInLoop(IntakeSystem *backIntake,
 	backIntake->BackRollerLoad();
 	secondaryRollers->Pulse();
 	//secondaryRollers->Run();
-	if(timer->Get() < 0.25)
-	{
-		drivetrain->TankDrive(-0.5, -0.5);
-	}
+	//if(timer->Get() < 0.25)
+	//{
+		//drivetrain->TankDrive(-0.5, -0.5);
+	drivetrain->TankDrive(-0.6, -0.6);
+	//}
 }
 
 void LoadBackAutoInLoop(IntakeSystem *backIntake,
@@ -213,7 +214,7 @@ void LoadBackAutoEnd(IntakeSystem *backIntake, IntakeSystem *frontIntake,
 {
 	backIntake->Stop();
 	secondaryRollers->Stop();
-	shooter->ShooterPrime(false);
+	//shooter->ShooterPrime(false);
 	frontIntake->DeployIntake();
 	backIntake->DeployIntake();
 	//OpenFlower(frontIntake, backIntake, secondaryRollers);
@@ -331,11 +332,22 @@ bool LoadTopAutoConditions(Timer *timer, IterativeRobot *me)
 	return false;
 }
 void LoadTopAutoInLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
-		SecondaryRollerSystem *secondaryRollers)
+		SecondaryRollerSystem *secondaryRollers, Timer *timer)
 {
-	frontIntake->Reverse();
-	backIntake->Reverse();
-	secondaryRollers->Run();
+	static bool deployedIntakes = false;
+	if(timer->Get() < 0.4)
+	{
+		frontIntake->Reverse();
+		backIntake->Reverse();
+	}
+	else if(!deployedIntakes)
+	{
+		deployedIntakes = true;
+		frontIntake->DeployIntake();
+		backIntake->DeployIntake();
+	}
+	//secondaryRollers->Run();
+	secondaryRollers->RunSlow();
 }
 void LoadTopAutoEnd(SecondaryRollerSystem *secondaryRollers,
 		IntakeSystem *frontIntake, IntakeSystem *backIntake)

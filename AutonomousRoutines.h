@@ -55,7 +55,7 @@ void TwoShotShortLong(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 }
 
 void TwoShotShortShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
-		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *autoTimer, Timer *shotTimer, Solenoid *spitShortSwap,
+		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *autoTimer, Timer *timer2, Solenoid *spitShortSwap,
 		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *rightEncoder, 
 		DriverStation *driverStation)
 {
@@ -63,10 +63,10 @@ void TwoShotShortShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	frontIntake->FrontRollerAutoSlow();
 	LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me);
 	
-	TwoShotShortPrep(shooter, shotTimer); 
+	TwoShotShortPrep(shooter, timer2); 
 	
 	MultiAutoLoop(frontIntake, backIntake, shooter, drivetrain, 
-			autoTimer, shotTimer, secondaryRollers, spitShortSwap, me, rightEncoder,
+			autoTimer, timer2, secondaryRollers, spitShortSwap, me, rightEncoder,
 			driverStation);
 	frontIntake->DeployIntake();
 	backIntake->DeployIntake(); 
@@ -74,7 +74,7 @@ void TwoShotShortShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	
 	ShootShortAuto(frontIntake, backIntake, shooter, autoTimer, secondaryRollers, spitShortSwap, me);
 	autoTimer->Stop();
-	shotTimer->Stop();
+	timer2->Stop();
 	/*ShortShootDriveForwardAuto(frontIntake, backIntake, shooter, timer, secondaryRolles, spitShortSwap, me, drivetrain, rightEncoder);
 	LoadFrontAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, drivetrain, me);
 	Wait(1.0);
@@ -83,14 +83,16 @@ void TwoShotShortShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 
 
 void OneShotShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
-		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *autoTimer, Timer *shotTimer, Solenoid *spitShortSwap,
-		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *rightEncoder, DriverStation *driverStation, NetworkTable *table, float startSide)
+		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *autoTimer, Timer *timer2, Solenoid *spitShortSwap,
+		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *rightEncoder, DriverStationLCD *driverStationLCD, NetworkTable *table, float startSide)
 {
 	table->PutNumber("Enabled", 1);
 	spitShortSwap->Set(true);
-	frontIntake->FrontRollerAutoSlow();
+	//frontIntake->FrontRollerAutoSlow();
 	LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me);
 	float visionInput = ReceiveVisionProcessing(table);
+	driverStationLCD->PrintfLine((DriverStationLCD::Line)0,"Vision: %f", visionInput);
+	driverStationLCD->UpdateLCD();
 	shooter->ShooterPrime(true);
 	Wait(1.0);
 	
@@ -102,9 +104,13 @@ void OneShotShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	
 	bool backintakeup = false; //unused
 	
-	shotTimer->Reset();
+	timer2->Reset();
 	bool stopSecondary = false;
-	if(visionInput != startSide) //both are 1.0 for left and 2.0 for right
+	if(visionInput == 0.0)
+	{
+		Wait(2.0);
+	}
+	else if(visionInput != startSide) //both are 1.0 for left and 2.0 for right
 	{
 		Wait(4.0);
 	}
@@ -125,8 +131,8 @@ void OneShotShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		//second
 		if(!shootPrep && rightEncoder->Get() <- 2300) //3 feet forward? TODO number
 		{
-			shotTimer->Start();
-			shotTimer->Reset();
+			timer2->Start();
+			timer2->Reset();
 			ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, spitShortSwap, true);
 			shootPrep = true;
 		}
@@ -150,10 +156,10 @@ void OneShotShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 			break;
 		}
 	}
-	frontIntake->DeployIntake();
-	backIntake->DeployIntake();
+	frontIntake->UndeployIntake();
+	backIntake->UndeployIntake();
 	autoTimer->Stop();
-	shotTimer->Stop();
+	timer2->Stop();
 	/*ShortShootDriveForwardAuto(frontIntake, backIntake, shooter, timer, secondaryRolles, spitShortSwap, me, drivetrain, rightDT);
 	LoadFrontAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, drivetrain, me);
 	Wait(1.0);
@@ -196,29 +202,34 @@ void ShootThreeAndDriveV2(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	//DriveForwardAuto(drivetrain, timer, me);	
 }*/
 
-void ShortShortShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
-		ShooterSystem *shooter, RobotDrive *drivetrain,DriverStation *driverStation, Timer *autoTimer, Timer *shotTimer,
+void ThreeShotShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
+		ShooterSystem *shooter, RobotDrive *drivetrain,DriverStation *driverStation, Timer *autoTimer, Timer *timer2,
 		SecondaryRollerSystem *secondaryRollers, Solenoid *spitShortSwap, IterativeRobot *me, 
 		Encoder *rightEncoder, NetworkTable *table, float startSide)
 {
-	table->PutNumber("Enabled", 1);
+	//table->PutNumber("Enabled", 1);
 	spitShortSwap->Set(true);
-	frontIntake->FrontRollerAutoSlow();
+	printf("secondary pistons set true\n");
+	//frontIntake->FrontRollerAutoSlow();
 	LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me);
-	float visionInput = ReceiveVisionProcessing(table);
+	printf("Loaded from top\n");
+	//float visionInput = ReceiveVisionProcessing(table);
 	shooter->ShooterPrime(true);
+	printf("Shooter primed\n");
 	Wait(1.0);
+	printf("Past wait");
 		
+	TwoShotShortPrep(shooter, timer2); 
 
 	MultiAutoLoop(frontIntake, backIntake, shooter, drivetrain, 
-			autoTimer, shotTimer, secondaryRollers, spitShortSwap, me, rightEncoder,
+			autoTimer, timer2, secondaryRollers, spitShortSwap, me, rightEncoder,
 			driverStation);
+	printf("Hi! WATCH ME ACTUALLY WORK FOR THREE BALL!\n");
 	frontIntake->DeployIntake();
 	backIntake->DeployIntake();
 	autoTimer->Stop();
-	drivetrain->TankDrive(-0.4, -0.4);
 	LoadBackAutoDrive(frontIntake, backIntake, shooter, autoTimer, secondaryRollers, drivetrain, me);
-	Wait(1.0);
+	//Wait(1.0);
 	ShootAuto(frontIntake, backIntake, shooter, autoTimer, secondaryRollers, spitShortSwap, me);
 }
 

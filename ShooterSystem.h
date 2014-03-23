@@ -43,7 +43,7 @@ public:
 		deadzoneTimer = new Timer();
 		shooterAK = 1.0;
 		shooterBK = 1.0;
-		shooterWait = 0.15;
+		shooterWait = 0.15; 
 	}
 
 	bool HallSensorTriggered()

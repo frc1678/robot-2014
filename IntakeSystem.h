@@ -44,7 +44,7 @@ public:
 		intakeDeployed = false;
 
 		frontIntakeK = 1.0;
-		frontIntakeK = 1.0;
+		backIntakeK = 1.0;
 	}
 	//TODO add secondary rollers to methods. Have some internal ones
 	//then add to Pickup.
@@ -115,14 +115,14 @@ public:
 
 	void FrontRollerAutoSlow() {
 		if (front) {
-			intakeRoller->Set(0.3 * frontIntakeK);
+			intakeRoller->Set(0.2 * frontIntakeK);
 		} else {
 			intakeRoller->Set(0.3 * backIntakeK);
 		}
 	}
 	void BackRollerAutoSlow() {
 		if (front) {
-			intakeRoller->Set(0.3 * frontIntakeK);
+		intakeRoller->Set(0.2 * frontIntakeK);
 		} else {
 			//intakeRoller->Set(0.3 * backIntakeK);
 			intakeRoller->Set(0.3 * backIntakeK);
