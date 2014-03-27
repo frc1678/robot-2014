@@ -278,7 +278,172 @@ public:
 			heliotrope(frontIntake, backIntake, shooter, drivetrain, autoTimer,
 					turnTimer, secondaryRollers, gyro, 1.0, this);
 		}*/
-		if (driverStation->GetDigitalIn(3))
+		if(driverStation->GetDigitalIn(2))
+		{
+			backIntake->DeployIntake();
+			frontIntake->DeployIntake();
+			LoadTopAutoPrep(autoTimer, shooter);
+			while(LoadTopAutoConditions(autoTimer, this))
+			{
+			
+				backIntake->BackRollerAutoSlow();
+				frontIntake->FrontRollerAutoSlow();
+				secondaryRollers->Run();
+			}
+			LoadTopAutoEnd(secondaryRollers, frontIntake, backIntake);
+			//LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, this);
+			shooter->ShooterPrime(true);
+			//backIntake->DeployIntake();
+			backIntake->BackRollerAutoSlow();
+			frontIntake->FrontRollerAutoSlow();
+			//Wait(1.0);
+			bool shootPrep = false;
+			bool doneShooting = false;
+			bool stopSecondary = false;
+			bool backintakeup = false;
+			bool allDone = false;
+			bool doneDriving = false;
+			//while((rightEncoder->Get() > - 3300 || !doneShooting) && IsAutonomous())
+			while(ShootAutoConditions(shooter, this) || DriveForwardShootAutoConditions(autoTimer, this, rightEncoder) || !allDone)
+			{
+				//first
+				if(rightEncoder->Get() > -1000)
+				{
+					secondaryRollers->Pulse();
+				}
+				else if (!stopSecondary)
+				{
+					stopSecondary = true;
+					secondaryRollers->Stop();
+				}
+				
+				//second
+				if(!shootPrep && rightEncoder->Get() <- 1750) //3 feet forward? TODO number
+				{
+					shotTimer->Start();
+					shotTimer->Reset();
+					ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, spitShortSwap, true);
+					shootPrep = true;
+				}
+				if(shootPrep && ShootAutoConditions(shooter, this))
+				{
+					ShootAutoInLoop(shooter);
+					printf("Shot");
+				}
+				else if(shootPrep && !doneShooting)
+				{
+					ShootAutoEnd();
+				}
+				//third
+				if(shotTimer->Get() > 1.4) 
+				{
+					if(!backintakeup)
+					{
+						secondaryRollers->Undeploy();
+						//frontIntake->UndeployIntake();
+						backintakeup = true;
+					}
+					drivetrain->TankDrive(0.4, 0.4);
+					//frontIntake->FrontRollerLoad();
+					backIntake->BackRollerLoad();
+					printf("load");
+					
+					secondaryRollers->Pulse();
+				}
+				
+				//First
+				else if(rightEncoder->Get() > -3300)//DriveForwardShootAutoConditions(timer, me, rightEncoder))
+				{
+					DriveForwardAutoInLoop(drivetrain);
+				}
+				else if(!doneDriving)
+				{
+					DriveForwardAutoEnd(drivetrain);
+					doneDriving = true;
+				}
+				if(shotTimer->Get() > 3.0)//4.2)
+				{
+					printf("Shot timer > 4.2");
+					secondaryRollers->Stop();
+					DriveForwardAutoEnd(drivetrain);
+					allDone = true;
+					break;
+				}
+				
+			}
+			drivetrain->TankDrive(0.0, 0.0);
+			frontIntake->DeployIntake();
+			backIntake->DeployIntake(); 
+			Wait(0.5);
+			ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, spitShortSwap, true);
+			autoTimer->Stop();
+			autoTimer->Reset();
+			autoTimer->Start();
+			backintakeup = false;
+			bool shotDone = false;
+			while((ShootAutoConditions(shooter, this) || autoTimer->Get() < 3.0) && IsAutonomous())
+			{
+				if(ShootAutoConditions(shooter, this))
+				{
+					ShootAutoInLoop(shooter);
+				}
+				else if(!shotDone)
+				{
+					ShootAutoEnd();
+					shotDone = false;
+				}
+				if(autoTimer->Get() > 0.2) 
+				{
+					if(!backintakeup)
+					{
+						secondaryRollers->Undeploy();
+						//frontIntake->UndeployIntake();
+						frontIntake->DeployIntake();
+						backIntake->UndeployIntake();
+						backintakeup = true;
+					}
+					//drivetrain->TankDrive(0.4, 0.4);
+					//frontIntake->FrontRollerLoad();
+					if(autoTimer->Get() < 0.5)
+					{
+						drivetrain->TankDrive(0.7, 0.7);
+					}
+					else if(autoTimer->Get() < 0.9)
+					{
+						drivetrain->TankDrive(-0.7, -0.7);
+					}
+					else
+					{
+						drivetrain->TankDrive(0.0, 0.0);
+					}
+					
+					if(autoTimer->Get() < 0.9)
+					{
+						frontIntake->FrontRollerLoad();
+					}
+					//frontIntake->FrontPickup(driverStation);
+					else if(autoTimer->Get() > 0.9)
+					{
+						if(autoTimer->Get() > 1.1)
+						{
+							frontIntake->UndeployIntake();
+						}
+						//frontIntake->ReverseSlow();
+						backIntake->ReverseSlow();
+						
+					}
+					
+					
+					
+					secondaryRollers->Pulse();
+				}
+			}
+			LoadTopAutoEnd(secondaryRollers, frontIntake, backIntake);
+			Wait(0.3);
+			ShootShortAuto(frontIntake, backIntake, shooter, autoTimer, secondaryRollers, spitShortSwap, this);
+			autoTimer->Stop();
+		}
+		else if (driverStation->GetDigitalIn(3))
 		{
 			//TwoShotWithVision(frontIntake, backIntake, shooter, drivetrain, autoTimer, secondaryRollers,
 			//		this, leftEncoder, rightEncoder, gyro, table);

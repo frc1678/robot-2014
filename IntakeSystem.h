@@ -30,14 +30,14 @@ public:
 
 	IntakeSystem(int rollerTalonPort, Talon *tsecondaryIntakeRollerA,
 			Talon *tsecondaryIntakeRollerB, int sensorPort,
-			Solenoid *tIntakeUp, bool front) {
+			Solenoid *tIntakeUp, bool tfront) {
 		intakeRoller = new Talon(rollerTalonPort);
 		secondaryIntakeRollerA = tsecondaryIntakeRollerA;
 		secondaryIntakeRollerB = tsecondaryIntakeRollerB;
 		intakeSensor = new DigitalInput(sensorPort);
 		intakeUp = tIntakeUp;
 
-		front = true;
+		front = tfront;
 		readyToPickup = true;
 		sensorTriggered = false;
 		pickupTimer = new Timer();
@@ -58,6 +58,17 @@ public:
 			intakeRoller->Set(-1.0 * backIntakeK);
 		}
 
+	}
+	void ReverseSlow()
+	{
+		if (front)
+		{
+			intakeRoller->Set(-0.5 * frontIntakeK);
+		}
+		else
+		{
+			intakeRoller->Set(-0.5 * backIntakeK);
+		}
 	}
 	void Stop() {
 		intakeRoller->Set(0.0);
@@ -115,17 +126,16 @@ public:
 
 	void FrontRollerAutoSlow() {
 		if (front) {
-			intakeRoller->Set(0.2 * frontIntakeK);
+			intakeRoller->Set(0.25 * frontIntakeK);
 		} else {
-			intakeRoller->Set(0.3 * backIntakeK);
+			intakeRoller->Set(0.4 * backIntakeK);
 		}
 	}
 	void BackRollerAutoSlow() {
 		if (front) {
-		intakeRoller->Set(0.2 * frontIntakeK);
+		intakeRoller->Set(0.25 * frontIntakeK);
 		} else {
-			//intakeRoller->Set(0.3 * backIntakeK);
-			intakeRoller->Set(0.3 * backIntakeK);
+			intakeRoller->Set(0.4 * backIntakeK);
 		}
 	}
 
@@ -199,11 +209,13 @@ public:
 		if (!sensorTriggered) {
 			//printf("running");
 			FrontRollerLoad();
-		} else {
+		} 
+		else {
 			pickupTimer->Start();
 			if (pickupTimer->Get() < m_ds->GetAnalogIn(2)) {
 				FrontRollerLoad();
-			} else {
+			} 
+			else {
 				if (intakeDeployed) {
 					//printf("undeploy");
 					UndeployIntake();

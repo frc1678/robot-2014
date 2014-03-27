@@ -139,7 +139,7 @@ void ShootAutoPrep(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	backIntake->BackRollerAutoSlow();
 	shooter->ShooterPrime(shortShot);
 	spitShortSwap->Set(shortShot);
-	//Wait(0.3); //TODO how short can this be?
+	//Wait(0.3); 
 	
 	secondaryRollers->Deploy();
 	shooter->BeginShooterFire();

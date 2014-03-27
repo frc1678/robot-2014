@@ -480,7 +480,6 @@ void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 			
 	while(MultiAutoConditions(shooter, allDone, autoTimer, rightEncoder, me))
 	{
-		printf("In multiauto loop");
 		//first
 		if(rightEncoder->Get() > -1000)
 		{

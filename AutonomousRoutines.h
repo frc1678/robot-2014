@@ -90,11 +90,11 @@ void OneShotShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	spitShortSwap->Set(true);
 	//frontIntake->FrontRollerAutoSlow();
 	LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me);
+	Wait(1.0);
 	float visionInput = ReceiveVisionProcessing(table);
 	driverStationLCD->PrintfLine((DriverStationLCD::Line)0,"Vision: %f", visionInput);
 	driverStationLCD->UpdateLCD();
 	shooter->ShooterPrime(true);
-	Wait(1.0);
 	
 	bool shootPrep = false;
 	bool doneDriving = false;
