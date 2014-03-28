@@ -15,6 +15,7 @@ class CrioFile {
 	//istream *reader;
 	ofstream fileSave; //create new output file 
 	bool currentlyLogging;
+	float voltageCounter;
 	
 public:
 	CrioFile()
@@ -23,6 +24,7 @@ public:
 		//fileSave.open("File.txt");
 		currentTimer = new Timer();
 		currentlyLogging = false;
+		voltageCounter = 0;
 	}
 		
 	/*float GetCurrent()
@@ -63,7 +65,7 @@ public:
 		if(currentlyLogging)
 		{
 		float current = a->GetVoltage();
-		current = fabs(2.5-current);
+		current = fabs(5-current);
 		double time = currentTimer->Get();
 		fileSave<<time<<" "<<current<<"\r\n";
 		
@@ -84,6 +86,40 @@ public:
 			fileSave.close();
 			currentTimer->Stop();
 		}
+	}
+	
+	float CheckVoltage(AnalogChannel *a)
+	{
+		float current = a->GetVoltage();
+		current = fabs(5.0-current);
+		
+		return current;
+	}
+	
+	void VoltageMonitor(Solenoid *gearUp, Solenoid *gearDown, CrioFile *currentSensor, 
+			AnalogChannel *a, DriverStationLCD *driverStationLCD)
+	{
+		if(currentSensor->CheckVoltage(a) >= 3.6)
+		{
+			voltageCounter = voltageCounter + 1;
+			
+			if(voltageCounter >= 15)
+			{
+				gearUp->Set(false);
+				gearDown->Set(true);
+				voltageCounter = 0;
+			}
+		}
+		else if(currentSensor->CheckVoltage(a) < 3.6)
+		{
+			voltageCounter = 0;
+		}
+		
+		driverStationLCD->Printf((DriverStationLCD::Line) 5, 1, "Counter: %f", 
+				voltageCounter);
+
+		driverStationLCD->UpdateLCD();
+		//printf("Counter: %f \n", voltageCounter);
 	}
 	/*
 	void printFile()

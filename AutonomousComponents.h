@@ -392,7 +392,6 @@ bool DriveForwardShootAutoConditions(Timer *timer, IterativeRobot *me, Encoder *
 
 void DriveForwardAutoInLoop(RobotDrive *drivetrain)
 {
-	//drivetrain->TankDrive(-0.75, -0.75);
 	drivetrain->TankDrive(-0.8, -0.8);
 }
 
