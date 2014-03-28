@@ -16,7 +16,6 @@ class CrioFile {
 	ofstream fileSave; //create new output file 
 	bool currentlyLogging;
 	
-	
 public:
 	CrioFile()
 	{
@@ -58,6 +57,7 @@ public:
 			currentTimer->Start();
 			currentTimer->Reset();			
 		}*/
+
 		fileSave.open("File.txt", ios::app); //temp
 
 		if(currentlyLogging)
@@ -72,6 +72,7 @@ public:
 			printf("File did not open.\n");
 		}
 		}
+
 		fileSave.close();
 	}
 	
