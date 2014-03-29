@@ -20,6 +20,7 @@ class Robot: public IterativeRobot {
 
 	CrioFile *currentSensor;
 	AnalogChannel *a;
+	AnalogChannel *b;
 	
 	float CurrentData[6];
 
@@ -61,7 +62,6 @@ class Robot: public IterativeRobot {
 
 	//Timers.
 	Timer *autoTimer;
-	Timer *autoTimer2;
 	Timer *turnTimer;
 	Timer *shotTimer;
 
@@ -120,6 +120,7 @@ public:
 
 		currentSensor = new CrioFile();
 		a = new AnalogChannel(3);
+		b = new AnalogChannel(7);
 		for (int i = 0; i < 6; i++) {
 			CurrentData[i] = 0.0;
 		}
@@ -161,7 +162,6 @@ public:
 
 		//Autonomous Timer
 		autoTimer = new Timer();
-		autoTimer2 = new Timer();
 		turnTimer = new Timer(); //starts && resets when we start gyroTurnAngle 
 		shotTimer = new Timer();
 
@@ -244,13 +244,31 @@ public:
 	}
 
 	void DisabledInit() {
+		
+		shooter->Reset();
+
+		leftEncoder->Reset();
+		rightEncoder->Reset();
+
+		leftEncoder->Start();
+		rightEncoder->Start();
+
+		gyro->Reset();
+		
+		//Stop Timers
+		autoTimer->Stop();
+		turnTimer->Stop();
+		shotTimer->Stop();
+		
+		frontIntake->UndeployIntake();
+		backIntake->UndeployIntake();
+		secondaryRollers->Undeploy();
+		
 		table->PutNumber("Enabled", 0);
 		driverStationLCD->Clear();
 		drivetrain->TankDrive(0.0, 0.0);
-		frontIntakeDeploy->Set(frontIntake->DeployState());
-		backIntakeDeploy->Set(backIntake->DeployState());
-		armPiston->Set(secondaryRollers->DeployState());
 		currentSensor->EndLog();
+		
 	}
 	void DisabledPeriodic() {
 		table->PutNumber("Enabled", 0);
@@ -261,8 +279,7 @@ public:
 		driverStationLCD->Clear();
 		driverStationLCD->UpdateLCD();
 		table->PutNumber("Enabled", 1);
-		autoTimer2->Start();
-		autoTimer2->Reset();
+		
 		table->PutString("Direction: ", "MERP");
 		leftEncoder->Start();
 		rightEncoder->Start();
@@ -272,7 +289,7 @@ public:
 		
 		if (driverStation->GetDigitalIn(1))
 		{
-			ThreeShotGoalie1(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder, shotTimer, drivetrain, spitShortSwap);
+			ThreeShotGoalieStraightRight(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder, shotTimer, drivetrain, spitShortSwap);
 		} else if (driverStation->GetDigitalIn(2)) //TODO Don't change this, change I/O 5
 		{
 			backIntake->DeployIntake();
@@ -426,7 +443,8 @@ public:
 					secondaryRollers, spitShortSwap, this);
 			autoTimer->Stop();
 		} else if (driverStation->GetDigitalIn(3)) {
-			ThreeShotGoalie2(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder, shotTimer, drivetrain, spitShortSwap);
+			ThreeShotGoalieLeftRight(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers,
+					allDone, rightEncoder,leftEncoder, shotTimer, drivetrain, spitShortSwap);
 		} else if (driverStation->GetDigitalIn(4)) {
 			printf("In GetDigitalIn 4");
 			OneShotShort(frontIntake, backIntake, shooter, drivetrain,
@@ -448,8 +466,13 @@ public:
 				secondaryRollers->Run();
 			}
 			LoadTopAutoEnd(secondaryRollers, frontIntake, backIntake);
-			//float direction = ReceiveVisionProcessing(table);
-			float direction = 1.0;
+			float direction = ReceiveVisionProcessing(table);
+			if(direction == 0.0)
+			{
+				driverStationLCD->Printf((DriverStationLCD::Line)3, 1, "VISION ERROR");
+				direction = 1.0;
+			}
+			//float direction = 1.0;
 			//LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, this);
 			shooter->ShooterPrime(true);
 			//backIntake->DeployIntake();
@@ -505,7 +528,7 @@ public:
 				//Added this- remove for return to known good code.
 				if (direction == 2.0)
 				{
-					if(!shootPrep && rightEncoder->Get() < -1600)
+					if(!shootPrep && rightEncoder->Get() < -1900)
 					{
 						backIntake->ReverseSlow();
 					}
@@ -517,7 +540,7 @@ public:
 				
 				if(direction == 1.0)
 				{
-					if(!shootPrep && leftEncoder->Get() < -1600)
+					if(!shootPrep && leftEncoder->Get() < -1900)
 					{
 						backIntake->ReverseSlow();
 					}
@@ -530,7 +553,7 @@ public:
 				//second
 				if(direction == 1.0)
 				{
-					if (!shootPrep && leftEncoder->Get() < -1750) //3 feet forward?
+					if (!shootPrep && leftEncoder->Get() < -2000) //3 feet forward?
 					{
 						shotTimer->Start();
 						shotTimer->Reset();
@@ -541,7 +564,7 @@ public:
 				}
 				if(direction == 2.0)
 				{
-					if (!shootPrep && rightEncoder->Get() < -1750) //3 feet forward?
+					if (!shootPrep && rightEncoder->Get() < -2000) //3 feet forward?
 					{
 						shotTimer->Start();
 						shotTimer->Reset();
@@ -566,7 +589,7 @@ public:
 						backintakeup = true;
 					}
 					
-					drivetrain->TankDrive(0.4, 0.4);
+					drivetrain->TankDrive(-0.6, -0.6);
 					//frontIntake->FrontRollerLoad();
 					backIntake->BackRollerLoad();
 					printf("load");
@@ -590,7 +613,7 @@ public:
 
 					if(direction == 1.0)
 					{
-						if(leftEncoder->Get() - encoderStartValue > -540) 
+						if(leftEncoder->Get() - encoderStartValue > -720) 
 						//for directions
 						{
 
@@ -607,7 +630,7 @@ public:
 					
 					else if(direction == 2.0)
 					{
-						if(rightEncoder->Get() - encoderStartValue > -540)
+						if(rightEncoder->Get() - encoderStartValue > -720)
 							//for directions
 						{
 
@@ -758,74 +781,35 @@ public:
 			TwoShotShortShort(frontIntake, backIntake, shooter, drivetrain,
 					autoTimer, shotTimer, spitShortSwap, secondaryRollers,
 					this, rightEncoder, driverStation);
-		} else if (driverStation->GetDigitalIn(8)) {
-			printf(" getdigitalin 8");
-			spitShortSwap->Set(false);
-			LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer,
-					shooter, this);
-
-			Wait(0.5);
-			ShootAuto(frontIntake, backIntake, shooter, autoTimer,
-					secondaryRollers, spitShortSwap, this);
-			//LoadBackAutoDrive(frontIntake, backIntake, shooter, timer, secondaryRollers, drivetrain, me);
-			spitShortSwap->Set(true);
-			Wait(0.2);
-			LoadBackAutoDrive(frontIntake, backIntake, shooter, autoTimer,
-					secondaryRollers, drivetrain, this);
-			printf("Done driving!");
-
-			MultiAutoLoop(frontIntake, backIntake, shooter, drivetrain,
-					autoTimer, turnTimer, secondaryRollers, spitShortSwap,
-					this, rightEncoder, driverStation);
-			frontIntake->DeployIntake();
-			backIntake->DeployIntake();
-			Wait(0.5);
-
-			ShootShortAuto(frontIntake, backIntake, shooter, autoTimer,
-					secondaryRollers, spitShortSwap, this);
-
-		}
-		
+		} 		
 		 else if (driverStation->GetDigitalIn(8))
 		 {
-			 ThreeShotGoalie3(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder, shotTimer, drivetrain, spitShortSwap);
+			 ThreeShotGoalieRightLeft(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder, shotTimer, drivetrain, spitShortSwap);
 		 }
 	}
 	void AutonomousPeriodic() {
 		//printf("Gyro: %f, Gyro Rate: %f\n", gyro->GetAngle(), gyro->GetRate());
 	}
 	void TeleopInit() {
-		currentSensor->StartLog();
-		
-		
+		currentSensor->StartLog(); 
+			
 		spitShortSwap->Set(true);
-		shooter->Reset();
 
 		compressor->Start();
 
-		leftEncoder->Reset();
-		rightEncoder->Reset();
-
-		leftEncoder->Start();
-		rightEncoder->Start();
-
-		gyro->Reset();
 
 		gearToggle = false;
 		gearUp->Set(!gearToggle);
 		gearDown->Set(gearToggle);
 
 		//Photo to compare
-		table->PutNumber("Enabled", 1);
+		//table->PutNumber("Enabled", 1);
 
-		//Stop Timers
-		autoTimer->Stop();
-		turnTimer->Stop();
-		frontIntake->UndeployIntake();
-		backIntake->UndeployIntake();
+		
 	}
 	void TeleopPeriodic() {
 		currentSensor->LogCurrent(a);
+		currentSensor->LogHeat(b);
 		for (int i = 0; i < 5; i++) {
 			if (i == 4) {
 				CurrentData[i] = a->GetVoltage();
@@ -836,6 +820,7 @@ public:
 			driverStationLCD->Printf((DriverStationLCD::Line) i, 1, "C:%f",
 					CurrentData[i]);
 		}
+		driverStationLCD->Printf((DriverStationLCD::Line)4, 1, "H:%f", currentSensor->CheckHeat(b));
 		driverStationLCD->UpdateLCD();
 
 		dataTable->PutNumber("Enabled", 1);

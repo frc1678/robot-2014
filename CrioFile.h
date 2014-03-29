@@ -46,6 +46,10 @@ public:
 		currentlyLogging = true;
 		fileSave<<"Time: "<<"Current:\n\r";
 		fileSave.close();
+		fileSave.open("Heat.txt");
+		currentlyLogging = true;
+		fileSave<<"Time: "<<"Heat:\n\r";
+		fileSave.close();
 	}
 	void LogCurrent(AnalogChannel *a)
 	{
@@ -77,7 +81,28 @@ public:
 
 		fileSave.close();
 	}
-	
+
+	void LogHeat(AnalogChannel *b)
+		{
+
+			fileSave.open("Heat.txt", ios::app); //temp
+
+			if(currentlyLogging)
+			{
+			float Value = b->GetValue();
+			double time = currentTimer->Get();
+			fileSave<<time<<" "<<Value<<"\r\n";
+			
+			if(fileSave.fail())//test to see if file opened
+			{
+				printf("File did not open.\n");
+			}
+			}
+
+			fileSave.close();
+		}
+		
+
 	void EndLog()
 	{
 		if(currentlyLogging)
@@ -95,11 +120,17 @@ public:
 		
 		return current;
 	}
+	float CheckHeat(AnalogChannel *b)
+	{
+		float Value = b->GetValue();
+		
+		return Value;
+	}
 	
 	void VoltageMonitor(Solenoid *gearUp, Solenoid *gearDown, CrioFile *currentSensor, 
 			AnalogChannel *a, DriverStationLCD *driverStationLCD)
 	{
-		if(currentSensor->CheckVoltage(a) >= 3.6)
+		if(currentSensor->CheckVoltage(a) >= 3.5)
 		{
 			voltageCounter = voltageCounter + 1;
 			
@@ -110,7 +141,7 @@ public:
 				voltageCounter = 0;
 			}
 		}
-		else if(currentSensor->CheckVoltage(a) < 3.6)
+		else if(currentSensor->CheckVoltage(a) < 3.5)
 		{
 			voltageCounter = 0;
 		}

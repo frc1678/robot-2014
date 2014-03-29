@@ -201,11 +201,11 @@ void ShootThreeAndDriveV2(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 
 	//DriveForwardAuto(drivetrain, timer, me);	
 }*/
-void ThreeShotGoalie1(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer *autoTimer,
+void ThreeShotGoalieStraightRight(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer *autoTimer,
 		ShooterSystem *shooter, IterativeRobot *me, SecondaryRollerSystem *secondaryRollers,
 		bool allDone, Encoder *rightEncoder, Timer *shotTimer, RobotDrive *drivetrain, Solenoid *spitShortSwap)
 {
-	backIntake->DeployIntake();
+	backIntake->DeployIntake(); //Center, Left, Right
 	frontIntake->DeployIntake();
 	LoadTopAutoPrep(autoTimer, shooter);
 	while (LoadTopAutoConditions(autoTimer, me)) {
@@ -239,7 +239,6 @@ void ThreeShotGoalie1(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer
 			secondaryRollers->Stop();
 		}
 
-		//Added this- remove for return to known good code.
 		if(!shootPrep && rightEncoder->Get() < -1550)
 		{
 			backIntake->ReverseSlow();
@@ -254,6 +253,10 @@ void ThreeShotGoalie1(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer
 		{
 			shotTimer->Start();
 			shotTimer->Reset();
+			if(rightEncoder->Get() > -1785) 
+			{
+				drivetrain->TankDrive(0.8, 0.0); //Second turn
+			}
 			ShootAutoPrep(frontIntake, backIntake, shooter,
 					secondaryRollers, spitShortSwap, true);
 			shootPrep = true;
@@ -265,13 +268,13 @@ void ThreeShotGoalie1(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer
 			ShootAutoEnd();
 		}
 		//third
-		if (shotTimer->Get() > 1.4) {
+		if (shotTimer->Get() > 1.7) { //1.4 for good code
 			if (!backintakeup) {
 				secondaryRollers->Undeploy();
 				//frontIntake->UndeployIntake();
 				backintakeup = true;
 			}
-			drivetrain->TankDrive(0.4, 0.46);
+			drivetrain->TankDrive(0.35, 0.5); //last turn
 			//frontIntake->FrontRollerLoad();
 			backIntake->BackRollerLoad();
 			printf("load");
@@ -282,7 +285,7 @@ void ThreeShotGoalie1(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer
 		//First
 		else if (rightEncoder->Get() > -3300)//DriveForwardShootAutoConditions(timer, me, rightEncoder))
 		{
-			drivetrain->TankDrive(-.75, -.85);
+			drivetrain->TankDrive(-.8, -.8);
 		} else if (!doneDriving) {
 			DriveForwardAutoEnd(drivetrain);
 			doneDriving = true;
@@ -356,9 +359,9 @@ void ThreeShotGoalie1(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer
 			secondaryRollers, spitShortSwap, me);
 	autoTimer->Stop();
 }
-void ThreeShotGoalie2(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer *autoTimer,
+void ThreeShotGoalieLeftRight(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer *autoTimer,
 		ShooterSystem *shooter, IterativeRobot *me, SecondaryRollerSystem *secondaryRollers,
-		bool allDone, Encoder *rightEncoder, Timer *shotTimer, RobotDrive *drivetrain, Solenoid *spitShortSwap)
+		bool allDone, Encoder *rightEncoder, Encoder *leftEncoder, Timer *shotTimer, RobotDrive *drivetrain, Solenoid *spitShortSwap)
 {
 	backIntake->DeployIntake();
 	frontIntake->DeployIntake();
@@ -385,9 +388,9 @@ void ThreeShotGoalie2(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer
 	//while((rightEncoder->Get() > - 3300 || !doneShooting) && IsAutonomous())
 	while (ShootAutoConditions(shooter, me)
 			|| DriveForwardShootAutoConditions(autoTimer, me,
-					rightEncoder) || !allDone) {
+					leftEncoder) || !allDone) {
 		//first
-		if (rightEncoder->Get() > -1000) {
+		if (leftEncoder->Get() > -1000) {
 			secondaryRollers->Pulse();
 		} else if (!stopSecondary) {
 			stopSecondary = true;
@@ -395,7 +398,7 @@ void ThreeShotGoalie2(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer
 		}
 
 		//Added this- remove for return to known good code.
-		if(!shootPrep && rightEncoder->Get() < -1550)
+		if(!shootPrep && leftEncoder->Get() < -1550)
 		{
 			backIntake->ReverseSlow();
 		}
@@ -405,11 +408,15 @@ void ThreeShotGoalie2(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer
 		}
 		
 		//second
-		if (!shootPrep && rightEncoder->Get() < -1750) //3 feet forward?
+		if (!shootPrep && leftEncoder->Get() < -1750) //3 feet forward?
 		{
 			shotTimer->Start();
 			shotTimer->Reset();
-			ShootAutoPrep(frontIntake, backIntake, shooter,
+			if(leftEncoder->Get() > -1785) 
+			{
+				drivetrain->TankDrive(0.8, 0.0); //Second turn
+			}
+			ShootAutoPrep(frontIntake, backIntake, shooter, //Put second turn -- right 
 					secondaryRollers, spitShortSwap, true);
 			shootPrep = true;
 		}
@@ -420,13 +427,13 @@ void ThreeShotGoalie2(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer
 			ShootAutoEnd();
 		}
 		//third
-		if (shotTimer->Get() > 1.4) {
+		if (shotTimer->Get() > 1.7) { //1.4 for good code, added because of extra turn
 			if (!backintakeup) {
 				secondaryRollers->Undeploy();
 				//frontIntake->UndeployIntake();
 				backintakeup = true;
 			}
-			drivetrain->TankDrive(0.5, 0.4);
+			drivetrain->TankDrive(0.7, 0.4);
 			//frontIntake->FrontRollerLoad();
 			backIntake->BackRollerLoad();
 			printf("load");
@@ -435,9 +442,17 @@ void ThreeShotGoalie2(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer
 		}
 
 		//First
-		else if (rightEncoder->Get() > -3300)//DriveForwardShootAutoConditions(timer, me, rightEncoder))
+		else if( leftEncoder->Get() > -3300)//DriveForwardShootAutoConditions(timer, me, rightEncoder))
 		{
-			drivetrain->TankDrive(-.85, -.75);
+			if(leftEncoder->Get() > -55)
+			{
+				drivetrain->TankDrive(0.0, -0.8);
+			}
+			else
+			{
+				//DriveForwardAutoInLoop(drivetrain);
+				drivetrain->TankDrive(-0.8, -0.8);
+			}
 		} else if (!doneDriving) {
 			DriveForwardAutoEnd(drivetrain);
 			doneDriving = true;
@@ -511,7 +526,7 @@ void ThreeShotGoalie2(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer
 			secondaryRollers, spitShortSwap, me);
 	autoTimer->Stop();
 }
-void ThreeShotGoalie3(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer *autoTimer,
+void ThreeShotGoalieRightLeft(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer *autoTimer,
 		ShooterSystem *shooter, IterativeRobot *me, SecondaryRollerSystem *secondaryRollers,
 		bool allDone, Encoder *rightEncoder, Timer *shotTimer, RobotDrive *drivetrain, Solenoid *spitShortSwap)
 {
@@ -564,6 +579,10 @@ void ThreeShotGoalie3(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer
 		{
 			shotTimer->Start();
 			shotTimer->Reset();
+			if(rightEncoder->Get() > -1785) 
+			{
+				drivetrain->TankDrive(0.8, 0.0); //Second turn
+			}
 			ShootAutoPrep(frontIntake, backIntake, shooter,
 					secondaryRollers, spitShortSwap, true);
 			shootPrep = true;
@@ -581,7 +600,7 @@ void ThreeShotGoalie3(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer
 				//frontIntake->UndeployIntake();
 				backintakeup = true;
 			}
-			drivetrain->TankDrive(0.4, 0.34);
+			drivetrain->TankDrive(0.45, 0.65);
 			//frontIntake->FrontRollerLoad();
 			backIntake->BackRollerLoad();
 			printf("load");
@@ -592,7 +611,15 @@ void ThreeShotGoalie3(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer
 		//First
 		else if (rightEncoder->Get() > -3300)//DriveForwardShootAutoConditions(timer, me, rightEncoder))
 		{
-			drivetrain->TankDrive(-.8, -.85);
+			if(rightEncoder->Get() > -35)
+			{
+				drivetrain->TankDrive(-0.8, 0.0);
+			}
+			else
+			{
+				//DriveForwardAutoInLoop(drivetrain);
+				drivetrain->TankDrive(-0.8, -0.8);
+			}
 		} else if (!doneDriving) {
 			DriveForwardAutoEnd(drivetrain);
 			doneDriving = true;
