@@ -71,11 +71,9 @@ public:
  		}
 	}
 
-	void ShooterPrime(bool shortShot) //on manipulator
+	void ShooterPrime(bool shortShot) 
 	{
 		//all the relevant solenoids
-		//Open up "arms"
-		//armPiston->Set(true); //TODO what direction is which? am I double solenoid?
 		//Long/short toggle
 		if (shortShot)
 		{

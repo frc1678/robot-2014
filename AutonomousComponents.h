@@ -117,7 +117,6 @@ void DriveStraight(RobotDrive *drivetrain, Encoder *leftDT, Encoder *rightEncode
 	}
 }
 
-//TODO put this in somewhere that implies not just autonomous.
 void OpenFlower(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		SecondaryRollerSystem *secondaryRollers)
 {

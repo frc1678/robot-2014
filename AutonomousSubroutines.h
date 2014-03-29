@@ -20,7 +20,7 @@ void GyroTurn(IterativeRobot *me, MPU6050_I2C *gyro, RobotDrive *drivetrain, flo
 		printf("in loop");
 		if(degreeOfTurn<0.0)
 		{
-			drivetrain->TankDrive(-0.5, 0.5); //TODO direction?
+			drivetrain->TankDrive(-0.5, 0.5); 
 		}
 		else
 		{
@@ -139,7 +139,7 @@ void ShootLoadFrontAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, spitShortSwap, false);
 	LoadFrontAutoPrep(frontIntake, backIntake, secondaryRollers, timer);
 
-	while(ShootAutoConditions(shooter, me) || LoadFrontAutoConditions(me, timer)) //TODO time condition for intake?
+	while(ShootAutoConditions(shooter, me) || LoadFrontAutoConditions(me, timer)) 
 	{
 		ShootAutoInLoop(shooter);
 		LoadFrontAutoInLoop(secondaryRollers, frontIntake, timer, drivetrain);
@@ -155,7 +155,7 @@ void ShootLoadFrontAutoDrive(IntakeSystem *frontIntake, IntakeSystem *backIntake
 	ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, spitShortSwap, false);
 	LoadFrontAutoPrep(frontIntake, backIntake, secondaryRollers, timer);
 
-	while(ShootAutoConditions(shooter, me) || LoadFrontAutoConditions(me, timer)) //TODO time condition for intake?
+	while(ShootAutoConditions(shooter, me) || LoadFrontAutoConditions(me, timer)) 
 	{
 		ShootAutoInLoop(shooter);
 		LoadFrontAutoDriveInLoop(secondaryRollers, frontIntake, timer, drivetrain, rightEncoder);
@@ -253,7 +253,7 @@ void LoadBackAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		RobotDrive *drivetrain, IterativeRobot *me)
 {
 	LoadBackAutoPrep(shooter, autoTimer, secondaryRollers, frontIntake);
-	while(LoadBackAutoConditions(autoTimer, me)) //TODO end condition
+	while(LoadBackAutoConditions(autoTimer, me)) 
 	{
 		LoadBackAutoInLoop(backIntake, secondaryRollers, drivetrain, autoTimer);
 	}
@@ -265,7 +265,7 @@ void LoadFrontAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		RobotDrive *drivetrain, IterativeRobot *me)
 {
 	LoadFrontAutoPrep(frontIntake, backIntake, secondaryRollers, autoTimer);
-	while(LoadFrontAutoConditions(me, autoTimer)) //TODO end condition
+	while(LoadFrontAutoConditions(me, autoTimer)) 
 	{
 		LoadFrontAutoInLoop(secondaryRollers, frontIntake, autoTimer, drivetrain);
 	}
@@ -276,7 +276,7 @@ void LoadBackAutoDrive(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		RobotDrive *drivetrain, IterativeRobot *me)
 {
 	LoadBackAutoPrep(shooter, autoTimer, secondaryRollers, frontIntake);
-	while(LoadBackAutoConditions(autoTimer, me)) //TODO end condition
+	while(LoadBackAutoConditions(autoTimer, me))
 	{
 		LoadBackAutoDriveInLoop(backIntake, secondaryRollers, drivetrain, autoTimer);
 		

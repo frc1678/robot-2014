@@ -46,7 +46,6 @@ public:
 		frontIntakeK = 1.0;
 		backIntakeK = 1.0;
 	}
-	//TODO add secondary rollers to methods. Have some internal ones
 	//then add to Pickup.
 	void Reverse() //Only call inside an if statement.
 	{
@@ -103,7 +102,7 @@ public:
 		} else {
 			intakeRoller->Set(1.0 * backIntakeK);
 		}
-		//TODO numbers
+	
 		//intakeRoller->Set(stick->GetTwist());
 	}
 
@@ -112,16 +111,16 @@ public:
 			intakeRoller->Set(1.0 * frontIntakeK);
 		} else {
 			intakeRoller->Set(1.0 * backIntakeK);
-		} //TODO numbers. Flipping for Fembots
+		} 
 		//intakeRoller->Set(stick->GetY());
 	}
 
 	void BackBumperHold() {
-		intakeRoller->Set(0.0); //TODO numbers
+		intakeRoller->Set(0.0); 
 	}
 
 	void FrontBumperHold() {
-		intakeRoller->Set(0.0); //TODO numbers.
+		intakeRoller->Set(0.0); 
 	}
 
 	void FrontRollerAutoSlow() {
