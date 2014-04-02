@@ -61,6 +61,7 @@ class Robot: public IterativeRobot {
 	SecondaryRollerSystem *secondaryRollers;
 
 	//Timers.
+	Timer *autoTimer2;
 	Timer *autoTimer;
 	Timer *turnTimer;
 	Timer *shotTimer;
@@ -161,6 +162,7 @@ public:
 				secondaryRollerB, armPiston);
 
 		//Autonomous Timer
+		autoTimer2 = new Timer();
 		autoTimer = new Timer();
 		turnTimer = new Timer(); //starts && resets when we start gyroTurnAngle 
 		shotTimer = new Timer();
@@ -289,7 +291,7 @@ public:
 		
 		if (driverStation->GetDigitalIn(1))
 		{
-			ThreeShotGoalieStraightRight(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder, shotTimer, drivetrain, spitShortSwap);
+			ThreeShotGoalie3(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder, shotTimer, drivetrain, spitShortSwap);
 		} else if (driverStation->GetDigitalIn(2)) //TODO Don't change this, change I/O 5
 		{
 			backIntake->DeployIntake();
@@ -443,8 +445,8 @@ public:
 					secondaryRollers, spitShortSwap, this);
 			autoTimer->Stop();
 		} else if (driverStation->GetDigitalIn(3)) {
-			ThreeShotGoalieLeftRight(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers,
-					allDone, rightEncoder,leftEncoder, shotTimer, drivetrain, spitShortSwap);
+			ThreeShotGoalieRightLeft(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers,
+					allDone, rightEncoder, shotTimer, drivetrain, spitShortSwap);
 		} else if (driverStation->GetDigitalIn(4)) {
 			printf("In GetDigitalIn 4");
 			OneShotShort(frontIntake, backIntake, shooter, drivetrain,
@@ -466,6 +468,7 @@ public:
 				secondaryRollers->Run();
 			}
 			LoadTopAutoEnd(secondaryRollers, frontIntake, backIntake);
+			//float direction = 2.0;
 			float direction = ReceiveVisionProcessing(table);
 			if(direction == 0.0)
 			{
@@ -492,7 +495,7 @@ public:
 					|| DriveForwardShootAutoConditions(autoTimer, this, rightEncoder) 
 					|| !allDone) 
 			{
-				driverStationLCD->Clear();
+				//driverStationLCD->Clear();
 				driverStationLCD->Printf((DriverStationLCD::Line) 0, 1, "Left: %d", leftEncoder->Get());
 				driverStationLCD->Printf((DriverStationLCD::Line) 1, 1, "Right: %d", rightEncoder->Get());
 				driverStationLCD->Printf((DriverStationLCD::Line) 2, 1, "Start Value: %d", encoderStartValue);
@@ -525,7 +528,6 @@ public:
 					}
 				}
 
-				//Added this- remove for return to known good code.
 				if (direction == 2.0)
 				{
 					if(!shootPrep && rightEncoder->Get() < -1900)
@@ -589,7 +591,14 @@ public:
 						backintakeup = true;
 					}
 					
-					drivetrain->TankDrive(-0.6, -0.6);
+					if(shotTimer->Get() < 3.0)
+					{
+						drivetrain->TankDrive(-0.6, -0.6);
+					}
+					else
+					{
+						drivetrain->TankDrive(0.0, 0.0);
+					}
 					//frontIntake->FrontRollerLoad();
 					backIntake->BackRollerLoad();
 					printf("load");
@@ -613,7 +622,7 @@ public:
 
 					if(direction == 1.0)
 					{
-						if(leftEncoder->Get() - encoderStartValue > -720) 
+						if(leftEncoder->Get() - encoderStartValue > -480) 
 						//for directions
 						{
 
@@ -630,7 +639,7 @@ public:
 					
 					else if(direction == 2.0)
 					{
-						if(rightEncoder->Get() - encoderStartValue > -720)
+						if(rightEncoder->Get() - encoderStartValue > -480)
 							//for directions
 						{
 
@@ -651,12 +660,13 @@ public:
 						(direction == 1.0 &&leftEncoder->Get() > -3300)) &&
 						(!startedSecondTurn || finishedSecondTurn))//DriveForwardShootAutoConditions(timer, me, rightEncoder))
 				{
-					driverStationLCD->Printf((DriverStationLCD::Line) 5, 1, "Drive");
-
+					
 					if(direction == 2.0)
 					{
-						if(rightEncoder->Get() > -35)
+						if(rightEncoder->Get() > -14)
+						//if(leftEncoder->Get() > -120) //Outside wheel.
 						{
+							driverStationLCD->Printf((DriverStationLCD::Line) 5, 1, "Drive %d", leftEncoder->Get());
 							drivetrain->TankDrive(-0.8, 0.0);
 						}
 						else
@@ -667,8 +677,10 @@ public:
 					}
 					if(direction == 1.0)
 					{
-						if(leftEncoder->Get() > -35)
+						if(leftEncoder->Get() > -14) 
+						//if(rightEncoder->Get() > -120)
 						{
+							driverStationLCD->Printf((DriverStationLCD::Line) 5, 1, "Drive %d", leftEncoder->Get());
 							drivetrain->TankDrive(0.0, -0.8);
 						}
 						else
@@ -683,7 +695,7 @@ public:
 					drivetrain->TankDrive(0.0, 0.0);
 					doneDriving = true;
 				}
-				if (shotTimer->Get() > 3.0)//4.2)
+				if (shotTimer->Get() > 3.2)//3.0)//4.2)
 				{
 					printf("Shot timer > 4.2");
 					secondaryRollers->Stop();
@@ -710,7 +722,7 @@ public:
 			backintakeup = false;
 			bool shotDone = false;
 			while ((ShootAutoConditions(shooter, this) || autoTimer->Get()
-					< 3.0) && IsAutonomous()) 
+					< 2.8) && IsAutonomous()) 
 			{
 				if (ShootAutoConditions(shooter, this)) 
 				{
@@ -772,9 +784,10 @@ public:
 			autoTimer->Stop();
 		} 
 		else if (driverStation->GetDigitalIn(6)) {
-			printf("In GetDigitalIn 6");
-			TwoShot(frontIntake, backIntake, shooter, drivetrain, autoTimer,
-					secondaryRollers, spitShortSwap, this, rightEncoder);
+			float direction = ReceiveVisionProcessing(table);
+			TwoShotShortVision(frontIntake, backIntake, shooter,
+					drivetrain, autoTimer, autoTimer2,spitShortSwap,
+					secondaryRollers, this,rightEncoder, leftEncoder, driverStation, direction);
 		} 
 		else if (driverStation->GetDigitalIn(7)) {
 			printf("In GetDigitalIn 7");
@@ -784,7 +797,7 @@ public:
 		} 		
 		 else if (driverStation->GetDigitalIn(8))
 		 {
-			 ThreeShotGoalieRightLeft(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder, shotTimer, drivetrain, spitShortSwap);
+			 ThreeShotGoalieLeftRight(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder, shotTimer, drivetrain, spitShortSwap);
 		 }
 	}
 	void AutonomousPeriodic() {
