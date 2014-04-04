@@ -492,7 +492,7 @@ void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		}
 		
 		//second
-		if(!shootPrep && rightEncoder->Get() <- 2300) //3 feet forward? TODO number
+		if(!shootPrep && rightEncoder->Get() <- 3300)//2300) //3 feet forward? TODO number
 		{
 			shotTimer->Start();
 			shotTimer->Reset();

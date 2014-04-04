@@ -127,15 +127,20 @@ public:
 		if (front) {
 			intakeRoller->Set(0.25 * frontIntakeK);
 		} else {
-			intakeRoller->Set(0.4 * backIntakeK);
+			intakeRoller->Set(0.5 * backIntakeK); 
 		}
 	}
 	void BackRollerAutoSlow() {
 		if (front) {
 		intakeRoller->Set(0.25 * frontIntakeK);
 		} else {
-			intakeRoller->Set(0.4 * backIntakeK);
+			intakeRoller->Set(0.5 * backIntakeK);
 		}
+	}
+	
+	void RunAt(float x) //TODO constant
+	{
+		intakeRoller->Set(x);
 	}
 
 	bool ProximityTriggered() {

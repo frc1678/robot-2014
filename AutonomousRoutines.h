@@ -86,10 +86,10 @@ void OneShotShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *autoTimer, Timer *timer2, Solenoid *spitShortSwap,
 		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *rightEncoder, DriverStationLCD *driverStationLCD, NetworkTable *table, float startSide)
 {
-	table->PutNumber("Enabled", 1);
 	spitShortSwap->Set(true);
 	//frontIntake->FrontRollerAutoSlow();
 	LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me);
+	table->PutNumber("Enabled", 1);
 	Wait(1.0);
 	float visionInput = ReceiveVisionProcessing(table);
 	driverStationLCD->PrintfLine((DriverStationLCD::Line)0,"Vision: %f", visionInput);
@@ -115,7 +115,10 @@ void OneShotShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		Wait(4.0);
 	}
 	
-	while(ShootAutoConditions(shooter, me) || DriveForwardShootAutoConditions(autoTimer, me, rightEncoder) || !allDone)
+	rightEncoder->Reset();
+	//leftEncoder->Reset();
+	
+	while((ShootAutoConditions(shooter, me) || DriveForwardShootAutoConditions(autoTimer, me, rightEncoder) || !allDone) && EnabledInAutonomous(me))
 	{
 		//first
 		if(rightEncoder->Get() > -500)

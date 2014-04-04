@@ -398,10 +398,7 @@
   C:/WindRiver/vxworks-6.3/target/h/WPILib/WPIlib.h \
   C:/WindRiver/workspace/IterativeTemplate/AutonomousSubroutines.h \
   C:/WindRiver/workspace/IterativeTemplate/AutonomousComponents.h \
-  C:/WindRiver/workspace/IterativeTemplate/Definitions.h \
-  C:/WindRiver/workspace/IterativeTemplate/CrioFile.h \
-  c:/windriver/gnu/3.4.4-vxworks-6.3/x86-win32/lib/gcc/../../../x86-win32/include/c++/3.4.4/iomanip \
-  c:/windriver/gnu/3.4.4-vxworks-6.3/x86-win32/lib/gcc/../../../x86-win32/include/c++/3.4.4/fstream
+  C:/WindRiver/workspace/IterativeTemplate/Definitions.h
 
 C:/WindRiver/vxworks-6.3/target/h/WPILib/WPILib.h:
 
@@ -1198,9 +1195,3 @@ C:/WindRiver/workspace/IterativeTemplate/AutonomousSubroutines.h:
 C:/WindRiver/workspace/IterativeTemplate/AutonomousComponents.h:
 
 C:/WindRiver/workspace/IterativeTemplate/Definitions.h:
-
-C:/WindRiver/workspace/IterativeTemplate/CrioFile.h:
-
-c:/windriver/gnu/3.4.4-vxworks-6.3/x86-win32/lib/gcc/../../../x86-win32/include/c++/3.4.4/iomanip:
-
-c:/windriver/gnu/3.4.4-vxworks-6.3/x86-win32/lib/gcc/../../../x86-win32/include/c++/3.4.4/fstream:

@@ -12,17 +12,17 @@
 #include "AutonomousSubroutines.h"
 #include "Definitions.h"
 //#include "CurrentSensor.h"
-#include "CrioFile.h"
+//#include "CrioFile.h"
 
 class Robot: public IterativeRobot {
 	DriverStation *driverStation;
 	DriverStationLCD *driverStationLCD;
 
-	CrioFile *currentSensor;
-	AnalogChannel *a;
-	AnalogChannel *b;
+	//CrioFile *currentSensor;
+	//AnalogChannel *a;
+	//AnalogChannel *b;
 	
-	float CurrentData[6];
+	//float CurrentData[6];
 
 	//Joysticks
 	Joystick *driverL;
@@ -49,6 +49,7 @@ class Robot: public IterativeRobot {
 	//Sensors
 	Encoder *leftEncoder; //wheel rotation clicks
 	Encoder *rightEncoder;
+	
 	//Gyro
 	MPU6050_I2C *gyro;
 
@@ -119,12 +120,12 @@ public:
 		driverR = new Joystick(2);
 		manipulator = new Joystick(3);
 
-		currentSensor = new CrioFile();
+		/*currentSensor = new CrioFile();
 		a = new AnalogChannel(3);
 		b = new AnalogChannel(7);
 		for (int i = 0; i < 6; i++) {
 			CurrentData[i] = 0.0;
-		}
+		}*/
 
 		dataTable = NetworkTable::GetTable("TurnTable");
 		dataTable->PutNumber("degreeOfTurn", 90.0);
@@ -150,6 +151,9 @@ public:
 		//Sensors 
 		leftEncoder = new Encoder(7, 6);//(6,7);
 		rightEncoder = new Encoder(4, 5);
+
+		leftEncoder->Start();
+		rightEncoder->Start();
 
 		//gyro
 		gyro = new MPU6050_I2C();
@@ -252,9 +256,6 @@ public:
 		leftEncoder->Reset();
 		rightEncoder->Reset();
 
-		leftEncoder->Start();
-		rightEncoder->Start();
-
 		gyro->Reset();
 		
 		//Stop Timers
@@ -269,7 +270,7 @@ public:
 		table->PutNumber("Enabled", 0);
 		driverStationLCD->Clear();
 		drivetrain->TankDrive(0.0, 0.0);
-		currentSensor->EndLog();
+		//currentSensor->EndLog();
 		
 	}
 	void DisabledPeriodic() {
@@ -280,14 +281,17 @@ public:
 		spitShortSwap->Set(true);
 		driverStationLCD->Clear();
 		driverStationLCD->UpdateLCD();
-		table->PutNumber("Enabled", 1);
+		//table->PutNumber("Enabled", 1);
 		
 		table->PutString("Direction: ", "MERP");
-		leftEncoder->Start();
-		rightEncoder->Start();
+		//leftEncoder->Start();
+		//rightEncoder->Start();
 		gearDown->Set(true);
 		gearUp->Set(false);
 		bool allDone;
+		
+		rightEncoder->Reset();
+		leftEncoder->Reset();
 		
 		if (driverStation->GetDigitalIn(1))
 		{
@@ -317,9 +321,9 @@ public:
 			bool allDone = false;
 			bool doneDriving = false;
 			//while((rightEncoder->Get() > - 3300 || !doneShooting) && IsAutonomous())
-			while (ShootAutoConditions(shooter, this)
+			while ((ShootAutoConditions(shooter, this)
 					|| DriveForwardShootAutoConditions(autoTimer, this,
-							rightEncoder) || !allDone) {
+							rightEncoder) || !allDone)&& IsAutonomous()) {
 				//first
 				if (rightEncoder->Get() > -1000) {
 					secondaryRollers->Pulse();
@@ -327,19 +331,27 @@ public:
 					stopSecondary = true;
 					secondaryRollers->Stop();
 				}
-
+				
+				
 				//Added this- remove for return to known good code.
-				if(!shootPrep && rightEncoder->Get() < -1550)
+				if(!shootPrep && rightEncoder->Get() < -2800)//1550)
 				{
 					backIntake->ReverseSlow();
 				}
 				else if(!shootPrep)
 				{
-					backIntake->BackRollerAutoSlow();
+					if(!shootPrep && rightEncoder->Get() > -1400)
+					{
+						backIntake->RunAt(0.55);
+					}
+					else if(!shootPrep && rightEncoder->Get() > -2800)
+					{
+						backIntake->RunAt(0.45);
+					}
 				}
 				
 				//second
-				if (!shootPrep && rightEncoder->Get() < -1750) //3 feet forward?
+				if (!shootPrep && rightEncoder->Get() < -3000)//1750) //3 feet forward?
 				{
 					shotTimer->Start();
 					shotTimer->Reset();
@@ -354,7 +366,7 @@ public:
 					ShootAutoEnd();
 				}
 				//third
-				if (shotTimer->Get() > 1.4) {
+				if (shotTimer->Get() > 1.4) { //&& < 0.3
 					if (!backintakeup) {
 						secondaryRollers->Undeploy();
 						//frontIntake->UndeployIntake();
@@ -457,6 +469,7 @@ public:
 			//ShootAuto(frontIntake, backIntake, shooter, autoTimer,
 			//		secondaryRollers, this);
 		} else if (driverStation->GetDigitalIn(5)) { //THIS IS NUMBER 5
+			table->PutNumber("Enabled", 1);
 			backIntake->DeployIntake();
 			frontIntake->DeployIntake();
 			LoadTopAutoPrep(autoTimer, shooter);
@@ -804,7 +817,7 @@ public:
 		//printf("Gyro: %f, Gyro Rate: %f\n", gyro->GetAngle(), gyro->GetRate());
 	}
 	void TeleopInit() {
-		currentSensor->StartLog(); 
+		//currentSensor->StartLog(); 
 			
 		spitShortSwap->Set(true);
 
@@ -821,9 +834,9 @@ public:
 		
 	}
 	void TeleopPeriodic() {
-		currentSensor->LogCurrent(a);
-		currentSensor->LogHeat(b);
-		for (int i = 0; i < 5; i++) {
+		//currentSensor->LogCurrent(a);
+		//currentSensor->LogHeat(b);
+		/*for (int i = 0; i < 5; i++) {
 			if (i == 4) {
 				CurrentData[i] = a->GetVoltage();
 			} else {
@@ -832,8 +845,8 @@ public:
 
 			driverStationLCD->Printf((DriverStationLCD::Line) i, 1, "C:%f",
 					CurrentData[i]);
-		}
-		driverStationLCD->Printf((DriverStationLCD::Line)4, 1, "H:%f", currentSensor->CheckHeat(b));
+		}*/
+		///driverStationLCD->Printf((DriverStationLCD::Line)4, 1, "H:%f", currentSensor->CheckHeat(b));
 		driverStationLCD->UpdateLCD();
 
 		dataTable->PutNumber("Enabled", 1);
@@ -997,7 +1010,7 @@ public:
 			frontIntake->UndeployIntake();
 		}
 		
-		currentSensor->VoltageMonitor(gearUp, gearDown, currentSensor, a, driverStationLCD);
+		//currentSensor->VoltageMonitor(gearUp, gearDown, currentSensor, a, driverStationLCD);
 
 		UpdateAllButtons();
 	}
@@ -1005,8 +1018,8 @@ public:
 		gyro->CalibrateRate();
 		leftEncoder->Reset();
 		rightEncoder->Reset();
-		leftEncoder->Start();
-		rightEncoder->Start();
+		//leftEncoder->Start();
+		//rightEncoder->Start();
 	}
 	void TestPeriodic() {
 		driverStationLCD->Printf((DriverStationLCD::Line) 0, 1,
