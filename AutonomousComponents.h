@@ -444,4 +444,22 @@ float ReceiveVisionProcessing(NetworkTable *table)
 	return autoDirection;
 }
 
+bool MultiAutoConditions(ShooterSystem *shooter, bool allDone, Timer *timer, Encoder *rightDT, IterativeRobot *me)
+{
+	if(ShootAutoConditions(shooter, me) || DriveForwardShootAutoConditions(timer, me, rightDT) || !allDone)
+	{
+		return true;
+	}
+return false;
+}
+
+void TwoShotShortPrep(ShooterSystem *shooter, Timer *timer2)
+{
+	shooter->ShooterPrime(true);
+		Wait(1.0);
+		
+		
+		timer2->Reset();
+}		
+
 #endif	

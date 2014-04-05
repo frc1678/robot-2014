@@ -251,7 +251,7 @@ public:
 		spitShortSwap->Set(true);
 		table->PutNumber("Enabled", 1);
 		table->PutString("Direction: ", "MERP");
-		leftEncoder->Start();
+		leftEncoder->Start(); //TODO sometimes called leftDT, currently commented, fix if you use.
 		rightEncoder->Start();
 		gearDown->Set(true);
 		gearUp->Set(false);
@@ -276,6 +276,7 @@ public:
 			//		this, leftEncoder, rightEncoder, gyro, table);
 			TwoShotShortLong(frontIntake, backIntake, shooter, drivetrain, autoTimer, 
 					spitShortSwap, secondaryRollers, this,  rightEncoder);
+			
 		}
 		/*else if (driverStation->GetDigitalIn(4))
 		{
@@ -295,7 +296,7 @@ public:
 		}
 		else if(driverStation->GetDigitalIn(7))
 		{
-			TwoShotShortShort(frontIntake, backIntake, shooter, drivetrain, autoTimer, turnTimer, spitShortSwap, secondaryRollers, this, rightEncoder, driverStation);
+			TwoShotShortShort(frontIntake, backIntake, shooter, drivetrain, autoTimer, shotTimer, spitShortSwap, secondaryRollers, this, rightEncoder, driverStation);
 		}
 		/*
 		else if (driverStation->GetDigitalIn(7))

@@ -31,8 +31,8 @@ else
 MODE_DIR := NonDebug
 endif
 OBJ_DIR := .
+PRJ_ROOT_DIR := C:/WindRiver/workspace/IterativeTemplate
 WS_ROOT_DIR := C:/WindRiver/workspace
-PRJ_ROOT_DIR := $(WS_ROOT_DIR)/IterativeTemplate
 
 
 
@@ -55,8 +55,6 @@ LIBS =
 IDE_INCLUDES = -I$(WIND_BASE)/target/h -I$(WIND_BASE)/target/h/WPILib -I$(WIND_BASE)/target/h/wrn/coreip 
 
 IDE_LIBRARIES = $(WIND_BASE)/target/lib/WPILib.a 
-
-IDE_DEFINES = 
 
 
 
@@ -103,7 +101,6 @@ IterativeTemplate/$(MODE_DIR)/% : DEBUGFLAGS_Assembler = -O2 -fstrength-reduce -
 endif
 IterativeTemplate/$(MODE_DIR)/% : IDE_INCLUDES = -I$(WIND_BASE)/target/h -I$(WIND_BASE)/target/h/WPILib -I$(WIND_BASE)/target/h/wrn/coreip 
 IterativeTemplate/$(MODE_DIR)/% : IDE_LIBRARIES = $(WIND_BASE)/target/lib/WPILib.a 
-IterativeTemplate/$(MODE_DIR)/% : IDE_DEFINES = 
 IterativeTemplate/$(MODE_DIR)/% : PROJECT_TYPE = DKM
 IterativeTemplate/$(MODE_DIR)/% : DEFINES = 
 IterativeTemplate/$(MODE_DIR)/% : EXPAND_DBG = 0
@@ -148,7 +145,6 @@ IterativeTemplate_partialImage/$(MODE_DIR)/% : DEBUGFLAGS_Assembler = -O2 -fstre
 endif
 IterativeTemplate_partialImage/$(MODE_DIR)/% : IDE_INCLUDES = -I$(WIND_BASE)/target/h -I$(WIND_BASE)/target/h/WPILib -I$(WIND_BASE)/target/h/wrn/coreip 
 IterativeTemplate_partialImage/$(MODE_DIR)/% : IDE_LIBRARIES = $(WIND_BASE)/target/lib/WPILib.a 
-IterativeTemplate_partialImage/$(MODE_DIR)/% : IDE_DEFINES = 
 IterativeTemplate_partialImage/$(MODE_DIR)/% : PROJECT_TYPE = DKM
 IterativeTemplate_partialImage/$(MODE_DIR)/% : DEFINES = 
 IterativeTemplate_partialImage/$(MODE_DIR)/% : EXPAND_DBG = 0
@@ -162,7 +158,7 @@ IterativeTemplate_partialImage/$(MODE_DIR)/% : LIBPATH =
 IterativeTemplate_partialImage/$(MODE_DIR)/% : LIBS = 
 IterativeTemplate_partialImage/$(MODE_DIR)/% : OBJ_DIR := IterativeTemplate_partialImage/$(MODE_DIR)
 
-IterativeTemplate_partialImage/$(MODE_DIR)/Objects/IterativeTemplate/MyRobot.o : $(PRJ_ROOT_DIR)/MyRobot.cpp $(FORCE_FILE_BUILD)
+IterativeTemplate_partialImage/$(MODE_DIR)/Objects/IterativeTemplate/MyRobot.o : C:/WindRiver/workspace/IterativeTemplate/MyRobot.cpp
 	$(TRACE_FLAG)if [ ! -d "`dirname "$@"`" ]; then mkdir -p "`dirname "$@"`"; fi;echo "building $@"; $(TOOL_PATH)ccppc $(DEBUGFLAGS_C++-Compiler) $(CC_ARCH_SPEC) -ansi -Wall  -MD -MP -mlongcall $(ADDED_C++FLAGS) $(IDE_INCLUDES) $(ADDED_INCLUDES) -DCPU=$(CPU) -DTOOL_FAMILY=$(TOOL_FAMILY) -DTOOL=$(TOOL) -D_WRS_KERNEL   $(DEFINES) -o "$@" -c "$<"
 
 
@@ -177,8 +173,6 @@ _clean :: IterativeTemplate_partialImage/$(MODE_DIR)/IterativeTemplate_partialIm
 
 IterativeTemplate_partialImage/$(MODE_DIR)/IterativeTemplate_partialImage_clean : 
 	$(TRACE_FLAG)if [ -d "IterativeTemplate_partialImage" ]; then cd "IterativeTemplate_partialImage"; rm -rf $(MODE_DIR); fi
-
-force : 
 
 DEP_FILES := IterativeTemplate_partialImage/$(MODE_DIR)/Objects/IterativeTemplate/MyRobot.d
 -include $(DEP_FILES)

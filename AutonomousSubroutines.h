@@ -150,8 +150,7 @@ void ShootLoadFrontAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 
 void ShootLoadFrontAutoDrive(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
 		ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers,
-		Solenoid *spitShortSwap,
-		IterativeRobot *me, RobotDrive *drivetrain, Encoder *rightDT)
+		Solenoid *spitShortSwap, IterativeRobot *me, RobotDrive *drivetrain, Encoder *rightEncoder)
 {
 	ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, spitShortSwap, false);
 	LoadFrontAutoPrep(frontIntake, backIntake, secondaryRollers, timer);
@@ -159,7 +158,7 @@ void ShootLoadFrontAutoDrive(IntakeSystem *frontIntake, IntakeSystem *backIntake
 	while(ShootAutoConditions(shooter, me) || LoadFrontAutoConditions(me, timer)) //TODO time condition for intake?
 	{
 		ShootAutoInLoop(shooter);
-		LoadFrontAutoDriveInLoop(secondaryRollers, frontIntake, timer, drivetrain, rightDT);
+		LoadFrontAutoDriveInLoop(secondaryRollers, frontIntake, timer, drivetrain, rightEncoder);
 	}
 	ShootAutoEnd();
 	LoadFrontAutoEnd(secondaryRollers, frontIntake, drivetrain);
@@ -192,23 +191,22 @@ void ShootAutoLoadBack(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 
 void ShootDriveForwardAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake, 
 		ShooterSystem *shooter, Timer *timer, SecondaryRollerSystem *secondaryRollers,
-		Solenoid *spitShortSwap,
-		IterativeRobot *me, RobotDrive *drivetrain, Encoder *rightDT)
+		Solenoid *spitShortSwap, IterativeRobot *me, RobotDrive *drivetrain, Encoder *rightEncoder)
 {
 	ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, spitShortSwap, false);
 	bool driveInit = false;
 	timer->Start();
 	timer->Reset();
 	
-	while(ShootAutoConditions(shooter, me) || DriveForwardAutoConditions(timer, me, rightDT))
+	while(ShootAutoConditions(shooter, me) || DriveForwardAutoConditions(timer, me, rightEncoder))
 	{
 		if(!driveInit && timer->Get() > 1.0)
 		{
-			DriveForwardAutoPrep(timer, rightDT);
+			DriveForwardAutoPrep(timer, rightEncoder);
 			driveInit = true;
 			backIntake->UndeployIntake();
 		}
-		if(driveInit && DriveForwardAutoConditions(timer, me, rightDT))
+		if(driveInit && DriveForwardAutoConditions(timer, me, rightEncoder))
 		{
 			DriveForwardAutoInLoop(drivetrain);
 		}
@@ -217,7 +215,9 @@ void ShootDriveForwardAuto(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	DriveForwardAutoEnd(drivetrain);
 	ShootAutoEnd();
 }
-void LoadTopAuto(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake, IntakeSystem *backIntake, Timer *timer, ShooterSystem *shooter, IterativeRobot *me)
+void LoadTopAuto(SecondaryRollerSystem *secondaryRollers, IntakeSystem *frontIntake, 
+		IntakeSystem *backIntake, Timer *timer, ShooterSystem *shooter, 
+		IterativeRobot *me)
 {
 	/*timer->Reset();
 	timer->Start();
@@ -450,6 +450,84 @@ void ShortShootTwoForwardAuto(IntakeSystem *frontIntake, IntakeSystem *backIntak
 	}
 	DriveForwardAutoEnd(drivetrain);
 	ShootAutoEnd();
+}
+void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
+		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *timer,Timer *timer2,
+		SecondaryRollerSystem *secondaryRollers, Solenoid *spitShortSwap,
+		IterativeRobot *me, Encoder *rightDT, DriverStation *driverStation)
+{
+	bool shootPrep = false;
+	bool doneDriving = false;
+	bool doneShooting = false;
+	
+	bool allDone = false;
+			
+	bool backintakeup = false;
+	bool stopSecondary = false;
+			
+	while(MultiAutoConditions(shooter, allDone, timer, rightDT, me))
+	{
+		//first
+		if(rightDT->Get() > -500)
+		{
+			secondaryRollers->Pulse();
+		}
+		else if (!stopSecondary)
+		{
+			stopSecondary = true;
+			secondaryRollers->Stop();
+		}
+		
+		//second
+		if(!shootPrep && rightDT->Get() <- 2300) //3 feet forward? TODO number
+		{
+			timer2->Start();
+			timer2->Reset();
+			ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, spitShortSwap, true);
+			shootPrep = true;
+		}
+		if(shootPrep && ShootAutoConditions(shooter, me))
+		{
+			ShootAutoInLoop(shooter);
+		}
+		else if(shootPrep && !doneShooting)
+		{
+			ShootAutoEnd();
+		}
+		//third
+		if(timer2->Get() > 1.9) //rename timer2
+		{
+			if(!backintakeup)
+			{
+				secondaryRollers->Undeploy();
+				backIntake->UndeployIntake();
+				backintakeup = true;
+			}
+			drivetrain->TankDrive(0.4, 0.4);
+			//frontIntake->FrontRollerLoad();
+			frontIntake->FrontPickup(driverStation);
+			
+			secondaryRollers->Pulse();
+		}
+		
+		//First
+		else if(rightDT->Get() > -3300)//DriveForwardShootAutoConditions(timer, me, rightDT))
+		{
+			DriveForwardAutoInLoop(drivetrain);
+		}
+		else if(!doneDriving)
+		{
+			DriveForwardAutoEnd(drivetrain);
+			doneDriving = true;
+		}
+		if(timer2->Get() > 4.2)
+		{
+			secondaryRollers->Stop();
+			DriveForwardAutoEnd(drivetrain);
+			allDone = true;
+			break;
+		}
+	}
 }
 
 #endif	
