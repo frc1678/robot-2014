@@ -516,10 +516,24 @@ void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 				backIntake->UndeployIntake();
 				backintakeup = true;
 			}
-			drivetrain->TankDrive(0.4, 0.4);
+			if(shotTimer->Get() < 3.0)
+			{
+				drivetrain->TankDrive(0.4, 0.4);
+			}
+			else
+			{
+				drivetrain->TankDrive(0.0, 0.0);
+			}
 			//frontIntake->FrontRollerLoad();
-			frontIntake->FrontPickup(driverStation);
-			
+			if(shotTimer->Get() > 1.5)
+			{
+				frontIntake->FrontPickup(driverStation);
+			}
+			else
+			{
+				//frontIntake->FrontRollerLoad();
+				frontIntake->Stop();
+			}
 			secondaryRollers->Pulse();
 		}
 		
@@ -533,7 +547,7 @@ void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 			DriveForwardAutoEnd(drivetrain);
 			doneDriving = true;
 		}
-		if(shotTimer->Get() > 3.0)//4.2)
+		if(shotTimer->Get() > 4.0)//3.0)//4.2)
 		{
 			printf("Shot timer > 4.2");
 			secondaryRollers->Stop();

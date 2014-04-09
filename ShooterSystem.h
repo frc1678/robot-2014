@@ -20,7 +20,7 @@ public:
 	float shooterAK;
 	float shooterBK;
 	Timer *deadzoneTimer;
-	Timer *camDelayTimer;
+	//Timer *camDelayTimer;
 	double shooterWait;
 	
 	//ANY TIME YOU WANT TO DEPLOY INTAKES, MAKE A PARALLEL METHOD IN

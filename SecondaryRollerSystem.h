@@ -33,6 +33,12 @@ public:
 		secondaryRollerB->Set(1.0 * rollerK);
 	}
 	
+	void RunAt(float x)
+	{
+		secondaryRollerA->Set(-x);
+		secondaryRollerB->Set(x);
+	}
+	
 	void Reverse()
 	{
 		secondaryRollerA->Set(1.0 * rollerK);

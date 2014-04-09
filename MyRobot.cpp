@@ -51,7 +51,7 @@ class Robot: public IterativeRobot {
 	Encoder *rightEncoder;
 	
 	//Gyro
-	MPU6050_I2C *gyro;
+	//MPU6050_I2C *gyro;
 
 	//Talons	
 	RobotDrive *drivetrain; // robot drive system
@@ -156,7 +156,7 @@ public:
 		rightEncoder->Start();
 
 		//gyro
-		gyro = new MPU6050_I2C();
+		//gyro = new MPU6050_I2C();
 		drivetrain = new RobotDrive(3, 4);
 		//Intake
 		secondaryRollerA = new Talon(7);
@@ -256,7 +256,7 @@ public:
 		leftEncoder->Reset();
 		rightEncoder->Reset();
 
-		gyro->Reset();
+		//gyro->Reset();
 		
 		//Stop Timers
 		autoTimer->Stop();
@@ -323,15 +323,19 @@ public:
 			//while((rightEncoder->Get() > - 3300 || !doneShooting) && IsAutonomous())
 			while ((ShootAutoConditions(shooter, this)
 					|| DriveForwardShootAutoConditions(autoTimer, this,
-							rightEncoder) || !allDone)&& IsAutonomous()) {
+							rightEncoder) || !allDone)&& IsAutonomous()) 
+			{
 				//first
-				if (rightEncoder->Get() > -1000) {
-					secondaryRollers->Pulse();
-				} else if (!stopSecondary) {
-					stopSecondary = true;
-					secondaryRollers->Stop();
+				if(shotTimer->Get() < 1.4)
+				{
+					if (rightEncoder->Get() > -1400) {
+						//secondaryRollers->Pulse(); //possible: runAt here.
+						secondaryRollers->RunAt(1.0);
+					} else if (!stopSecondary) {
+						stopSecondary = true;
+						secondaryRollers->Stop();
+					}
 				}
-				
 				
 				//Added this- remove for return to known good code.
 				if(!shootPrep && rightEncoder->Get() < -2800)//1550)
@@ -340,13 +344,13 @@ public:
 				}
 				else if(!shootPrep)
 				{
-					if(!shootPrep && rightEncoder->Get() > -1400)
+					if(!shootPrep && rightEncoder->Get() > -1000 && shotTimer->Get() < 1.4)
 					{
-						backIntake->RunAt(0.55);
+						backIntake->RunAt(0.45);
 					}
 					else if(!shootPrep && rightEncoder->Get() > -2800)
 					{
-						backIntake->RunAt(0.45);
+						backIntake->RunAt(0.4);
 					}
 				}
 				
@@ -361,10 +365,12 @@ public:
 				}
 				if (shootPrep && ShootAutoConditions(shooter, this)) {
 					ShootAutoInLoop(shooter);
-					printf("Shot");
+					//printf("Shot");
 				} else if (shootPrep && !doneShooting) {
 					ShootAutoEnd();
 				}
+				
+				//Drivetrain.
 				//third
 				if (shotTimer->Get() > 1.4) { //&& < 0.3
 					if (!backintakeup) {
@@ -372,12 +378,20 @@ public:
 						//frontIntake->UndeployIntake();
 						backintakeup = true;
 					}
-					drivetrain->TankDrive(0.4, 0.4);
+					if(shotTimer->Get() < 3.0)
+					{
+						drivetrain->TankDrive(0.4, 0.4);
+					}
+					else
+					{
+						drivetrain->TankDrive(0.0, 0.0);
+					}
 					//frontIntake->FrontRollerLoad();
 					backIntake->BackRollerLoad();
 					printf("load");
 					
 					secondaryRollers->Pulse();
+					//secondaryRollers->RunAt(1.0);
 				}
 
 				//First
@@ -388,7 +402,7 @@ public:
 					DriveForwardAutoEnd(drivetrain);
 					doneDriving = true;
 				}
-				if (shotTimer->Get() > 3.0)//4.2)
+				if (shotTimer->Get() > 3.4)//4.2)
 				{
 					printf("Shot timer > 4.2");
 					secondaryRollers->Stop();
@@ -410,7 +424,7 @@ public:
 			backintakeup = false;
 			bool shotDone = false;
 			while ((ShootAutoConditions(shooter, this) || autoTimer->Get()
-					< 3.0) && IsAutonomous()) {
+					< 2.4) && IsAutonomous()) { //3.0
 				if (ShootAutoConditions(shooter, this)) {
 					ShootAutoInLoop(shooter);
 				} else if (!shotDone) {
@@ -1015,7 +1029,7 @@ public:
 		UpdateAllButtons();
 	}
 	void TestInit() {
-		gyro->CalibrateRate();
+		//gyro->CalibrateRate();
 		leftEncoder->Reset();
 		rightEncoder->Reset();
 		//leftEncoder->Start();
