@@ -49,7 +49,6 @@ public:
 	//then add to Pickup.
 	void Reverse() //Only call inside an if statement.
 	{
-		//TODO When called with HumanLoad, front intake runs in pickup since 
 		//roller motors are set backward
 		if (front) {
 			intakeRoller->Set(-1.0 * frontIntakeK);

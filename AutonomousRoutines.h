@@ -81,7 +81,6 @@ void TwoShotShortShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, spitShortSwap, me);*/
 }
 
-//TODO Reference
 void OneShotShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *autoTimer, Timer *timer2, Solenoid *spitShortSwap,
 		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *rightEncoder, DriverStationLCD *driverStationLCD,
@@ -133,7 +132,7 @@ void OneShotShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		}
 		
 		//second
-		if(!shootPrep && rightEncoder->Get() <- 2300) //3 feet forward? TODO number
+		if(!shootPrep && rightEncoder->Get() <- 2300) 
 		{
 			timer2->Start();
 			timer2->Reset();
@@ -859,6 +858,7 @@ void TwoShotShortVision(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 }
 
 /*void TwoShotHot() TODO TODO Finish this!!!
+ * TODO What side do we start on??
 {
 	spitShortSwap->Set(true);
 	LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me);

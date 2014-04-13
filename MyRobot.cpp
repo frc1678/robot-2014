@@ -296,7 +296,7 @@ public:
 		if (driverStation->GetDigitalIn(1))
 		{
 			ThreeShotGoalie3(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder, shotTimer, drivetrain, spitShortSwap);
-		} else if (driverStation->GetDigitalIn(2)) //TODO Don't change this, change I/O 5
+		} else if (driverStation->GetDigitalIn(2)) 
 		{
 			backIntake->DeployIntake();
 			frontIntake->DeployIntake();
