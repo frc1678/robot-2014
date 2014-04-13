@@ -388,7 +388,7 @@ void ShortShootDriveForwardAuto(IntakeSystem *frontIntake, IntakeSystem *backInt
 			DriveForwardAutoEnd(drivetrain);
 			doneDriving = true;
 		}
-		if(!shootPrep && rightEncoder->Get() <- 1500) //3 feet forward? TODO number
+		if(!shootPrep && rightEncoder->Get() <- 1500) //3 feet forward? 
 		{
 			ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, spitShortSwap, true);
 			shootPrep = true;
@@ -432,7 +432,7 @@ void ShortShootTwoForwardAuto(IntakeSystem *frontIntake, IntakeSystem *backIntak
 			DriveForwardAutoEnd(drivetrain);
 			doneDriving = true;
 		}
-		if(!shootPrep && rightEncoder->Get() <- 1500) //3 feet forward? TODO number
+		if(!shootPrep && rightEncoder->Get() <- 1500) //3 feet forward? 
 		{
 			ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, spitShortSwap, true);
 			shootPrep = true;
@@ -492,7 +492,7 @@ void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		}
 		
 		//second
-		if(!shootPrep && rightEncoder->Get() <- 3300)//2300) //3 feet forward? TODO number
+		if(!shootPrep && rightEncoder->Get() <- 3300)//2300) //3 feet forward? 
 		{
 			shotTimer->Start();
 			shotTimer->Reset();
@@ -547,7 +547,7 @@ void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 			DriveForwardAutoEnd(drivetrain);
 			doneDriving = true;
 		}
-		if(shotTimer->Get() > 4.0)//3.0)//4.2)
+		if(shotTimer->Get() > 3.7)//3.0)//4.2)
 		{
 			printf("Shot timer > 4.2");
 			secondaryRollers->Stop();

@@ -811,10 +811,12 @@ public:
 			autoTimer->Stop();
 		} 
 		else if (driverStation->GetDigitalIn(6)) {
-			float direction = ReceiveVisionProcessing(table);
+			float direction = 1.0; //TODO Put back to receive vision processing
 			TwoShotShortVision(frontIntake, backIntake, shooter,
 					drivetrain, autoTimer, autoTimer2,spitShortSwap,
 					secondaryRollers, this,rightEncoder, leftEncoder, driverStation, direction);
+					
+			
 		} 
 		else if (driverStation->GetDigitalIn(7)) {
 			printf("In GetDigitalIn 7");

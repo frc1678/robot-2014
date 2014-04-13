@@ -170,7 +170,6 @@ public:
 		return Value;
 	}
 	
-	//TODO USE DONALD'S NEW FORMULA AND INCORPERATE HEAT FOR SHIFTING
 	void VoltageMonitor(Solenoid *gearUp, Solenoid *gearDown, CrioFile *currentSensor, 
 			AnalogChannel *a, DriverStationLCD *driverStationLCD)
 	//monitors the amount of voltage being drawn 

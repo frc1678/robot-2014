@@ -203,7 +203,7 @@ public:
 			}
 		}
 	}
-	//TODO make them in the same function.
+	
 	void FrontPickup( DriverStation *m_ds) {
 		if (ProximityTriggered()) {
 			//printf("sensor");
