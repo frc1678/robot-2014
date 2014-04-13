@@ -12,15 +12,15 @@
 #include "AutonomousSubroutines.h"
 #include "Definitions.h"
 //#include "CurrentSensor.h"
-//#include "CrioFile.h"
+#include "CrioFile.h"
 
 class Robot: public IterativeRobot {
 	DriverStation *driverStation;
 	DriverStationLCD *driverStationLCD;
 
-	//CrioFile *currentSensor;
-	//AnalogChannel *a;
-	//AnalogChannel *b;
+	CrioFile *currentSensor;
+	AnalogChannel *a;
+	AnalogChannel *b;
 	
 	//float CurrentData[6];
 
@@ -120,10 +120,10 @@ public:
 		driverR = new Joystick(2);
 		manipulator = new Joystick(3);
 
-		/*currentSensor = new CrioFile();
+		currentSensor = new CrioFile();
 		a = new AnalogChannel(3);
 		b = new AnalogChannel(7);
-		for (int i = 0; i < 6; i++) {
+		/*for (int i = 0; i < 6; i++) {
 			CurrentData[i] = 0.0;
 		}*/
 
@@ -848,8 +848,9 @@ public:
 		
 	}
 	void TeleopPeriodic() {
-		//currentSensor->LogCurrent(a);
-		//currentSensor->LogHeat(b);
+		currentSensor->LogCurrent(a);
+		currentSensor->LogHeat(b);
+		currentSensor->LogEncoders(leftEncoder, rightEncoder);
 		/*for (int i = 0; i < 5; i++) {
 			if (i == 4) {
 				CurrentData[i] = a->GetVoltage();
@@ -861,7 +862,6 @@ public:
 					CurrentData[i]);
 		}*/
 		///driverStationLCD->Printf((DriverStationLCD::Line)4, 1, "H:%f", currentSensor->CheckHeat(b));
-		driverStationLCD->UpdateLCD();
 
 		dataTable->PutNumber("Enabled", 1);
 		//printf("Left Encoder: %d Right Encoder: %d", leftEncoder->Get(), rightEncoder->Get());
@@ -870,8 +870,16 @@ public:
 
 
 		//Drive.
-		runDrivetrain(driverL->GetY(), driverR->GetY(), drivetrain);
+		//runDrivetrain(driverL->GetY(), driverR->GetY(), drivetrain);
+		runDrivetrainShift(driverL->GetY(), driverR->GetY(), drivetrain, 0.2, gearUp, gearDown, leftEncoder, rightEncoder);
+		//currentSensor->VoltageMonitor(gearUp, gearDown, currentSensor, a, driverStationLCD);
 
+		driverStationLCD->Printf((DriverStationLCD::Line) 3, 1,
+				"Left Encoder: %f", leftEncoder->GetRate());
+		driverStationLCD->Printf((DriverStationLCD::Line) 4, 1,
+				"Right Encoder: %f", rightEncoder->GetRate());
+		driverStationLCD->UpdateLCD();
+		
 		if (b_gearUp->ButtonClicked()) {
 			gearUp->Set(false);
 			gearDown->Set(true);
@@ -1024,8 +1032,7 @@ public:
 			frontIntake->UndeployIntake();
 		}
 		
-		//currentSensor->VoltageMonitor(gearUp, gearDown, currentSensor, a, driverStationLCD);
-
+		
 		UpdateAllButtons();
 	}
 	void TestInit() {

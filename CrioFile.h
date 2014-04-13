@@ -40,16 +40,24 @@ public:
 		(int)currentLogNum;
 		fileSave.close();
 		string newFileName = (currentLogNum + ".txt");*/
-		fileSave.open("File.txt");
-		currentTimer->Reset();
+		fileSave.open("File.txt"); //opening the file
+		//reseting and starting the timer
+		currentTimer->Reset(); 
 		currentTimer->Start();
+		
 		currentlyLogging = true;
-		fileSave<<"Time: "<<"Current:\n\r";
+		fileSave<<"Time: "<<"Current:\n\r"; //writing to the file
 		fileSave.close();
 		fileSave.open("Heat.txt");
 		currentlyLogging = true;
 		fileSave<<"Time: "<<"Heat:\n\r";
 		fileSave.close();
+		
+		fileSave.open("Encoder.txt");
+		currentlyLogging = true;
+		fileSave<<"Time: Rate: Clicks: \n\r";
+		fileSave.close();
+		//Two seperate files, one for heat and one for current.
 	}
 	void LogCurrent(AnalogChannel *a)
 	{
@@ -64,19 +72,21 @@ public:
 			currentTimer->Reset();			
 		}*/
 
-		fileSave.open("File.txt", ios::app); //temp
+		if(currentlyLogging) //only run if we are logging
+		{
+			fileSave.open("File.txt", ios::app); //temp
 
-		if(currentlyLogging)
-		{
-		float current = a->GetVoltage();
-		current = fabs(5-current);
-		double time = currentTimer->Get();
-		fileSave<<time<<" "<<current<<"\r\n";
-		
-		if(fileSave.fail())//test to see if file opened
-		{
-			printf("File did not open.\n");
-		}
+			float current = a->GetVoltage();
+			current = fabs(5-current); //log
+			//inverse chart, therefore absolute value
+			//5 b/c 0 = 5 on the inverted scale		
+			double time = currentTimer->Get();
+			fileSave<<time<<" "<<current<<"\r\n";
+			
+			if(fileSave.fail())//test to see if file opened
+			{
+				printf("File did not open.\n");
+			}
 		}
 
 		fileSave.close();
@@ -85,25 +95,55 @@ public:
 	void LogHeat(AnalogChannel *b)
 		{
 
-			fileSave.open("Heat.txt", ios::app); //temp
-
-			if(currentlyLogging)
-			{
-			float Value = b->GetValue();
-			double time = currentTimer->Get();
-			fileSave<<time<<" "<<Value<<"\r\n";
 			
-			if(fileSave.fail())//test to see if file opened
+
+			if(currentlyLogging) //only if we are currently logging
 			{
-				printf("File did not open.\n");
-			}
+				fileSave.open("Heat.txt", ios::app); //temp
+				//app appends the writing, so it writes to the end of the file
+				
+				float Value = b->GetValue();
+				double time = currentTimer->Get();
+				fileSave<<time<<" "<<Value<<"\r\n";
+				
+				if(fileSave.fail())//test to see if file opened
+				{
+					printf("File did not open.\n");
+				}
 			}
 
 			fileSave.close();
 		}
+	
+	void LogEncoders(Encoder *leftEncoder, Encoder *rightEncoder)
+	{
+		
+				
+		if(currentlyLogging)
+		{
+			fileSave.open("Encoders.txt", ios::app);
+			
+			double time = currentTimer->Get();
+			float rightRate = rightEncoder->GetRate();
+			float leftRate = leftEncoder->GetRate();
+			float rightValue = rightEncoder->Get();
+			float leftValue = leftEncoder->Get();
+			
+			fileSave<<time<<" "<<leftRate<< " "<<rightRate<<"  "<<leftValue<< " "
+					<<rightValue<<"\r\n";
+			
+			if(fileSave.fail())
+			{
+				printf("File did not open.\n");
+			}
+		}
+		
+		fileSave.close();
+	}
 		
 
 	void EndLog()
+	//flushing and closing the file
 	{
 		if(currentlyLogging)
 		{
@@ -113,28 +153,35 @@ public:
 		}
 	}
 	
-	float CheckVoltage(AnalogChannel *a)
+	float CheckVoltage(AnalogChannel *a) //checking the voltage of the sensors
 	{
 		float current = a->GetVoltage();
-		current = fabs(5.0-current);
+		current = fabs(5.0-current); //check
+		//inverse chart, therefore absolute value
+		//5 b/c 0 = 5 on the inverted scale
 		
 		return current;
 	}
-	float CheckHeat(AnalogChannel *b)
+	
+	float CheckHeat(AnalogChannel *b) //checking the temperatue of the sensors
 	{
-		float Value = b->GetValue();
+		float Value = b->GetValue(); //This get function may end up being a different one.
 		
 		return Value;
 	}
 	
+	//TODO USE DONALD'S NEW FORMULA AND INCORPERATE HEAT FOR SHIFTING
 	void VoltageMonitor(Solenoid *gearUp, Solenoid *gearDown, CrioFile *currentSensor, 
 			AnalogChannel *a, DriverStationLCD *driverStationLCD)
+	//monitors the amount of voltage being drawn 
 	{
 		if(currentSensor->CheckVoltage(a) >= 3.5)
 		{
-			voltageCounter = voltageCounter + 1;
+			voltageCounter++;
 			
 			if(voltageCounter >= 15)
+				//if it gets to high, auto shift down
+				
 			{
 				gearUp->Set(false);
 				gearDown->Set(true);

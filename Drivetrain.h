@@ -104,4 +104,34 @@ void runDrivetrain(float stickLeftInput, float stickRightInput, RobotDrive *driv
 	//runDrivetrain(stickLeftInput, stickRightInput, drivetrain, 0.1);
 }
 
+void runDrivetrainShift(float stickLeftInput, float stickRightInput, RobotDrive *drivetrain, float thresh, Solenoid *gearUp, Solenoid *gearDown, Encoder *leftEncoder, Encoder *rightEncoder)
+{
+	driveTrainValues(stickLeftInput, stickRightInput, thresh);
+	deadzone();
+	float outsideValue = 0.85; //true if output is OUTSIDE +/- me
+	float insideRate = 5.0; //true if encoder is INSIDE +/- me
+	static int counter = 0;
+	if(((useleft > outsideValue && leftEncoder->GetRate() < insideRate )|| 
+				(useleft < -outsideValue && leftEncoder->GetRate() > -insideRate))
+			|| //left side above, right side below, TODO boolean methods for all.
+		((useright > outsideValue && rightEncoder->GetRate() < insideRate) || 
+				(useright < -outsideValue) && rightEncoder->GetRate() > -insideRate))
+	{
+		//gearUp->Set(false);
+		//gearDown->Set(true);
+		counter++;
+	}
+	else
+	{
+		counter = 0;
+	}
+	if(counter > 15)//50)
+	{
+		gearUp->Set(false);
+		gearDown->Set(true);
+	}
+
+	drivetrain->TankDrive(useleft, useright); 
+}
+
 #endif
