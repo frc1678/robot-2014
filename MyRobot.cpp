@@ -814,7 +814,7 @@ public:
 			float direction = 1.0; //TODO Put back to receive vision processing
 			TwoShotShortVision(frontIntake, backIntake, shooter,
 					drivetrain, autoTimer, autoTimer2,spitShortSwap,
-					secondaryRollers, this,rightEncoder, leftEncoder, driverStation, direction);
+					secondaryRollers, this,rightEncoder, leftEncoder, driverStation, direction, table);
 					
 			
 		} 

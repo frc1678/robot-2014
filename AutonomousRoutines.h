@@ -767,11 +767,25 @@ void TwoShot(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 void TwoShotShortVision(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *autoTimer, Timer *timer2, Solenoid *spitShortSwap,
 		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *rightEncoder,Encoder *leftEncoder,
-		DriverStation *driverStation,float direction)
-{
-	spitShortSwap->Set(true);
+		DriverStation *driverStation,float direction, NetworkTable *table)
+{	
+		spitShortSwap->Set(true);
 		//frontIntake->FrontRollerAutoSlow();
-		LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me);
+		//LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me);
+		LoadTopAutoPrep(autoTimer, shooter);
+		while(LoadTopAutoConditions(autoTimer, me))//(timer->Get() < 0.8)//0.4)
+		{
+			/*frontIntake->Reverse();
+			backIntake->Reverse();
+			//secondaryRollers->Pulse();
+			secondaryRollers->Run();*/
+			if(autoTimer->Get() > 0.4)
+			{
+				table->PutNumber("Enabled", 1);
+			}
+			LoadTopAutoInLoop(frontIntake, backIntake, secondaryRollers, autoTimer);
+		}
+		LoadTopAutoEnd(secondaryRollers, frontIntake, backIntake);
 
 		TwoShotShortPrep(shooter, timer2); 
 
@@ -779,19 +793,19 @@ void TwoShotShortVision(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		autoTimer->Reset();
 		secondaryRollers->Stop();
 		Wait(0.4);
-		if(direction == 1.0)
+		float visionInput = ReceiveVisionProcessing(table);
+		if(visionInput == 0.0)
 		{
 			while(autoTimer->Get() < 0.5)
 			{
 				drivetrain->TankDrive(-0.8, 0.8);
 			}
 		}
-		if(direction == 2.0)
+		else if(visionInput == 1.0)
 		{
 			while(autoTimer->Get() < 0.5)
 			{
 				drivetrain->TankDrive(0.8, -0.8);
-			
 			}	
 		}
 		else
