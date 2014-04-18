@@ -880,6 +880,8 @@ public:
 				"Left Encoder: %f", leftEncoder->GetRate());
 		driverStationLCD->Printf((DriverStationLCD::Line) 4, 1,
 				"Right Encoder: %f", rightEncoder->GetRate());
+		driverStationLCD->Printf((DriverStationLCD::Line) 2, 1, 
+				"%f", manipulator->GetRawAxis(2));
 		driverStationLCD->UpdateLCD();
 		
 		if (b_gearUp->ButtonClicked()) {
@@ -894,13 +896,13 @@ public:
 		if (b_frontIntakePickup->ButtonPressed()) {
 			//intakes to hold the ball using proxy sensors
 			if (b_frontIntakePickup->ButtonClicked()
-					&& manipulator->GetRawAxis(5) == 0.0) {
+					&& manipulator->GetRawAxis(2) < 0.5) {
 				frontIntake->DeployIntake();
 			}
 			if (b_frontIntakePickup->ButtonClicked()) {
 				spitShortSwap->Set(true);
 			}
-			if (manipulator->GetRawAxis(5) != 0.0) {
+			if (manipulator->GetRawAxis(2) > 0.5) {
 				frontIntake->FrontRollerLoad();
 			} else {
 				frontIntake->FrontPickup(driverStation);
@@ -912,14 +914,14 @@ public:
 		else if (b_backIntakePickup->ButtonPressed()) {
 			//Pickup is here b/c we are unsure of how it'll interact w/ the stops
 			if (b_backIntakePickup->ButtonClicked() && manipulator->GetRawAxis(
-					5) == 0.0) {
+					2) < 0.5) {
 				shortShot = true;
 				shooter->ShooterPrime(shortShot);
 				backIntake->DeployIntake();
 
 				spitShortSwap->Set(true);
 			}
-			if (manipulator->GetRawAxis(5) != 0.0) {
+			if (manipulator->GetRawAxis(2) > 0.5) {
 				backIntake->BackRollerLoad();
 			} else {
 				backIntake->Pickup(manipulator, driverStation);
