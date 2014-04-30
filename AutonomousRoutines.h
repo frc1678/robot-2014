@@ -89,6 +89,7 @@ void OneShotShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	spitShortSwap->Set(true);
 	//frontIntake->FrontRollerAutoSlow();
 	LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me);
+	Wait(0.5);
 	table->PutNumber("Enabled", 1);
 	Wait(1.0);
 	float visionInput = ReceiveVisionProcessing(table);
@@ -112,7 +113,7 @@ void OneShotShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	}
 	else if(visionInput != startSide) //both are 1.0 for left and 2.0 for right
 	{
-		Wait(4.0);
+		Wait(3.5);//(4.0);
 	}
 	
 	rightEncoder->Reset();
@@ -794,14 +795,14 @@ void TwoShotShortVision(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		secondaryRollers->Stop();
 		Wait(0.4);
 		float visionInput = ReceiveVisionProcessing(table);
-		if(visionInput == 0.0)
+		if(visionInput == 1.0)
 		{
 			while(autoTimer->Get() < 0.5)
 			{
 				drivetrain->TankDrive(-0.8, 0.8);
 			}
 		}
-		else if(visionInput == 1.0)
+		else if(visionInput == 2.0)
 		{
 			while(autoTimer->Get() < 0.5)
 			{

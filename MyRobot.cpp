@@ -149,8 +149,8 @@ public:
 		spitShortSwap = new Solenoid(1);
 
 		//Sensors 
-		leftEncoder = new Encoder(7, 6);//(6,7);
-		rightEncoder = new Encoder(4, 5);
+		leftEncoder = new Encoder(4, 5); //diff b/t comp & prac//(7, 6);//(6,7);
+		rightEncoder = new Encoder(7, 6);//(4, 5);
 
 		leftEncoder->Start();
 		rightEncoder->Start();

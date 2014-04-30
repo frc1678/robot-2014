@@ -512,6 +512,7 @@ void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		{
 			if(!backintakeup)
 			{
+				backIntake->Stop();
 				secondaryRollers->Undeploy();
 				backIntake->UndeployIntake();
 				backintakeup = true;
