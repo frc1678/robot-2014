@@ -1,18 +1,16 @@
-#include "WPILib.h"
-#include "NetworkTables/NetworkTable.h"
+#include "WPILib.h" //Lots of convenient robot classes
+#include "NetworkTables/NetworkTable.h" //Networktables used for vision
 #include "Drivetrain.h"
-#include "IntakeSystem.h"
-#include "HumanLoad.h"
-#include "MPU6050_I2C.h"
-#include "ShooterSystem.h"
-#include "CitrusButton.h"
-//#include "Autonomous.h" 
-#include "SecondaryRollerSystem.h"
-#include "AutonomousRoutines.h"
-#include "AutonomousSubroutines.h"
-#include "Definitions.h"
-//#include "CurrentSensor.h"
-#include "CrioFile.h"
+#include "IntakeSystem.h" //System of pneumatics and motors involved in ball intake
+#include "HumanLoad.h" //System of operations used for human loading
+#include "MPU6050_I2C.h" //Non-KOP gyro
+#include "ShooterSystem.h" //System of pneumatics and motors involved in shooting
+#include "CitrusButton.h" //Custom button class used for manipulator and joystick buttons
+#include "SecondaryRollerSystem.h" //System of pneumatics and motors involved in settling ball before shot
+#include "AutonomousRoutines.h" //Collection of routines to chose from in autonomous
+#include "AutonomousSubroutines.h" //Collection of operations to be used in AutonomousRoutines
+#include "Definitions.h" //Used to simplify syntax for button operations
+#include "CrioFile.h" //Used for logging live in-match data to files on the Crio
 
 class Robot: public IterativeRobot {
 	DriverStation *driverStation;
@@ -22,9 +20,7 @@ class Robot: public IterativeRobot {
 	AnalogChannel *a;
 	AnalogChannel *b;
 	
-	//float CurrentData[6];
-
-	//Joysticks
+    //Joysticks
 	Joystick *driverL;
 	Joystick *driverR;
 	Joystick *manipulator; //gaming style controller
@@ -50,9 +46,6 @@ class Robot: public IterativeRobot {
 	Encoder *leftEncoder; //wheel rotation clicks
 	Encoder *rightEncoder;
 	
-	//Gyro
-	//MPU6050_I2C *gyro;
-
 	//Talons	
 	RobotDrive *drivetrain; // robot drive system
 	Talon *secondaryRollerA;
@@ -62,7 +55,8 @@ class Robot: public IterativeRobot {
 	SecondaryRollerSystem *secondaryRollers;
 
 	//Timers.
-	Timer *autoTimer2;
+	//For use in auto when timing routines
+	Timer *autoTimer2; 
 	Timer *autoTimer;
 	Timer *turnTimer;
 	Timer *shotTimer;
@@ -116,20 +110,18 @@ public:
 		driverStation = DriverStation::GetInstance();
 		driverStationLCD = DriverStationLCD::GetInstance();
 
-		driverL = new Joystick(1);
-		driverR = new Joystick(2);
-		manipulator = new Joystick(3);
+		driverL = new Joystick(1); //Joystick used to control left drivetrain
+		driverR = new Joystick(2); //Joystick used to control right drivetrain
+		manipulator = new Joystick(3); //Gamepad used to control most pneumatics and intakes
 
 		currentSensor = new CrioFile();
 		a = new AnalogChannel(3);
 		b = new AnalogChannel(7);
-		/*for (int i = 0; i < 6; i++) {
-			CurrentData[i] = 0.0;
-		}*/
-
+        
+		//Used in PID testing
 		dataTable = NetworkTable::GetTable("TurnTable");
 		dataTable->PutNumber("degreeOfTurn", 90.0);
-		dataTable->PutNumber("kpError", 2); //use 0.8 or 2
+		dataTable->PutNumber("kpError" , 2); //use 0.8 or 2
 		dataTable->PutNumber("kiError", 0.023); //use 0.027 or 0.023
 		dataTable->PutNumber("kdError", 0.5); //use 0.078 or 0.5
 
@@ -141,7 +133,7 @@ public:
 		//Solenoids.
 		gearUp = new Solenoid(8);
 		gearDown = new Solenoid(7);
-		frontIntakeDeploy = new Solenoid(3); //deploy = putdown
+		frontIntakeDeploy = new Solenoid(3); //deploy = put intake down
 		backIntakeDeploy = new Solenoid(4);
 		shotAlignerUp = new Solenoid(5);
 		shotAlignerDown = new Solenoid(6);
@@ -149,16 +141,16 @@ public:
 		spitShortSwap = new Solenoid(1);
 
 		//Sensors 
-		leftEncoder = new Encoder(4, 5); //diff b/t comp & prac//(7, 6);//(6,7);
-		rightEncoder = new Encoder(7, 6);//(4, 5);
+		leftEncoder = new Encoder(4, 5); //values switched between comp and practice robot (7, 6)
+		rightEncoder = new Encoder(7, 6); //(4, 5)
 
+		//Begins counting of encoder clicks for both drivetrains
 		leftEncoder->Start();
 		rightEncoder->Start();
 
-		//gyro
-		//gyro = new MPU6050_I2C();
+		
 		drivetrain = new RobotDrive(3, 4);
-		//Intake
+		//SecondaryIntake
 		secondaryRollerA = new Talon(7);
 		secondaryRollerB = new Talon(8);
 
@@ -172,7 +164,7 @@ public:
 		shotTimer = new Timer();
 
 		frontIntake = new IntakeSystem(6, secondaryRollerA, secondaryRollerB,
-				3, frontIntakeDeploy, true); //Switch because weirdness
+				3, frontIntakeDeploy, true);
 		backIntake = new IntakeSystem(1, secondaryRollerA, secondaryRollerB, 2,
 				backIntakeDeploy, false); 
 
@@ -269,7 +261,8 @@ public:
 		
 		table->PutNumber("Enabled", 0);
 		driverStationLCD->Clear();
-		drivetrain->TankDrive(0.0, 0.0);
+		drivetrain->TankDrive(0.0, 0.0); //TankDrive is a method of driving controling each drivetrain seperately
+		//TankDrive values range from -1 to 1
 		//currentSensor->EndLog();
 		
 	}
