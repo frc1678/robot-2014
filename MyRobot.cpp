@@ -261,7 +261,7 @@ public:
 		
 		table->PutNumber("Enabled", 0);
 		driverStationLCD->Clear();
-		drivetrain->TankDrive(0.0, 0.0); //TankDrive is a method of driving controling each drivetrain seperately
+		drivetrain->TankDrive(0.0, 0.0); //TankDrive is a method of driving controling each drivetrain separately, parameter 1 is left drivetrain, 2 is right
 		//TankDrive values range from -1 to 1
 		//currentSensor->EndLog();
 		
@@ -287,12 +287,20 @@ public:
 		leftEncoder->Reset();
 		//beginning of long chain to determine which auto we are running
 		//for running motors: -1 to 1 input range
-		//This applies to several of these: sorry for messy code
+		//This applies to several of these: sorry for messy code, not all of them work
 		if (driverStation->GetDigitalIn(1))
 		{
-			ThreeShotGoalie3(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder, shotTimer, drivetrain, spitShortSwap);
+			ThreeShotGoalie3(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder, shotTimer, drivetrain, spitShortSwap); //goalie avoidance 3 ball
 		} else if (driverStation->GetDigitalIn(2)) 
-		{
+		{ /*Summary: 
+		1. deploy intakes and prep to load top
+		2. load top
+		3. prime shooter and play with variables
+		4. shoot
+		5. load front
+		6. shoot   (do driving during most of the routine)
+		7. load back
+		8. shoot */
 			backIntake->DeployIntake();
 			frontIntake->DeployIntake();
 			LoadTopAutoPrep(autoTimer, shooter);
@@ -303,19 +311,15 @@ public:
 				secondaryRollers->Run();
 			}
 			LoadTopAutoEnd(secondaryRollers, frontIntake, backIntake);
-			//LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, this);
 			shooter->ShooterPrime(true);
-			//backIntake->DeployIntake();
 			backIntake->BackRollerAutoSlow();
 			frontIntake->FrontRollerAutoSlow();
-			//Wait(1.0);
 			bool shootPrep = false;
 			bool doneShooting = false;
 			bool stopSecondary = false;
 			bool backintakeup = false;
 			bool allDone = false;
 			bool doneDriving = false;
-			//while((rightEncoder->Get() > - 3300 || !doneShooting) && IsAutonomous())
 			while ((ShootAutoConditions(shooter, this)
 					|| DriveForwardShootAutoConditions(autoTimer, this,
 							rightEncoder) || !allDone)&& IsAutonomous()) 
@@ -324,7 +328,6 @@ public:
 				if(shotTimer->Get() < 1.4)
 				{
 					if (rightEncoder->Get() > -1400) {
-						//secondaryRollers->Pulse(); //possible: runAt here.
 						secondaryRollers->RunAt(1.0);
 					} else if (!stopSecondary) {
 						stopSecondary = true;
@@ -332,7 +335,6 @@ public:
 					}
 				}
 				
-				//Added this- remove for return to known good code.
 				if(!shootPrep && rightEncoder->Get() < -2800)//1550)
 				{
 					backIntake->ReverseSlow();
@@ -380,16 +382,12 @@ public:
 					{
 						drivetrain->TankDrive(0.0, 0.0);
 					}
-					//frontIntake->FrontRollerLoad();
 					backIntake->BackRollerLoad();
-					printf("load");
-					
 					secondaryRollers->Pulse();
-					//secondaryRollers->RunAt(1.0);
 				}
 
 				//First
-				else if (rightEncoder->Get() > -3300)//DriveForwardShootAutoConditions(timer, me, rightEncoder))
+				else if (rightEncoder->Get() > -3300)
 				{
 					DriveForwardAutoInLoop(drivetrain);
 				} else if (!doneDriving) {
@@ -398,7 +396,6 @@ public:
 				}
 				if (shotTimer->Get() > 3.4)//4.2)
 				{
-					printf("Shot timer > 4.2");
 					secondaryRollers->Stop();
 					DriveForwardAutoEnd(drivetrain);
 					allDone = true;
@@ -428,13 +425,10 @@ public:
 				if (autoTimer->Get() > 0.2) {
 					if (!backintakeup) {
 						secondaryRollers->Undeploy();
-						//frontIntake->UndeployIntake();
 						frontIntake->DeployIntake();
 						backIntake->UndeployIntake();
 						backintakeup = true;
 					}
-					//drivetrain->TankDrive(0.4, 0.4);
-					//frontIntake->FrontRollerLoad();
 					if (autoTimer->Get() < 0.5) { //Doing a little dance to get the ball in
 						drivetrain->TankDrive(0.7, 0.7);
 					} else if (autoTimer->Get() < 0.9) {
