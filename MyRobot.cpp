@@ -267,16 +267,16 @@ public:
 		
 	}
 	void DisabledPeriodic() {
-		table->PutNumber("Enabled", 0);
-		drivetrain->TankDrive(0.0, 0.0);
+		table->PutNumber("Enabled", 0); // 0 means not enabled, 1 means it is
+		drivetrain->TankDrive(0.0, 0.0); //stop
 	}
 	void AutonomousInit() {
-		spitShortSwap->Set(true);
+		spitShortSwap->Set(true); //fingers on the shooter used to controll the ball
 		driverStationLCD->Clear();
 		driverStationLCD->UpdateLCD();
 		//table->PutNumber("Enabled", 1);
 		
-		table->PutString("Direction: ", "MERP");
+		table->PutString("Direction: ", "MERP"); //MERP so that we get an error if timing with network tables doesn't work
 		//leftEncoder->Start();
 		//rightEncoder->Start();
 		gearDown->Set(true);
@@ -285,7 +285,9 @@ public:
 		
 		rightEncoder->Reset();
 		leftEncoder->Reset();
-		
+		//beginning of long chain to determine which auto we are running
+		//for running motors: -1 to 1 input range
+		//This applies to several of these: sorry for messy code
 		if (driverStation->GetDigitalIn(1))
 		{
 			ThreeShotGoalie3(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder, shotTimer, drivetrain, spitShortSwap);
@@ -358,7 +360,6 @@ public:
 				}
 				if (shootPrep && ShootAutoConditions(shooter, this)) {
 					ShootAutoInLoop(shooter);
-					//printf("Shot");
 				} else if (shootPrep && !doneShooting) {
 					ShootAutoEnd();
 				}
@@ -434,7 +435,7 @@ public:
 					}
 					//drivetrain->TankDrive(0.4, 0.4);
 					//frontIntake->FrontRollerLoad();
-					if (autoTimer->Get() < 0.5) {
+					if (autoTimer->Get() < 0.5) { //Doing a little dance to get the ball in
 						drivetrain->TankDrive(0.7, 0.7);
 					} else if (autoTimer->Get() < 0.9) {
 						drivetrain->TankDrive(-0.7, -0.7);
@@ -445,12 +446,10 @@ public:
 					if (autoTimer->Get() < 0.9) {
 						frontIntake->FrontRollerLoad();
 					}
-					//frontIntake->FrontPickup(driverStation);
 					else if (autoTimer->Get() > 0.9) {
 						if (autoTimer->Get() > 1.1) {
 							frontIntake->UndeployIntake();
 						}
-						//frontIntake->ReverseSlow();
 						backIntake->ReverseSlow();
 						frontIntake->Stop();
 					}
@@ -463,19 +462,18 @@ public:
 			ShootShortAuto(frontIntake, backIntake, shooter, autoTimer,
 					secondaryRollers, spitShortSwap, this);
 			autoTimer->Stop();
+			
 		} else if (driverStation->GetDigitalIn(3)) {
 			ThreeShotGoalieRightLeft(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers,
 					allDone, rightEncoder, shotTimer, drivetrain, spitShortSwap);
+			
 		} else if (driverStation->GetDigitalIn(4)) {
 			printf("In GetDigitalIn 4");
 			OneShotShort(frontIntake, backIntake, shooter, drivetrain,
 					autoTimer, turnTimer, spitShortSwap, secondaryRollers,
 					this, rightEncoder, driverStationLCD, table, 1.0);
-			//ShootLoadFrontAuto(frontIntake, backIntake, shbooter, autoTimer,
-			//		secondaryRollers, this, drivetrain);
-			//ShootAuto(frontIntake, backIntake, shooter, autoTimer,
-			//		secondaryRollers, this);
-		} else if (driverStation->GetDigitalIn(5)) { //THIS IS NUMBER 5
+			
+		} else if (driverStation->GetDigitalIn(5)) { 
 			table->PutNumber("Enabled", 1);
 			backIntake->DeployIntake();
 			frontIntake->DeployIntake();
@@ -488,20 +486,15 @@ public:
 				secondaryRollers->Run();
 			}
 			LoadTopAutoEnd(secondaryRollers, frontIntake, backIntake);
-			//float direction = 2.0;
 			float direction = ReceiveVisionProcessing(table);
 			if(direction == 0.0)
 			{
 				driverStationLCD->Printf((DriverStationLCD::Line)3, 1, "VISION ERROR");
 				direction = 1.0;
 			}
-			//float direction = 1.0;
-			//LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, this);
 			shooter->ShooterPrime(true);
-			//backIntake->DeployIntake();
 			backIntake->BackRollerAutoSlow();
 			frontIntake->FrontRollerAutoSlow();
-			//Wait(1.0);
 			bool shootPrep = false;
 			bool doneShooting = false;
 			bool stopSecondary = false;
@@ -510,12 +503,10 @@ public:
 			bool doneDriving = false;
 			bool startedSecondTurn = false;
 			bool finishedSecondTurn = false;
-			//while((rightEncoder->Get() > - 3300 || !doneShooting) && IsAutonomous())
 			while (ShootAutoConditions(shooter, this)
 					|| DriveForwardShootAutoConditions(autoTimer, this, rightEncoder) 
 					|| !allDone) 
 			{
-				//driverStationLCD->Clear();
 				driverStationLCD->Printf((DriverStationLCD::Line) 0, 1, "Left: %d", leftEncoder->Get());
 				driverStationLCD->Printf((DriverStationLCD::Line) 1, 1, "Right: %d", rightEncoder->Get());
 				driverStationLCD->Printf((DriverStationLCD::Line) 2, 1, "Start Value: %d", encoderStartValue);
@@ -607,7 +598,7 @@ public:
 				if (shotTimer->Get() > 1.4) {
 					driverStationLCD->Printf((DriverStationLCD::Line) 5, 1, "  NOT!");
 					if (!backintakeup) {
-						secondaryRollers->Undeploy();//frontIntake->UndeployIntake();
+						secondaryRollers->Undeploy();
 						backintakeup = true;
 					}
 					
@@ -678,40 +669,35 @@ public:
 				//first
 				else if (((direction == 2.0 &&rightEncoder->Get() > -3300) ||
 						(direction == 1.0 &&leftEncoder->Get() > -3300)) &&
-						(!startedSecondTurn || finishedSecondTurn))//DriveForwardShootAutoConditions(timer, me, rightEncoder))
+						(!startedSecondTurn || finishedSecondTurn))
 				{
 					
 					if(direction == 2.0)
 					{
 						if(rightEncoder->Get() > -14)
-						//if(leftEncoder->Get() > -120) //Outside wheel.
 						{
 							driverStationLCD->Printf((DriverStationLCD::Line) 5, 1, "Drive %d", leftEncoder->Get());
 							drivetrain->TankDrive(-0.8, 0.0);
 						}
 						else
 						{
-							//DriveForwardAutoInLoop(drivetrain);
 							drivetrain->TankDrive(-0.8, -0.8);
 						}
 					}
 					if(direction == 1.0)
 					{
 						if(leftEncoder->Get() > -14) 
-						//if(rightEncoder->Get() > -120)
 						{
 							driverStationLCD->Printf((DriverStationLCD::Line) 5, 1, "Drive %d", leftEncoder->Get());
 							drivetrain->TankDrive(0.0, -0.8);
 						}
 						else
 						{
-							//DriveForwardAutoInLoop(drivetrain);
 							drivetrain->TankDrive(-0.8, -0.8);
 						}
 					}
 				} 
 				else if (!doneDriving) {
-					//DriveForwardAutoEnd(drivetrain);
 					drivetrain->TankDrive(0.0, 0.0);
 					doneDriving = true;
 				}
@@ -719,7 +705,6 @@ public:
 				{
 					printf("Shot timer > 4.2");
 					secondaryRollers->Stop();
-					//DriveForwardAutoEnd(drivetrain);
 					drivetrain->TankDrive(0.0, 0.0);
 					allDone = true;
 					break;
@@ -763,8 +748,6 @@ public:
 						backIntake->UndeployIntake();
 						backintakeup = true;
 					}
-					//drivetrain->TankDrive(0.4, 0.4);
-					//frontIntake->FrontRollerLoad();
 					if (autoTimer->Get() < 0.5) 
 					{
 						drivetrain->TankDrive(0.7, 0.7);
@@ -782,14 +765,12 @@ public:
 					{
 						frontIntake->FrontRollerLoad();
 					}
-					//frontIntake->FrontPickup(driverStation);
 					else if (autoTimer->Get() > 0.9) 
 					{
 						if (autoTimer->Get() > 1.1) 
 						{
 							frontIntake->UndeployIntake();
 						}
-						//frontIntake->ReverseSlow();
 						backIntake->ReverseSlow();
 						frontIntake->Stop();
 					}
@@ -804,7 +785,7 @@ public:
 			autoTimer->Stop();
 		} 
 		else if (driverStation->GetDigitalIn(6)) {
-			float direction = 1.0; //TODO Put back to receive vision processing
+			float direction = 1.0; //TODO Put back to receive vision processing and not manualy set the hot goal
 			TwoShotShortVision(frontIntake, backIntake, shooter,
 					drivetrain, autoTimer, autoTimer2,spitShortSwap,
 					secondaryRollers, this,rightEncoder, leftEncoder, driverStation, direction, table);
@@ -826,7 +807,6 @@ public:
 		//printf("Gyro: %f, Gyro Rate: %f\n", gyro->GetAngle(), gyro->GetRate());
 	}
 	void TeleopInit() {
-		//currentSensor->StartLog(); 
 			
 		spitShortSwap->Set(true);
 
@@ -837,16 +817,12 @@ public:
 		gearUp->Set(!gearToggle);
 		gearDown->Set(gearToggle);
 
-		//Photo to compare
-		//table->PutNumber("Enabled", 1);
-
-		
-	}
+		}
 	void TeleopPeriodic() {
 		currentSensor->LogCurrent(a);
 		currentSensor->LogHeat(b);
 		currentSensor->LogEncoders(leftEncoder, rightEncoder);
-		/*for (int i = 0; i < 5; i++) {
+		/*for (int i = 0; i < 5; i++) { //for putting the current log on the driverstation.
 			if (i == 4) {
 				CurrentData[i] = a->GetVoltage();
 			} else {
