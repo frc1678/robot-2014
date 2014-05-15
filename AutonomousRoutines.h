@@ -938,5 +938,13 @@ void TwoShotHot(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 
 }
 
+void FunAuto(RobotDrive *drivetrain, Encoder *leftEncoder, Encoder *rightEncoder)
+{
+	drivetrain->TankDrive(0.0, 0.0);
+	if(leftEncoder->Get() <= 0)
+	{
+		drivetrain->TankDrive(0.0, 0.0);
+	}
+}
 
 #endif	
