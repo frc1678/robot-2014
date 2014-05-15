@@ -290,7 +290,8 @@ public:
 		//This applies to several of these: sorry for messy code, not all of them work
 		if (driverStation->GetDigitalIn(1))
 		{
-			ThreeShotGoalie3(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder, shotTimer, drivetrain, spitShortSwap); //goalie avoidance 3 ball
+			FunAuto(drivetrain, leftEncoder, rightEncoder);
+			//ThreeShotGoalie3(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder, shotTimer, drivetrain, spitShortSwap); //goalie avoidance 3 ball
 		} else if (driverStation->GetDigitalIn(2)) 
 		{ /*Summary: 
 		1. deploy intakes and prep to load top
