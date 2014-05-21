@@ -37,41 +37,45 @@
 	//DriveForwardAuto(drivetrain, timer, me, rightEncoder);
 }*/
 
+//Two shots, one short and one long
 void TwoShotShortLong(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *autoTimer, Solenoid *spitShortSwap,
 		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *rightEncoder)
 {
-	spitShortSwap->Set(false);
-	LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me);
+	spitShortSwap->Set(false);  //Shortest fingers down
+	LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me); //suck the ball in from the top
 	//ShootAutoLoadBack(frontIntake, backIntake, shooter, timer, secondaryRollers, me, drivetrain);
 	Wait(1.5);
-	ShootAuto(frontIntake, backIntake, shooter, autoTimer, secondaryRollers, spitShortSwap, me);
-	spitShortSwap->Set(true);
-	LoadBackAuto(frontIntake, backIntake, shooter, autoTimer, secondaryRollers, drivetrain, me);
-	spitShortSwap->Set(true);
+	ShootAuto(frontIntake, backIntake, shooter, autoTimer, secondaryRollers, spitShortSwap, me); //Shoot the ball
+	spitShortSwap->Set(true); //Shortest fingers up
+	LoadBackAuto(frontIntake, backIntake, shooter, autoTimer, secondaryRollers, drivetrain, me); //load the ball in from the back
+	spitShortSwap->Set(true); //shortest fingers up
 	Wait(1.0);
-	//drive and shoot.
+	//drive forward and shoots a short shot when closer
 	ShortShootDriveForwardAuto(frontIntake, backIntake, shooter, autoTimer, secondaryRollers, spitShortSwap, me, drivetrain, rightEncoder);
 }
 
+//two shots, both shorter shots
 void TwoShotShortShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *autoTimer, Timer *timer2, Solenoid *spitShortSwap,
 		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *rightEncoder, 
 		DriverStation *driverStation)
 {
-	spitShortSwap->Set(true);
-	frontIntake->FrontRollerAutoSlow();
-	LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me);
+	spitShortSwap->Set(true); //shortest fingers up
+	frontIntake->FrontRollerAutoSlow(); //slowly roll balls against the bumpers
+	LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me); //sucks the ball in down from the top
 	
-	TwoShotShortPrep(shooter, timer2); 
+	TwoShotShortPrep(shooter, timer2); //Set everything for the shot
 	
+	//drives, pulse secondaries and shoots
 	MultiAutoLoop(frontIntake, backIntake, shooter, drivetrain, 
 			autoTimer, timer2, secondaryRollers, spitShortSwap, me, rightEncoder,
 			driverStation); //driving and stuff and shoots once
-	frontIntake->DeployIntake();
+	//sets the intakes down
+	frontIntake->DeployIntake(); 
 	backIntake->DeployIntake(); 
 	Wait(1.0);
-	
+	//shoots a short shot
 	ShootShortAuto(frontIntake, backIntake, shooter, autoTimer, secondaryRollers, spitShortSwap, me);
 	autoTimer->Stop();
 	timer2->Stop();
@@ -81,27 +85,28 @@ void TwoShotShortShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, spitShortSwap, me);*/
 }
 
+//Drive and shoot one short shot in auto
 void OneShotShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *autoTimer, Timer *timer2, Solenoid *spitShortSwap,
 		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *rightEncoder, DriverStationLCD *driverStationLCD,
 		NetworkTable *table, float startSide)
 {
-	spitShortSwap->Set(true);
+	spitShortSwap->Set(true); //shortest fingers up
 	//frontIntake->FrontRollerAutoSlow();
-	LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me);
+	LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me); //suck down the ball
 	Wait(0.5);
-	table->PutNumber("Enabled", 1);
+	table->PutNumber("Enabled", 1); //send to network table that robot is on
 	Wait(1.0);
-	float visionInput = ReceiveVisionProcessing(table);
+	float visionInput = ReceiveVisionProcessing(table); //Tabble direction returned
 	driverStationLCD->PrintfLine((DriverStationLCD::Line)0,"Vision: %f", visionInput);
 	driverStationLCD->UpdateLCD();
-	shooter->ShooterPrime(true);
+	shooter->ShooterPrime(true); //longest fingers down
 	
 	bool shootPrep = false;
 	bool doneDriving = false;
 	bool doneShooting = false;
 	
-	bool allDone = false;
+	bool allDone = false; //for continuing the while loop
 	
 	bool backintakeup = false; //unused
 	
@@ -109,11 +114,11 @@ void OneShotShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	bool stopSecondary = false;
 	if(visionInput == 0.0)
 	{
-		Wait(2.0);
+		Wait(2.0); //hot is in front
 	}
 	else if(visionInput != startSide) //both are 1.0 for left and 2.0 for right
 	{
-		Wait(3.5);//(4.0);
+		Wait(3.5);//(4.0); //wait for hot
 	}
 	
 	rightEncoder->Reset();
@@ -122,11 +127,11 @@ void OneShotShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	while((ShootAutoConditions(shooter, me) || DriveForwardShootAutoConditions(autoTimer, me, rightEncoder) || !allDone) && EnabledInAutonomous(me))
 	{
 		//first
-		if(rightEncoder->Get() > -500)
+		if(rightEncoder->Get() > -500) //for the short distance, settle the ball
 		{
 			secondaryRollers->Pulse();
 		}
-		else if (!stopSecondary)
+		else if (!stopSecondary) //preset to false as to not run more than once
 		{
 			stopSecondary = true;
 			secondaryRollers->Stop();
@@ -137,32 +142,34 @@ void OneShotShort(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		{
 			timer2->Start();
 			timer2->Reset();
+			//Shortest fingers up, longest down
 			ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, spitShortSwap, true);
 			shootPrep = true;
 		}
-		if(shootPrep && ShootAutoConditions(shooter, me))
+		if(shootPrep && ShootAutoConditions(shooter, me)) //if a certain point has been reached, and aren't already shooting in auto
 		{
-			ShootAutoInLoop(shooter);
+			ShootAutoInLoop(shooter); //shoot the ball
 		}
 		else if(shootPrep && !doneShooting)
 		{
-			ShootAutoEnd();
+			ShootAutoEnd(); //does... nothing
 		}
-		//first
+		//first. Just driving forward to a point
 		else if(rightEncoder->Get() > -3300)//DriveForwardShootAutoConditions(timer, me, rightDT))
 		{
-			DriveForwardAutoInLoop(drivetrain);
+			DriveForwardAutoInLoop(drivetrain); //Driving at almost full speed
 		}
 		else if(!doneDriving)
 		{
-			DriveForwardAutoEnd(drivetrain);
+			DriveForwardAutoEnd(drivetrain); //sets motors to stop
 			doneDriving = true;
 			break;
 		}
 	}
+	//bring up the intakes 
 	frontIntake->UndeployIntake();
 	backIntake->UndeployIntake();
-	autoTimer->Stop();
+	autoTimer->Stop(); //stop so nothing breaks
 	timer2->Stop();
 	/*ShortShootDriveForwardAuto(frontIntake, backIntake, shooter, timer, secondaryRolles, spitShortSwap, me, drivetrain, rightDT);
 	LoadFrontAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, drivetrain, me);
@@ -209,20 +216,21 @@ void ThreeShotGoalie3(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer
 		ShooterSystem *shooter, IterativeRobot *me, SecondaryRollerSystem *secondaryRollers,
 		bool allDone, Encoder *rightEncoder, Timer *shotTimer, RobotDrive *drivetrain, Solenoid *spitShortSwap)
 {
-	backIntake->DeployIntake();
+	backIntake->DeployIntake(); //set intakes down
 	frontIntake->DeployIntake();
 	LoadTopAutoPrep(autoTimer, shooter);
-	while (LoadTopAutoConditions(autoTimer, me)) {
+	while (LoadTopAutoConditions(autoTimer, me)) //check time since prep
+	{
 
-		backIntake->BackRollerAutoSlow();
+		backIntake->BackRollerAutoSlow(); //roll ball to hold against bumpers
 		frontIntake->FrontRollerAutoSlow();
-		secondaryRollers->Run();
+		secondaryRollers->Run(); //suck the ball down to settle
 	}
-	LoadTopAutoEnd(secondaryRollers, frontIntake, backIntake);
+	LoadTopAutoEnd(secondaryRollers, frontIntake, backIntake); //sets intakes down
 	//LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, this);
-	shooter->ShooterPrime(true);
+	shooter->ShooterPrime(true); //longest fingers down
 	//backIntake->DeployIntake();
-	backIntake->BackRollerAutoSlow();
+	backIntake->BackRollerAutoSlow(); //roll ball to hold against bumpers
 	frontIntake->FrontRollerAutoSlow();
 	//Wait(1.0);
 	bool shootPrep = false;
@@ -236,83 +244,96 @@ void ThreeShotGoalie3(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer
 	//while((rightEncoder->Get() > - 3300 || !doneShooting) && IsAutonomous())
 	while (ShootAutoConditions(shooter, me)
 			|| DriveForwardShootAutoConditions(autoTimer, me,
-					rightEncoder) || !allDone) {
-		//first
-		if (rightEncoder->Get() > -1000) {
+					rightEncoder) || !allDone) 
+	{
+		//first. Pulse to a certain point
+		if (rightEncoder->Get() > -1000) 
+		{
 			secondaryRollers->Pulse();
-		} else if (!stopSecondary) {
+		} 
+		else if (!stopSecondary) 
+		{
 			stopSecondary = true;
 			secondaryRollers->Stop();
 		}
 
 		//Added this- remove for return to known good code.
-		if(!shootPrep && rightEncoder->Get() < -1550)
+		if(!shootPrep && rightEncoder->Get() < -1550) //past a certain point
 		{
-			backIntake->BackRollerAutoSlow();
+			backIntake->BackRollerAutoSlow(); //roll to hold ball against bumpers
 			//backIntake->ReverseSlow();
 		}
 		else if(!shootPrep)
 		{
-			backIntake->BackRollerAutoSlow();
+			backIntake->BackRollerAutoSlow(); //continually roll against bumpers
 		}
 		
 		//second
 		if (!shootPrep && rightEncoder->Get() < -1750) //3 feet forward?
 		{
+			//get ready to shoot. Start/reset everything
 			shotTimer->Start();
 			shotTimer->Reset();
 			ShootAutoPrep(frontIntake, backIntake, shooter,
 					secondaryRollers, spitShortSwap, true);
-			shootPrep = true;
+			shootPrep = true; //runs loop once
 		}
-		if (shootPrep && ShootAutoConditions(shooter, me)) {
-			ShootAutoInLoop(shooter);
+		if (shootPrep && ShootAutoConditions(shooter, me)) 
+		{
+			ShootAutoInLoop(shooter); //shoots
 			printf("Shot");
-		} else if (shootPrep && !doneShooting) {
-			ShootAutoEnd();
+		}
+		else if (shootPrep && !doneShooting) 
+		{
+			ShootAutoEnd(); //nothing
 		}
 		//third
-		if (shotTimer->Get() > 1.4) {
-			if (!backintakeup) {
-				secondaryRollers->Undeploy();
+		if (shotTimer->Get() > 1.4) //past a point
+		{
+			if (!backintakeup) 
+			{
+				secondaryRollers->Undeploy(); //bring in rollers
 				//frontIntake->UndeployIntake();
 				backintakeup = true;
 			}
 			//drivetrain->TankDrive();
 			//frontIntake->FrontRollerLoad();
-			backIntake->BackRollerLoad();
+			backIntake->BackRollerLoad(); //load from the back
 			printf("load");
 			
-			secondaryRollers->Pulse();
+			secondaryRollers->Pulse(); //settle the ball
 		}
-		else if(shotTimer->Get() < 0.7 && shotTimer->Get() > 0.3) 
+		else if(shotTimer->Get() < 0.7 && shotTimer->Get() > 0.3)  //between a ceratin point
 		{
-			drivetrain->TankDrive(-0.6, 0.7); //Second turn
+			drivetrain->TankDrive(-0.6, 0.7); //turn
 		}
 		
 
-		//First
+		//First. Drive forward 
 		else if (rightEncoder->Get() > -3300)//DriveForwardShootAutoConditions(timer, me, rightEncoder))
 		{
 				drivetrain->TankDrive(-0.9, -0.9);
-		} else if (!doneDriving) {
-			DriveForwardAutoEnd(drivetrain);
+		}
+		else if (!doneDriving) 
+		{
+			DriveForwardAutoEnd(drivetrain); //stop motors
 			doneDriving = true;
 		}
 		if (shotTimer->Get() > 3.0)//4.2)
 		{
 			printf("Shot timer > 3.0");
-			secondaryRollers->Stop();
-			DriveForwardAutoEnd(drivetrain);
+			secondaryRollers->Stop(); //stop rollers
+			DriveForwardAutoEnd(drivetrain); //stop motors
 			allDone = true;
 			break;
 		}
 
 	}
 	drivetrain->TankDrive(0.0, 0.0);
-	frontIntake->DeployIntake();
+	frontIntake->DeployIntake(); //set intakes down
 	backIntake->DeployIntake();
 	Wait(0.5);
+	//get ready before the shoot
 	ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers,
 			spitShortSwap, true);
 	autoTimer->Stop();
@@ -320,16 +341,25 @@ void ThreeShotGoalie3(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer
 	autoTimer->Start();
 	backintakeup = false;
 	bool shotDone = false;
+	//enabled, plus timer is under a point, and/or we are ready to shoot
 	while ((ShootAutoConditions(shooter, me) || autoTimer->Get()
-			< 3.0) && EnabledInAutonomous(me)) {
-		if (ShootAutoConditions(shooter, me)) {
-			ShootAutoInLoop(shooter);
-		} else if (!shotDone) {
+			< 3.0) && EnabledInAutonomous(me)) 
+	{
+		if (ShootAutoConditions(shooter, me)) 
+		{
+			ShootAutoInLoop(shooter); //take the shoot
+		} 
+		else if (!shotDone) 
+		{
 			ShootAutoEnd();
 			shotDone = false;
 		}
-		if (autoTimer->Get() > 0.2) {
-			if (!backintakeup) {
+		if (autoTimer->Get() > 0.2) //past a specific point
+		{
+			if (!backintakeup) 
+			
+			{
+				//bring intakes up
 				secondaryRollers->Undeploy();
 				//frontIntake->UndeployIntake();
 				frontIntake->DeployIntake();
@@ -338,32 +368,40 @@ void ThreeShotGoalie3(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer
 			}
 			//drivetrain->TankDrive(0.4, 0.4);
 			//frontIntake->FrontRollerLoad();
-			if (autoTimer->Get() < 0.5) {
-				drivetrain->TankDrive(0.8, 0.4);
-			} else if (autoTimer->Get() < 0.9) {
-				drivetrain->TankDrive(-0.4, -0.8);
-			} else {
-				drivetrain->TankDrive(0.0, 0.0);
+			if (autoTimer->Get() < 0.5) 
+			
+				drivetrain->TankDrive(0.8, 0.4); //turn right
+			}
+			else if (autoTimer->Get() < 0.9) 
+			{
+				drivetrain->TankDrive(-0.4, -0.8); //moreso to the right
+			}
+			else {
+				drivetrain->TankDrive(0.0, 0.0); //stop motors
 			}
 
-			if (autoTimer->Get() < 0.9) {
-				frontIntake->FrontRollerLoad();
+			if (autoTimer->Get() < 0.9)
+			{
+				frontIntake->FrontRollerLoad(); //load another ball while turning
 			}
 			//frontIntake->FrontPickup(driverStation);
-			else if (autoTimer->Get() > 0.9) {
-				if (autoTimer->Get() > 1.1) {
-					frontIntake->UndeployIntake();
+			else if (autoTimer->Get() > 0.9)
+			{
+				if (autoTimer->Get() > 1.1)
+				{
+					frontIntake->UndeployIntake(); //bring intake back up
 				}
 				//frontIntake->ReverseSlow();
 				backIntake->ReverseSlow();
 				frontIntake->Stop();
 			}
 
-			secondaryRollers->Pulse();
+			secondaryRollers->Pulse(); //settle the ball
 		}
 	}
-	LoadTopAutoEnd(secondaryRollers, frontIntake, backIntake);
+	LoadTopAutoEnd(secondaryRollers, frontIntake, backIntake); //bring everything in and stop 
 	Wait(0.3);
+	//short shot
 	ShootShortAuto(frontIntake, backIntake, shooter, autoTimer,
 			secondaryRollers, spitShortSwap, me);
 	autoTimer->Stop();
@@ -374,20 +412,21 @@ void ThreeShotGoalieLeftRight(IntakeSystem *backIntake, IntakeSystem *frontIntak
 		ShooterSystem *shooter, IterativeRobot *me, SecondaryRollerSystem *secondaryRollers,
 		bool allDone, Encoder *rightEncoder, Timer *shotTimer, RobotDrive *drivetrain, Solenoid *spitShortSwap)
 {
-	backIntake->DeployIntake();
+	backIntake->DeployIntake(); //set intakes down
 	frontIntake->DeployIntake();
-	LoadTopAutoPrep(autoTimer, shooter);
-	while (LoadTopAutoConditions(autoTimer, me)) {
-
+	LoadTopAutoPrep(autoTimer, shooter); //largest fingers up
+	while (LoadTopAutoConditions(autoTimer, me))
+	{
+		//rolls to hold the ball against the bumpers
 		backIntake->BackRollerAutoSlow();
 		frontIntake->FrontRollerAutoSlow();
-		secondaryRollers->Run();
+		secondaryRollers->Run(); //run to suck down the ball
 	}
-	LoadTopAutoEnd(secondaryRollers, frontIntake, backIntake);
+	LoadTopAutoEnd(secondaryRollers, frontIntake, backIntake); //stop everything
 	//LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, this);
-	shooter->ShooterPrime(true);
+	shooter->ShooterPrime(true); //longest fingers down
 	//backIntake->DeployIntake();
-	backIntake->BackRollerAutoSlow();
+	backIntake->BackRollerAutoSlow(); //rolls to hold balls against bumpers
 	frontIntake->FrontRollerAutoSlow();
 	//Wait(1.0);
 	bool shootPrep = false;
@@ -401,58 +440,68 @@ void ThreeShotGoalieLeftRight(IntakeSystem *backIntake, IntakeSystem *frontIntak
 	//while((rightEncoder->Get() > - 3300 || !doneShooting) && IsAutonomous())
 	while (ShootAutoConditions(shooter, me)
 			|| DriveForwardShootAutoConditions(autoTimer, me,
-					rightEncoder) || !allDone) {
-		//first
-		if (rightEncoder->Get() > -1000) {
+					rightEncoder) || !allDone)
+	{
+		//first. Until a certain point, pulse rollers
+		if (rightEncoder->Get() > -1000)
+		{
 			secondaryRollers->Pulse();
-		} else if (!stopSecondary) {
+		}
+		else if (!stopSecondary)
+		{
 			stopSecondary = true;
 			secondaryRollers->Stop();
 		}
 
 		//Added this- remove for return to known good code.
-		if(!shootPrep && rightEncoder->Get() < -1550)
+		if(!shootPrep && rightEncoder->Get() < -1550) //past a certain point 
 		{
-			backIntake->BackRollerAutoSlow();
+			backIntake->BackRollerAutoSlow(); //roll the ball against bimpers
 			//backIntake->ReverseSlow();
 		}
 		else if(!shootPrep)
 		{
-			backIntake->BackRollerAutoSlow();
+			backIntake->BackRollerAutoSlow(); //just continually roll against bumpers
 		}
 		
-		//second
+		//second. Past a ceratin point, prep for the shot
 		if (!shootPrep && rightEncoder->Get() < -1750) //3 feet forward?
 		{ //once we reach -1750 then prepair to shoot
 			shotTimer->Start();
 			shotTimer->Reset();
+			//prep for the shot
 			ShootAutoPrep(frontIntake, backIntake, shooter,
 					secondaryRollers, spitShortSwap, true);
 			shootPrep = true;
 		}
-		if (shootPrep && ShootAutoConditions(shooter, me)) {
-			ShootAutoInLoop(shooter);
+		if (shootPrep && ShootAutoConditions(shooter, me)) //check time since prep 
+		{
+			ShootAutoInLoop(shooter); //take the shot
 			printf("Shot");
-		} else if (shootPrep && !doneShooting) {
+		}
+		else if (shootPrep && !doneShooting)
+		{
 			ShootAutoEnd();
 		}
 		//third
-		if (shotTimer->Get() > 1.4) {
-			if (!backintakeup) {
-				secondaryRollers->Undeploy();
+		if (shotTimer->Get() > 1.4)
+		{
+			if (!backintakeup)
+			{
+				secondaryRollers->Undeploy(); //bring rollers in
 				//frontIntake->UndeployIntake();
 				backintakeup = true;
 			}
 			//drivetrain->TankDrive();
 			//frontIntake->FrontRollerLoad();
-			backIntake->BackRollerLoad();
+			backIntake->BackRollerLoad(); //roller the ball against bumpers
 			printf("load");
 			
-			secondaryRollers->Pulse();
+			secondaryRollers->Pulse(); //pulse to settle
 		}
 		else if(shotTimer->Get() < 0.9 && shotTimer->Get() > 0.5) 
 		{
-			drivetrain->TankDrive(-0.7, 0.8); //Second turn
+			drivetrain->TankDrive(-0.7, 0.8); // turn
 		}
 		
 
@@ -461,14 +510,16 @@ void ThreeShotGoalieLeftRight(IntakeSystem *backIntake, IntakeSystem *frontIntak
 		{
 			if(rightEncoder->Get() > -80)
 			{
-				drivetrain->TankDrive(0.0, -0.8);
+				drivetrain->TankDrive(0.0, -0.8); //turn to the right
 			}
 			else
 			{
 				//DriveForwardAutoInLoop(drivetrain);
-				drivetrain->TankDrive(-0.9, -0.9);
+				drivetrain->TankDrive(-0.9, -0.9); //drive forward
 			}
-		} else if (!doneDriving) {
+		}
+		else if (!doneDriving)
+		{
 			DriveForwardAutoEnd(drivetrain);
 			doneDriving = true;
 		}
@@ -715,53 +766,60 @@ void ThreeShotGoalieRightLeft(IntakeSystem *backIntake, IntakeSystem *frontIntak
 	autoTimer->Stop();
 }
 
+//3 short shots
 void ThreeShotShort1(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		ShooterSystem *shooter, RobotDrive *drivetrain,DriverStation *driverStation, Timer *autoTimer, Timer *timer2,
 		SecondaryRollerSystem *secondaryRollers, Solenoid *spitShortSwap, IterativeRobot *me, 
 		Encoder *rightEncoder, NetworkTable *table, float startSide)
 {
 	//table->PutNumber("Enabled", 1);
-	spitShortSwap->Set(true);
+	spitShortSwap->Set(true); //shortest fingers up
 	printf("secondary pistons set true\n");
 	//frontIntake->FrontRollerAutoSlow();
-	LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me);
+	LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me); //load the ball of rollers
 	printf("Loaded from top\n");
 	//float visionInput = ReceiveVisionProcessing(table);
-	shooter->ShooterPrime(true);
+	shooter->ShooterPrime(true); //longest fingers down
 	printf("Shooter primed\n");
 	Wait(1.0);
 	printf("Past wait");
 		
 	TwoShotShortPrep(shooter, timer2); 
 
+	//shopts once and drives forward
 	MultiAutoLoop(frontIntake, backIntake, shooter, drivetrain, 
 			autoTimer, timer2, secondaryRollers, spitShortSwap, me, rightEncoder,
 			driverStation);
 	printf("Hi! WATCH ME ACTUALLY WORK FOR THREE BALL!\n");
-	frontIntake->DeployIntake();
+	frontIntake->DeployIntake(); //set intakes down
 	backIntake->DeployIntake();
 	autoTimer->Stop();
+	//Load ball from the back while driving
 	LoadBackAutoDrive(frontIntake, backIntake, shooter, autoTimer, secondaryRollers, drivetrain, me);
 	//Wait(1.0);
+	//shoot the abll once loaded
 	ShootAuto(frontIntake, backIntake, shooter, autoTimer, secondaryRollers, spitShortSwap, me);
 }
 
+//two shots taken
 void TwoShot(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *autoTimer,
 		SecondaryRollerSystem *secondaryRollers, Solenoid *spitShortSwap, IterativeRobot *me, Encoder *rightEncoder)
 {
-	spitShortSwap->Set(false);
-	LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me);
+	spitShortSwap->Set(false); //shortest fingers down 
+	LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me); //suck ball down off rollers
 	
 	Wait(1.5);
-	ShootAuto(frontIntake, backIntake, shooter, autoTimer, secondaryRollers, spitShortSwap, me);
+	ShootAuto(frontIntake, backIntake, shooter, autoTimer, secondaryRollers, spitShortSwap, me); //shoots the ball
 	//LoadBackAutoDrive(frontIntake, backIntake, shooter, timer, secondaryRollers, drivetrain, me);
-	spitShortSwap->Set(true);
+	spitShortSwap->Set(true); //shortest fingers up
+	//load the ball from the back
 	LoadBackAuto(frontIntake, backIntake, shooter, autoTimer, secondaryRollers, drivetrain, me);
 	printf("Done driving!");
-	spitShortSwap->Set(false);
-	Wait(1.0);
+	spitShortSwap->Set(false); //shortest fingers set down
+	Wait(1.0); 
 	//ShootAuto(frontIntake, backIntake, shooter, timer, secondaryRollers, me);
+	//shoot while driving forward. Ends with intakes down
 	ShootDriveForwardAuto(frontIntake, backIntake, shooter, autoTimer, secondaryRollers, spitShortSwap, me, drivetrain, rightEncoder);
 }
 
@@ -770,11 +828,11 @@ void TwoShotShortVision(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		SecondaryRollerSystem *secondaryRollers, IterativeRobot *me, Encoder *rightEncoder,Encoder *leftEncoder,
 		DriverStation *driverStation,float direction, NetworkTable *table)
 {	
-		spitShortSwap->Set(true);
+		spitShortSwap->Set(true); //shortest fingers up 
 		//frontIntake->FrontRollerAutoSlow();
 		//LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me);
-		LoadTopAutoPrep(autoTimer, shooter);
-		while(LoadTopAutoConditions(autoTimer, me))//(timer->Get() < 0.8)//0.4)
+		LoadTopAutoPrep(autoTimer, shooter); //timers and long fingers up
+		while(LoadTopAutoConditions(autoTimer, me))//(timer->Get() < 0.8)//0.4) //before a ceratin point
 		{
 			/*frontIntake->Reverse();
 			backIntake->Reverse();
@@ -782,34 +840,35 @@ void TwoShotShortVision(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 			secondaryRollers->Run();*/
 			if(autoTimer->Get() > 0.4)
 			{
-				table->PutNumber("Enabled", 1);
+				table->PutNumber("Enabled", 1); //send number to network tables so vision will run
 			}
-			LoadTopAutoInLoop(frontIntake, backIntake, secondaryRollers, autoTimer);
+			LoadTopAutoInLoop(frontIntake, backIntake, secondaryRollers, autoTimer); //suck down the ball 
 		}
-		LoadTopAutoEnd(secondaryRollers, frontIntake, backIntake);
+		LoadTopAutoEnd(secondaryRollers, frontIntake, backIntake); //intakes down
 
+		//timer reset, and long fingers down
 		TwoShotShortPrep(shooter, timer2); 
 
 		autoTimer->Start();
 		autoTimer->Reset();
 		secondaryRollers->Stop();
 		Wait(0.4);
-		float visionInput = ReceiveVisionProcessing(table);
-		if(visionInput == 1.0)
+		float visionInput = ReceiveVisionProcessing(table); //should say which direction to go
+		if(visionInput == 1.0) //go left
 		{
 			while(autoTimer->Get() < 0.5)
 			{
 				drivetrain->TankDrive(-0.8, 0.8);
 			}
 		}
-		else if(visionInput == 2.0)
+		else if(visionInput == 2.0) //go right
 		{
 			while(autoTimer->Get() < 0.5)
 			{
 				drivetrain->TankDrive(0.8, -0.8);
 			}	
 		}
-		else
+		else //just go right
 		{
 			while(autoTimer->Get() < 0.5)
 			{
@@ -818,10 +877,11 @@ void TwoShotShortVision(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		}
 		autoTimer->Stop();
 		
+		//drive forward and shoots a ball
 		MultiAutoLoop(frontIntake, backIntake, shooter, drivetrain, 
 				autoTimer, timer2, secondaryRollers, spitShortSwap, me, rightEncoder,
 				driverStation); //driving and stuff and shoots once
-		frontIntake->DeployIntake();
+		frontIntake->DeployIntake();//sets intakes down
 		backIntake->DeployIntake(); 
 		Wait(0.5);
 		
@@ -837,17 +897,18 @@ void TwoShotHot(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		NetworkTable *table, float startSide, Timer *shotTimer) 
 
 {
-	table->PutNumber("Enabled", 1);
-	spitShortSwap->Set(true);
+	table->PutNumber("Enabled", 1); //sends to network tables that robot is enabled
+	spitShortSwap->Set(true); //shortest fingers up 
 	//frontIntake->FrontRollerAutoSlow();
-	LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me);
+	LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me); //sucks ball in off the rollers
 	
 	Wait(1.0);
-	float visionInput = ReceiveVisionProcessing(table);
-	driverStationLCD->PrintfLine((DriverStationLCD::Line)0,"Vision: %f", visionInput);
+	float visionInput = ReceiveVisionProcessing(table); //check to see what direction we should go
+	driverStationLCD->PrintfLine((DriverStationLCD::Line)0,"Vision: %f", visionInput); //print said value to driverstation
 	driverStationLCD->UpdateLCD();
 	shooter->ShooterPrime(true);
 	
+	//preset so things only run once
 	bool shootPrep = false;
 	bool doneDriving = false;
 	bool doneShooting = false;
@@ -860,11 +921,11 @@ void TwoShotHot(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	bool stopSecondary = false;
 	if(visionInput == 0.0)
 	{
-		Wait(0.6);
+		Wait(0.6); //hot is in front of you
 	}
 	else if(visionInput != startSide) //both are 1.0 for left and 2.0 for right
 	{
-		Wait(4.0);
+		Wait(4.0); //hot will soon be in front of you
 	}
 	
 	rightEncoder->Reset();
@@ -872,7 +933,7 @@ void TwoShotHot(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 	
 	while((ShootAutoConditions(shooter, me) || DriveForwardShootAutoConditions(autoTimer, me, rightEncoder) || !allDone) && EnabledInAutonomous(me))
 	{
-		//first
+		//first. Just drving while pulsing
 		if(rightEncoder->Get() > -500)
 		{
 			secondaryRollers->Pulse();
@@ -883,7 +944,7 @@ void TwoShotHot(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 			secondaryRollers->Stop();
 		}
 		
-		//second
+		//second. Over a certaion point, prep for shot
 		if(!shootPrep && rightEncoder->Get() <- 2300) 
 		{
 			timer2->Start();
@@ -893,15 +954,18 @@ void TwoShotHot(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		}
 		if(shootPrep && ShootAutoConditions(shooter, me))
 		{
-			ShootAutoInLoop(shooter);
+			ShootAutoInLoop(shooter); //take the shot
 			Wait(0.3);
+			//load another ball in from the back
 			LoadBackAuto(frontIntake, backIntake, shooter, autoTimer, secondaryRollers, drivetrain, me);
 		}
+		//check again for next shot
 		else if(shootPrep && ShootAutoConditions(shooter, me))
 		{
+			//prep shot
 			ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, spitShortSwap, true);
 			Wait(0.3);
-			ShootAutoInLoop(shooter);
+			ShootAutoInLoop(shooter); //take shot
 		}
 		else if(shootPrep && !doneShooting)
 		{
@@ -910,14 +974,14 @@ void TwoShotHot(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		//first
 		else if(rightEncoder->Get() > -3300)//DriveForwardShootAutoConditions(timer, me, rightDT))
 		{
-			DriveForwardAutoInLoop(drivetrain);
-			backIntake->ReverseSlow();
+			DriveForwardAutoInLoop(drivetrain); //drive forward to a point
+			backIntake->ReverseSlow(); //slowly roll away
 		}
 		else if(!shootPrep)
 		{
 			if(!shootPrep && rightEncoder->Get() > -1000 && shotTimer->Get() < 1.4)
 			{
-				backIntake->RunAt(0.45);
+				backIntake->RunAt(0.45); //load the ball
 			}
 			else if(!shootPrep && rightEncoder->Get() > -2800)
 			{
@@ -931,19 +995,19 @@ void TwoShotHot(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 			break;
 		}
 	}
-	frontIntake->UndeployIntake();
+	frontIntake->UndeployIntake(); //bring intakes in
 	backIntake->UndeployIntake();
 	autoTimer->Stop();
 	timer2->Stop();
 
 }
 
-void FunAuto(RobotDrive *drivetrain, Encoder *leftEncoder, Encoder *rightEncoder)
+void FunAuto(RobotDrive *drivetrain, Encoder *leftEncoder, Encoder *rightEncoder) //Bryton, how will they tell how long they should turn for...
 {
-	drivetrain->TankDrive(0.0, 0.0);
-	if(leftEncoder->Get() <= 0)
+	drivetrain->TankDrive(0.0, 0.0); //Will cause the robot to drive
+	if(leftEncoder->Get() <= 0) //Check to see how far you are driving and when 
 	{
-		drivetrain->TankDrive(0.0, 0.0);
+		drivetrain->TankDrive(0.0, 0.0); //Here's where you should turn
 	}
 }
 
