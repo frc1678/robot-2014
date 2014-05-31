@@ -3,13 +3,15 @@
 #ifndef SECONDARYROLLERSYSTEM_H
 #define SECONDARYROLLERSYSTEM_H //include protection
 
+//Two small rollers on the right and left sides of the robot. Used to settle the ball before shooting.
+
 class SecondaryRollerSystem
 {
 public:
 	
-	Talon *secondaryRollerA;
+	Talon *secondaryRollerA; 
 	Talon *secondaryRollerB;
-	Solenoid *armPiston;
+	Solenoid *armPiston; //They move in and out, out to not bump shot, in when settling the ball.
 	Timer *pulseTimer;
 	bool armsDown;
 	float rollerK;
@@ -29,13 +31,13 @@ public:
 	
 	void Run()
 	{
-		secondaryRollerA->Set(-1.0 * rollerK);
+		secondaryRollerA->Set(-1.0 * rollerK); //They need to run in opposite directions.
 		secondaryRollerB->Set(1.0 * rollerK);
 	}
 	
 	void RunAt(float x)
 	{
-		secondaryRollerA->Set(-x);
+		secondaryRollerA->Set(-x); //value between -1.0 and 1.0
 		secondaryRollerB->Set(x);
 	}
 	
@@ -55,7 +57,6 @@ public:
 	{
 		secondaryRollerA->Set(0.0);
 		secondaryRollerB->Set(0.0);
-		//pulseTimer->Stop();
 	}
 	
 	void Reset()
@@ -66,7 +67,7 @@ public:
 		pulseTimer->Reset();
 	}
 	
-	void Pulse()
+	void Pulse() //More effective at settling the ball than running alone.
 	{
 		float time = pulseTimer->Get();
 		if(time <0.1)
@@ -106,25 +107,25 @@ public:
 		}
 	}
 	
-	void Deploy()
+	void Deploy() //put out
 	{
-		armPiston->Set(true);
+		armPiston->Set(true); 
 		armsDown = true;
 	}
 	
-	void Undeploy()
+	void Undeploy() //pull in
 	{
 		armPiston->Set(false);
 		armsDown = (false);
 	}
 	
-	void ToggleArms()
+	void ToggleArms() //toggle deployed state
 	{
 		armsDown = !armsDown;
 		armPiston->Set(armsDown);
 	}
 	
-	bool DeployState()
+	bool DeployState() //use to find out if they are deployed
 	{
 		return armsDown;
 	}
