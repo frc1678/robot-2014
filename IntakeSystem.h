@@ -127,7 +127,7 @@ public:
 		}
 	}
 	
-	void RunAt(float x)
+	void RunAt(float x) //x is a float between -1 and 1 for the speed that we run them at
 	{
 		if(front)
 		{
