@@ -1,4 +1,4 @@
-/* Class for the MPU6050 gyro
+/* Class for the MPU6050 non-KOP gyro
  * Plugs into the I2C port on digital sidecar
  * Relevant datasheets:
  * http://www.invensense.com/mems/gyro/documents/RM-MPU-6000A-00v4.2.pdf (register map)
@@ -51,7 +51,7 @@ public:
 		gyroCalTimer->Reset();
 	}
 
-	float GetRate()
+	float GetRate() //reading the raw-ish data from a port
 	{
 		uint8_t gyroValue = 7;
 		int GYRO_ZOUT_H;
@@ -63,7 +63,7 @@ public:
 		float zOutput;
 		zOutput = (float)((GYRO_ZOUT_H<<8)+GYRO_ZOUT_L);
 		//take care of signed/unsigned
-		if (zOutput> 32768)
+		if (zOutput> 32768) //making this data usefull
 		{
 			zOutput -= 32768*2;
 		}
@@ -109,18 +109,10 @@ public:
 		gyroTimer->Reset();
 		return gyroAngle;
 	}
-	float GetCalibratedAngle()
+	float GetCalibratedAngle() //this must also be called every iteration of a loop to supply a constant stream of data 
 	{
 		float currRate = GetCalibratedRate();
-		/*if (currRate < 0.5 && currRate> -0.5) //Deadzone for rotation?
-
-		{
-			currRate = 0.0;
-		}*/
 		gyroCalAngle += currRate*gyroCalTimer->Get();
-		//printf("gyroCalAngle += currRate*gyroCalTimer->Get(): %f\n", gyroCalAngle);
-		//printf("dModule->GetI2C(0x68<<1): %f\n", me);
-		//printf("Cycle Time: %f\n", gyroCalTimer->Get());
 		gyroCalTimer->Reset();
 		return gyroCalAngle;
 	}
