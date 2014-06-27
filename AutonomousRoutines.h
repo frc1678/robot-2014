@@ -1049,7 +1049,7 @@ void PIDDriveStraight(CitrusPID *PID, RobotDrive *drivetrain, Encoder *leftEncod
 		leftDriveTrainInput = 0.75 + correction;
 		rightDriveTrainInput = 0.75 - correction;
 		
-		drivetrain->TankDrive(leftDriveTrainInput, rightDriveTrainInput);
+		drivetrain->TankDrive(-leftDriveTrainInput, -rightDriveTrainInput); //negative so that it goes forward.  
 	}
 	
 	
