@@ -1022,7 +1022,7 @@ void PIDDriveStraight(CitrusPID *PID, RobotDrive *drivetrain, Encoder *leftEncod
 	float pError = 0.0;
 	float iError = 0.0;
 	float dError = 0.0;
-	float pCoefficient = 0.0;
+	float pCoefficient = 0.0;//These should be between 0 and 1 i think
 	float iCoefficient = 0.0;
 	float dCoefficient = 0.0;
 	int targetEncoderClicks = 100;
@@ -1046,8 +1046,8 @@ void PIDDriveStraight(CitrusPID *PID, RobotDrive *drivetrain, Encoder *leftEncod
 		//putting things together
 		correction = pError + iError + dError;
 		
-		leftDriveTrainInput = 0.75 + correction;
-		rightDriveTrainInput = 0.75 - correction;
+		leftDriveTrainInput = 0.75 - correction;
+		rightDriveTrainInput = 0.75 + correction;
 		
 		drivetrain->TankDrive(-leftDriveTrainInput, -rightDriveTrainInput); //negative so that it goes forward.  
 	}
