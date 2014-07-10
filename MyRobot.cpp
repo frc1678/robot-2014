@@ -77,6 +77,9 @@ class Robot: public IterativeRobot {
 	ShooterSystem *shooter;
 	bool shortShot;
 	bool shotKillSwitch;
+	
+	//PID
+	CitrusPID *PID;
 
 	//Buttons!
 	CitrusButton *b_gearUp;
@@ -180,6 +183,9 @@ public:
 
 		shortShot = false;
 		shotKillSwitch = false;
+		
+		//PID
+		PID = new CitrusPID();
 
 		//Buttons 
 		//NOTE: ALWAYS ADD NEW BUTTON TO UpdateAllButtons()

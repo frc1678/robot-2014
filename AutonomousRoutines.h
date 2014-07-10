@@ -1016,4 +1016,43 @@ void FunAuto(RobotDrive *drivetrain, Encoder *leftEncoder, Encoder *rightEncoder
 	drivetrain->TankDrive(0.0, 0.0);
 }
 
+void PIDDriveStraight(CitrusPID *PID, RobotDrive *drivetrain, Encoder *leftEncoder, Encoder *rightEncoder)
+{ //Currently, this is just a basic outline of what the PID should be,
+	//There may be more math involved and the Coefficients will be tuned
+	float pError = 0.0;
+	float iError = 0.0;
+	float dError = 0.0;
+	float pCoefficient = 0.0;
+	float iCoefficient = 0.0;
+	float dCoefficient = 0.0;
+	int targetEncoderClicks = 100;
+	float leftDriveTrainInput = 0.0;
+	float rightDriveTrainInput = 0.0;
+	float correction = 0.0;
+	
+	while(((leftEncoder->Get() + rightEncoder->Get()) / 2) <= targetEncoderClicks)
+	{
+		//proportional error, the difference between the two encoders
+		pError = (leftEncoder->Get() - rightEncoder->Get()) * pCoefficient;
+		
+		//integral error
+		//each time you re-multiply by the coefficient, do we want to do this?
+		iError += pError;
+		iError *= iCoefficient;
+		
+		//Derivitive error
+		dError = (leftEncoder->GetRate() - rightEncoder->GetRate()) * dCoefficient;
+		
+		//putting things together
+		correction = pError + iError + dError;
+		
+		leftDriveTrainInput = 0.75 + correction;
+		rightDriveTrainInput = 0.75 - correction;
+		
+		drivetrain->TankDrive(leftDriveTrainInput, rightDriveTrainInput);
+	}
+	
+	
+}
+
 #endif	
