@@ -398,7 +398,7 @@ void ThreeShotGoalie3(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer
 
 			secondaryRollers->Pulse(); //settle the ball
 		}
-	}
+	
 	LoadTopAutoEnd(secondaryRollers, frontIntake, backIntake); //bring everything in and stop 
 	Wait(0.3);
 	//short shot
@@ -1004,11 +1004,16 @@ void TwoShotHot(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 
 void FunAuto(RobotDrive *drivetrain, Encoder *leftEncoder, Encoder *rightEncoder) //Bryton, how will they tell how long they should turn for...
 {
-	drivetrain->TankDrive(0.0, 0.0); //Will cause the robot to drive
-	if(leftEncoder->Get() <= 0) //Check to see how far you are driving and when 
+	while(leftEncoder->Get() >= -1000)
 	{
-		drivetrain->TankDrive(0.0, 0.0); //Here's where you should turn
+		drivetrain->TankDrive(-0.3,-0.3); //Drive forward
+		printf("in fun auto");
+		if (leftEncoder -> Get() <= -400 && leftEncoder -> Get() >= -800)
+		{
+			drivetrain->TankDrive(0.3,-0.3); //Here's where you should turn
+		}
 	}
+	drivetrain->TankDrive(0.0, 0.0);
 }
 
 #endif	

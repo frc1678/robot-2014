@@ -291,6 +291,7 @@ public:
 		if (driverStation->GetDigitalIn(1))
 		{
 			FunAuto(drivetrain, leftEncoder, rightEncoder);
+			printf("in DIO 1\n");
 			//ThreeShotGoalie3(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder, shotTimer, drivetrain, spitShortSwap); //goalie avoidance 3 ball
 		} else if (driverStation->GetDigitalIn(2)) 
 		{ /*Summary: 
@@ -814,7 +815,6 @@ public:
 
 		}
 	void TeleopPeriodic() {
-		currentSensor->LogCurrent(a);
 		currentSensor->LogHeat(b);
 		currentSensor->LogEncoders(leftEncoder, rightEncoder);
 		/*for (int i = 0; i < 5; i++) { //for putting the current log on the driverstation.
