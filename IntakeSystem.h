@@ -3,13 +3,6 @@
 #define INTAKESYSTEM_H //include protection
 class IntakeSystem {
 public:
-	/*
-	 bool ProximityTriggered();
-	 void BackRollerInitialPickup();
-	 void FrontRollerInitialPickup();
-	 void FrontRollerHold();
-	 void BackRollerHold();
-	 */
 	Talon *intakeRoller;
 	DigitalInput *intakeSensor;
 	Solenoid *intakeUp;
@@ -22,7 +15,7 @@ public:
 	bool front;
 	Timer *pickupTimer;
 
-	//boolean for is intake deployed
+	//boolean for is intake deployed?
 	bool intakeDeployed;
 
 	float frontIntakeK;
@@ -49,7 +42,7 @@ public:
 	//then add to Pickup.
 	void Reverse() //Only call inside an if statement.
 	{
-		//roller motors are set backward
+		//roller motors are set backward (rotate as if sucking in from on top)
 		if (front) {
 			intakeRoller->Set(-1.0 * frontIntakeK);
 		} else {
@@ -76,7 +69,7 @@ public:
 		pickupTimer->Reset();
 	}
 
-	//USE THESE TWO WHENEVER YOU WANT TO DEPLOY THE INTAKES.
+	//USE THESE WHENEVER YOU WANT TO DEPLOY THE INTAKES.
 	void DeployIntake() {
 		intakeDeployed = true;
 		intakeUp->Set(true);
@@ -90,7 +83,7 @@ public:
 		intakeUp->Set(intakeDeployed);
 	}
 
-	bool DeployState() {
+	bool DeployState() { 
 		return intakeDeployed;
 	}
 
@@ -101,8 +94,6 @@ public:
 		} else {
 			intakeRoller->Set(1.0 * backIntakeK);
 		}
-	
-		//intakeRoller->Set(stick->GetTwist());
 	}
 
 	void BackRollerLoad() {
@@ -111,7 +102,6 @@ public:
 		} else {
 			intakeRoller->Set(1.0 * backIntakeK);
 		} 
-		//intakeRoller->Set(stick->GetY());
 	}
 
 	void BackBumperHold() {
@@ -122,7 +112,7 @@ public:
 		intakeRoller->Set(0.0); 
 	}
 
-	void FrontRollerAutoSlow() {
+	void FrontRollerAutoSlow() { //used during auto
 		if (front) {
 			intakeRoller->Set(0.25 * frontIntakeK);
 		} else {
@@ -137,12 +127,20 @@ public:
 		}
 	}
 	
-	void RunAt(float x) //TODO constant
+	void RunAt(float x) //x is a float between -1 and 1 for the speed that we run them at
 	{
-		intakeRoller->Set(x);
+		if(front)
+		{
+			intakeRoller->Set(x * frontIntakeK);	
+		}
+		else
+		{
+			intakeRoller->Set(x * backIntakeK); 
+		}
+		
 	}
 
-	bool ProximityTriggered() {
+	bool ProximityTriggered() { //TODO, add link to picture of where this sensor is
 		if (intakeSensor->Get() == 1) {
 			return false;
 		} else {
@@ -166,6 +164,7 @@ public:
 	}
 
 	void Hold() {
+		//tell us when to stop rolling in order to hold the ball between the bumpers and the intakes.
 		if (!ProximityTriggered()) {
 			if (front) {
 				FrontRollerLoad();
@@ -173,7 +172,6 @@ public:
 				BackRollerLoad();
 			}
 		} else {
-			//printf("Proxy!\n");
 			if (front) {
 				FrontBumperHold();
 			} else {
@@ -183,11 +181,9 @@ public:
 	}
 	void Pickup(Joystick * stick, DriverStation *m_ds) {
 		if (ProximityTriggered()) {
-			//printf("sensor");
 			sensorTriggered = true;
 		}
 		if (!sensorTriggered) {
-			//printf("running");
 			BackRollerLoad();
 		} else {
 			pickupTimer->Start();
@@ -195,10 +191,8 @@ public:
 				BackRollerLoad();
 			} else {
 				if (intakeDeployed) {
-					//printf("undeploy");
 					UndeployIntake();
 				}
-				//printf("slow");
 				BackRollerSlow();
 			}
 		}
@@ -206,11 +200,9 @@ public:
 	
 	void FrontPickup( DriverStation *m_ds) {
 		if (ProximityTriggered()) {
-			//printf("sensor");
 			sensorTriggered = true;
 		}
 		if (!sensorTriggered) {
-			//printf("running");
 			FrontRollerLoad();
 		} 
 		else {
@@ -220,10 +212,8 @@ public:
 			} 
 			else {
 				if (intakeDeployed) {
-					//printf("undeploy");
 					UndeployIntake();
 				}
-				//printf("slow");
 				FrontRollerSlow(m_ds);
 			}
 		}

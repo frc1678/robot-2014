@@ -4,7 +4,7 @@
 #ifndef CITRUSBUTTON_H
 #define CITRUSBUTTON_H
 
-//Designed to get input from joysticks.
+//Designed to get input from joysticks & manipulators.
 class CitrusButton
 {
 	bool output;
@@ -38,55 +38,49 @@ public:
 	}
 	bool ButtonClicked(bool input)
 	{
-		//Return true the first time input's true after being false
-		//false otherwise.
+	//Return true if the button state changes from false to true. (not clicked to clicked)
 		bool returnMe = false;
 		if (input != oldInput && input == true)
 		{
 			returnMe = true;
 		}
-		else
-		{
-			returnMe = false;
-		}
 		return returnMe;
 	}
-	bool ButtonClicked()
+	bool ButtonClicked() 
 	{
+	//Return true if the button state changes from false to true. (not clicked to clicked)
 		if (button > 0)
 		{
 			return ButtonClicked(stick->GetRawButton(button));
 		}
 		return false;
 	}
-	bool ButtonReleased(bool input)
+	bool ButtonReleased(bool input) 
+	//Return true if the button state changes from true to false. (clicked to not clicked)
 	{
 		bool returnMe = false;
 		if (input != oldInput && input == false)
 		{
 			returnMe = true;
 		}
-		else
-		{
-			returnMe = false;
-		}
 		return returnMe;
 	}
 	bool ButtonReleased()
 	{
-		if (button!= 0)
+	//Return true if the button state changes from true to false. (clicked to not clicked)
+		if (button > 0)
 		{
 			return ButtonReleased(stick->GetRawButton(button));
 		}
 		return false;
 	}
-	bool ButtonPressed(bool input)
+	bool ButtonPressed(bool input) //only purpose is below. Why done this way?
 	{
 		return input;
 	}
-	bool ButtonPressed()
+	bool ButtonPressed() //returns the state of the button
 	{
-		if (button!= 0)
+		if (button > 0)
 		{
 			return ButtonPressed(stick->GetRawButton(button));
 		}
@@ -103,7 +97,7 @@ public:
 };
 
 //Use the following like: input = TurnOn(myButton); input = Toggle(myButton, input);
-bool TurnOn(CitrusButton *button)
+bool TurnOn(CitrusButton *button) //used to undo below
 {
 	if (button->ButtonClicked())
 	{
@@ -111,7 +105,7 @@ bool TurnOn(CitrusButton *button)
 	}
 	return false;
 }
-bool TurnOff(CitrusButton *button)
+bool TurnOff(CitrusButton *button) //if the button is clicked (see above) then return false
 {
 	if (button->ButtonClicked())
 	{
@@ -120,6 +114,7 @@ bool TurnOff(CitrusButton *button)
 	return true;
 }
 bool Toggle(CitrusButton *button, bool input)
+//Toggle the results of clicking the button (see above). Used for clicked only. not pressed.
 { 
 	if (button->ButtonClicked())
 	{

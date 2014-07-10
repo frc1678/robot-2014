@@ -5,14 +5,17 @@
 #include <fstream>
 #include <ctime>
 
-#ifndef CRIOFILE_H
+#ifndef CRIOFILE_H //Include Gaurds
 #define CRIOFILE_H
+
+/*
+We use this to log various in match data to files on the cRIO. These files can be accessed by 
+FTPing to them (from a computer commected to the robot).
+*/
 
 using namespace std;
 class CrioFile {
-	//AnalogChannel *a;
 	Timer *currentTimer;
-	//istream *reader;
 	ofstream fileSave; //create new output file 
 	bool currentlyLogging;
 	float voltageCounter;
@@ -20,26 +23,14 @@ class CrioFile {
 public:
 	CrioFile()
 	{
-		//a = new AnalogChannel(3);
-		//fileSave.open("File.txt");
 		currentTimer = new Timer();
 		currentlyLogging = false;
 		voltageCounter = 0;
 	}
 		
-	/*float GetCurrent()
-	{
-		float returnMe = a->GetVoltage();
-		return returnMe;
-	}*/
 	void StartLog()
 	{
-		/*string currentLogNum = "";
-		fileSave.open("LogNum.txt");
-		istream& reader>>(fileSave,currentLogNum);
-		(int)currentLogNum;
-		fileSave.close();
-		string newFileName = (currentLogNum + ".txt");*/
+		
 		fileSave.open("File.txt"); //opening the file
 		//reseting and starting the timer
 		currentTimer->Reset(); 
@@ -47,17 +38,17 @@ public:
 		
 		currentlyLogging = true;
 		fileSave<<"Time: "<<"Current:\n\r"; //writing to the file
-		fileSave.close();
-		fileSave.open("Heat.txt");
+		fileSave.close(); //Close the file
+		fileSave.open("Heat.txt"); //Open DIFFERENT file
 		currentlyLogging = true;
-		fileSave<<"Time: "<<"Heat:\n\r";
-		fileSave.close();
+		fileSave<<"Time: "<<"Heat:\n\r"; //logging
+		fileSave.close(); //Close it
 		
-		fileSave.open("Encoder.txt");
+		fileSave.open("Encoder.txt"); //Open wheel encoder file
 		currentlyLogging = true;
-		fileSave<<"Time: Rate: Clicks: \n\r";
-		fileSave.close();
-		//Two seperate files, one for heat and one for current.
+		fileSave<<"Time: Rate: Clicks: \n\r"; //log
+		fileSave.close(); //close
+		//Three seperate files, one for heat, one for rotation and one for current.
 	}
 	void LogCurrent(AnalogChannel *a)
 	{
@@ -78,10 +69,9 @@ public:
 
 			float current = a->GetVoltage();
 			current = fabs(5-current); //log
-			//inverse chart, therefore absolute value
-			//5 b/c 0 = 5 on the inverted scale		
+			//Absolute value of 5 - current reading, the scale is inverted, this makes it easier to read		
 			double time = currentTimer->Get();
-			fileSave<<time<<" "<<current<<"\r\n";
+			fileSave<<time<<" "<<current<<"\r\n"; //log two colomns, one with time and the other with current
 			
 			if(fileSave.fail())//test to see if file opened
 			{
@@ -130,7 +120,7 @@ public:
 			float leftValue = leftEncoder->Get();
 			
 			fileSave<<time<<" "<<leftRate<< " "<<rightRate<<"  "<<leftValue<< " "
-					<<rightValue<<"\r\n";
+					<<rightValue<<"\r\n"; //logging rotation rate and amount rotated for both sides of the drive train
 			
 			if(fileSave.fail())
 			{
@@ -179,7 +169,7 @@ public:
 			voltageCounter++;
 			
 			if(voltageCounter >= 15)
-				//if it gets to high, auto shift down
+				//if it gets to high for enough time, auto shift down to low gear
 				
 			{
 				gearUp->Set(false);
