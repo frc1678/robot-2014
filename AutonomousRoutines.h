@@ -1060,28 +1060,40 @@ void TwoShotRandom(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer *a
 		ShooterSystem *shooter, IterativeRobot *me, SecondaryRollerSystem *secondaryRollers,
 		bool allDone, Encoder *rightEncoder, Timer *shotTimer, RobotDrive *drivetrain, Solenoid *spitShortSwap)
 {
-	spitShortSwap->Set(true); //shortest fingers up 
-
-	LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me); //sucks ball in off the rollers
-	shooter->ShooterPrime(true);
-
+	int k;
+	// Even number = true. Odd number = false. Even means go right, then left. Odd means go left, then right. 
+	if (randomNum){
+		k = 1;
+	}
+	else {
+		k = -1;
+	}
 	//preset things so they only run once
 	bool shootPrep = false;
-	bool orchid = false;
 	bool doneDriving = false;
 	bool doneShooting = false;
-	bool allDone = false;
+	
+	allDone = false;
+	bool allDone2 = false;
+	
 	bool stopSecondary = false;
-	bool shotTaken = false;
-	bool secondRun = false;
+	bool backintakeup = false;
 
+	spitShortSwap->Set(true); //shortest fingers up 
+	frontIntake->FrontRollerAutoSlow();
+	LoadTopAuto(secondaryRollers, frontIntake, backIntake, autoTimer, shooter, me); //sucks ball in off the rollers
+	shooter->ShooterPrime(true); // Prep for short shot
 
-	timer2->Reset();
+	
+	autoTimer->Reset();
+	shotTimer->Reset();
 	rightEncoder->Reset();
 
 
 	while((ShootAutoConditions(shooter, me) || DriveForwardShootAutoConditions(autoTimer, me, rightEncoder) || !allDone) && EnabledInAutonomous(me))
 	{
+
+
 		//first. Just drving while pulsing
 		if(rightEncoder->Get() > -1000)
 		{
@@ -1092,143 +1104,133 @@ void TwoShotRandom(IntakeSystem *backIntake, IntakeSystem *frontIntake, Timer *a
 			stopSecondary = true;
 			secondaryRollers->Stop();
 		}
-		
-		if(!shootPrep && rightEncoder->Get() < -1550)
-		{
-			backIntake->RunAt(0.45);
-		//backIntake->ReverseSlow();
-		}
-		else if(!shootPrep)
-		{
-			backIntake->RunAt(0.4);
-		}
+
+
 		
 		//second. Over a certaion point, prep for shot
-		if(!shootPrep && rightEncoder->Get() < -1750) 
+		if(!shootPrep && rightEncoder->Get() < -3300) 
 		{
-			timer2->Start();
-			timer2->Reset();
+			shotTimer->Start();
+			shotTimer->Reset();
 			ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, spitShortSwap, true);
 			shootPrep = true;
 		}
 		
-		if(shotTaken && !orchid)
+
+
+		if(shootPrep && ShootAutoConditions(shooter, me))
 		{
-			secondaryRollers->Pulse();
-		}
-		else 
-		{
-			secondaryRollers->Stop();
-		}
-		
-		//We've alredy preped, now shoot
-		if((rightEncoder->Get() < -2800 && !shotTaken ) && (shootPrep && ShootAutoConditions(shooter, me)))
-		{
-			ShootAutoInLoop(shooter); //take the shot
-			Wait(0.3); //TODO Shave time
-			//load another ball in from the back
-			LoadBackAuto(frontIntake, backIntake, shooter, autoTimer, secondaryRollers, drivetrain, me);
-			shotTaken = true;
-		}
-		else if(shootPrep && orchid)
-		{
-			ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, spitShortSwap, true);
-		
-		}
-		//check again for next shot
-		else if((shootPrep && orchid) && ShootAutoConditions(shooter, me))
-		{
-			//prep shot
-			//ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, spitShortSwap, true);
-			Wait(0.3);
-			ShootAutoInLoop(shooter); //take shot
+			ShootAutoInLoop(shooter);
 		}
 		else if(shootPrep && !doneShooting)
-			{
+		{
 			ShootAutoEnd();
 		}
-			//first. All driving
-		else if(rightEncoder->Get() > -3300 && !shotTaken && !secondRun)  //TODO Values
+
+
+
+		//THIRD
+		if(shotTimer->Get() > 1.0)//1.9) 
 		{
-			if(rightEncoder->Get() > -2100)
+			if(!backintakeup)
 			{
-				drivetrain->TankDrive(-0.9, -0.9); //drive forward a distance
+				backIntake->Stop();
+				secondaryRollers->Undeploy();
+				backIntake->UndeployIntake();
+				backintakeup = true;
 			}
-			else if(rightEncoder->Get() < -2100 && rightEncoder->Get() > -2800)
+
+
+			if(shotTimer->Get() > 1.5)
 			{
-				//DriveForwardAutoInLoop(drivetrain);
-				drivetrain->TankDrive(0.0, -0.6);  //turns to the left at point 1
+				frontIntake->FrontPickup(driverStation);
 			}
-			else if(rightEncoder->Get() < -2800)
+			else
 			{
-				drivetrain->TankDrive(-0.8, -0.8); //drive forward a litle more to point 2
+				//frontIntake->FrontRollerLoad();
+				frontIntake->Stop();
 			}
-			else if (rightEncoder->Get() <-3200)
+
+
+			if(shotTimer->Get() < 3.0)
 			{
-				secondRun = true;
+				drivetrain->TankDrive(0.4, 0.4);
 			}
 			else
 			{
 				drivetrain->TankDrive(0.0, 0.0);
 			}
-		
-		//backIntake->ReverseSlow(); //slowly roll away TODO CHeck if this needs to go back in
-		}
-		else if(shotTaken && !orchid && secondRun) //first shoot has been taken, now back up to get ready for the second one
-		{
-			if(rightEncoder->Get() < -2800)
-		{
-			drivetrain->TankDrive(0.8, 0.8); //drive backward until we reach 2800 clicks again at point 3
-		}
-		else if(rightEncoder->Get() > -2800 && rightEncoder->Get() < -2300)
-		{
-			drivetrain->TankDrive(0.0, 0.6); //when we reach 2800, turn right til 2300. Pivoting on the left side
-		}
-		else if(rightEncoder->Get() > -2300)
-		{
-			drivetrain->TankDrive(-0.7, -0.7); //once past 2300 clicks, drive forward again to point 4
-		}
-		else if(rightEncoder->Get() < -2600)
-		{
-			drivetrain->TankDrive(0.8, 0.8); //when we're past 2600, drive backward again to point 5
-		}
-		else if(rightEncoder->Get() > -1900 && rightEncoder->Get() < -1500)
-		{
-			drivetrain->TankDrive(0.0, -0.6); //drive until 1900, then turn to the left
-			orchid = true;
-		}
-		else if(rightEncoder->Get() > -1500 && rightEncoder->Get() < -450)
-		{
-			drivetrain->TankDrive(-0.8, -0.8); //drive forward slightly to point 6 before shot is taken 
-		}
-		else
-		{
-			drivetrain->TankDrive(0.0, 0.0);
+			
+			//frontIntake->FrontRollerLoad();
+			
+			secondaryRollers->Pulse();
 		}
 		
+		//FIRST. Driving
+		else if((leftEncoder->Get() > -30 && randomNum) || rightEncoder->Get() > -30) {
+			if (randomNum){
+				drivetrain->TankDrive((0.5 * -k), 0.0);
+			}
+			else {
+				drivetrain->TankDrive(0.0, (0.5 * -k));	
+			}
 		}
-		/*else if(!shootPrep)
+		else if(rightEncoder->Get() > -3300)//DriveForwardShootAutoConditions(timer, me, rightEncoder))
 		{
-		if(!shootPrep && rightEncoder->Get() > -1000 && shotTimer->Get() < 1.4)
-		{
-		backIntake->RunAt(0.45); //load the ball
+			drivetrain->TankDrive((0.8 * -k), (0.8 * -k)); // Drive slightly to the right to start.
 		}
-		else if(!shootPrep && rightEncoder->Get() > -2800)
-		{
-		backIntake->RunAt(0.4);
-		}
-		}*/
 		else if(!doneDriving)
 		{
 			DriveForwardAutoEnd(drivetrain);
 			doneDriving = true;
+		}
+
+
+		if(shotTimer->Get() > 3.7)//3.0)//4.2)
+		{
+			printf("Shot timer > 4.2");
+			secondaryRollers->Stop();
+			DriveForwardAutoEnd(drivetrain);
+			allDone = true;
+			autoTimer->Start();
+			autoTimer->Reset();
 			break;
 		}
 	}
-		frontIntake->UndeployIntake(); //bring intakes in
-		backIntake->UndeployIntake();
-		autoTimer->Stop();
-		timer2->Stop();
+
+		//------------------------------------------------------
+
+
+
+	frontIntake->DeployIntake();
+	backIntake->DeployIntake();
+
+	while ((ShootAutoConditions(shooter, me) || DriveForwardShootAutoConditions(autoTimer, me, rightEncoder) || !allDone2) && EnabledInAutonomous(me)){
+		
+		if (autoTimer->Get() < 0.4) { //TODO Time
+
+			drivetrain->TankDrive(0.7, 0.7);
+		}
+		else if (autoTimer->Get() < 0.7) {
+			drivetrain->TankDrive((0.9 * k), (0.9 * -k));
+		}
+		else if (autoTimer->Get() < 0.9) {
+			drivetrain->TankDrive(0.0, 0.0);
+		}
+		else if (autoTimer->Get() < 1.3) {
+			drivetrain->TankDrive((1.0 * -k), (1.0 * k));
+		}
+		else {
+			drivetrain->TankDrive(0.0, 0.0);
+		}
+		if (autoTimer->Get() > 1.5){
+			ShootShortAuto(frontIntake, backIntake, shooter, autoTimer, secondaryRollers, spitShortSwap, me);
+			autoTimer->Stop();
+			shotTimer->Stop();
+			allDone2 = true;
+		}
+		
+	}
 
 }	
 
