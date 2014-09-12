@@ -104,7 +104,8 @@ void runDrivetrain(float stickLeftInput, float stickRightInput, RobotDrive *driv
 	//runDrivetrain(stickLeftInput, stickRightInput, drivetrain, 0.1);
 }
 
-void runDrivetrainShift(float stickLeftInput, float stickRightInput, RobotDrive *drivetrain, float thresh, Solenoid *gearUp, Solenoid *gearDown, Encoder *leftEncoder, Encoder *rightEncoder)
+void runDrivetrainShift(float stickLeftInput, float stickRightInput, RobotDrive *drivetrain, 
+		float thresh, Solenoid *gearUp, Solenoid *gearDown, Encoder *leftEncoder, Encoder *rightEncoder)
 {
 	driveTrainValues(stickLeftInput, stickRightInput, thresh);
 	deadzone();
