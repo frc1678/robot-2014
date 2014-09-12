@@ -478,7 +478,7 @@ bool MultiAutoConditions(ShooterSystem *shooter, bool allDone, Timer *timer, Enc
 	{
 		return true;
 	}
-return false;
+	return false;
 }
 
 void TwoShotShortPrep(ShooterSystem *shooter, Timer *timer2)
