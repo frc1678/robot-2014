@@ -1,6 +1,6 @@
 #include "WPILib.h" //Lots of convenient robot classes
 #include "NetworkTables/NetworkTable.h" //Networktables used for vision
-#include "Drivetrain.h"
+#include "Drivetrain.h" //Drivetrain Header File
 #include "IntakeSystem.h" //System of pneumatics and motors involved in ball intake
 #include "HumanLoad.h" //System of operations used for human loading
 #include "MPU6050_I2C.h" //Non-KOP gyro
@@ -13,8 +13,18 @@
 #include "CrioFile.h" //Used for logging live in-match data to files on the Crio
 
 class Robot: public IterativeRobot {
+	
+	
+	///////////////////////////
+	//
+	//	  ROBOT DECLARATION
+	//
+	///////////////////////////
+	
 	DriverStation *driverStation;
 	DriverStationLCD *driverStationLCD;
+	
+	DigitalOutput *sensor;
 
 	CrioFile *currentSensor;
 	AnalogChannel *a;
@@ -75,8 +85,13 @@ class Robot: public IterativeRobot {
 
 	//Shooting
 	ShooterSystem *shooter;
+	
 	bool shortShot;
 	bool shotKillSwitch;
+	bool bumperShot;
+
+	//Random number generator 
+	bool randomNum;
 	
 	//PID
 	CitrusPID *PID;
@@ -105,14 +120,25 @@ class Robot: public IterativeRobot {
 	CitrusButton *b_toggleShotAlign;
 	CitrusButton *b_notShooting;
 	CitrusButton *b_notShooting2;
+	CitrusButton *b_reverseHumanLoad;
 
 public:
+	
+	
+	///////////////////////////
+	//
+	//	ROBOT INITIALIZATION
+	//
+	///////////////////////////
+	
 	Robot() {
 		printf("Robot INITIALIZATION\n");
 
 		driverStation = DriverStation::GetInstance();
 		driverStationLCD = DriverStationLCD::GetInstance();
 
+		sensor = new DigitalOutput(3);
+		
 		driverL = new Joystick(1); //Joystick used to control left drivetrain
 		driverR = new Joystick(2); //Joystick used to control right drivetrain
 		manipulator = new Joystick(3); //Gamepad used to control most pneumatics and intakes
@@ -133,56 +159,67 @@ public:
 
 		compressor = new Compressor(1, 1);
 
-		//Solenoids.
-		gearUp = new Solenoid(8);
-		gearDown = new Solenoid(7);
+		//Solenoids. Compressed air.
+		gearUp  		  = new Solenoid(8);
+		gearDown          = new Solenoid(7);
 		frontIntakeDeploy = new Solenoid(3); //deploy = put intake down
-		backIntakeDeploy = new Solenoid(4);
-		shotAlignerUp = new Solenoid(5);
-		shotAlignerDown = new Solenoid(6);
-		armPiston = new Solenoid(2);
-		spitShortSwap = new Solenoid(1);
+		backIntakeDeploy  = new Solenoid(4);
+		shotAlignerUp     = new Solenoid(5);
+		shotAlignerDown   = new Solenoid(6);
+		armPiston         = new Solenoid(2); // Controls both secondary roller pistons. Toggles them up and down
+		spitShortSwap     = new Solenoid(1);
 
 		//Sensors 
-		leftEncoder = new Encoder(4, 5); //values switched between comp and practice robot (7, 6)
-		rightEncoder = new Encoder(7, 6); //(4, 5)
+		/*
+		 * Ports for the encoders (in relation to the drivetrain motors)
+		 * Left- 4,5 for competition robot, 7,6 for the practice robot
+		 * Right- 7,6 for competition robot, 4,5 for the practice robot
+		 */
+		leftEncoder  = new Encoder(4, 5); 
+		rightEncoder = new Encoder(7, 6);
 
 		//Begins counting of encoder clicks for both drivetrains
 		leftEncoder->Start();
 		rightEncoder->Start();
 
 		
-		drivetrain = new RobotDrive(3, 4);
+		drivetrain = new RobotDrive(3, 4); //Ports for the motors on the drivetrain
 		//SecondaryIntake
-		secondaryRollerA = new Talon(7);
-		secondaryRollerB = new Talon(8);
+		secondaryRollerA = new Talon(7); //Port for (most likely) the left secondary
+		secondaryRollerB = new Talon(8); //Port for (most likely) the right secondary
 
+		// Creating the class object for the secondary rollers. 
 		secondaryRollers = new SecondaryRollerSystem(secondaryRollerA,
 				secondaryRollerB, armPiston);
 
 		//Autonomous Timer
 		autoTimer2 = new Timer();
-		autoTimer = new Timer();
-		turnTimer = new Timer(); //starts && resets when we start gyroTurnAngle 
-		shotTimer = new Timer();
+		autoTimer  = new Timer();
+		turnTimer  = new Timer(); //starts && resets when we start gyroTurnAngle 
+		shotTimer  = new Timer();
 
+		// The class object for the front intake. 
 		frontIntake = new IntakeSystem(6, secondaryRollerA, secondaryRollerB,
-				3, frontIntakeDeploy, true);
-		backIntake = new IntakeSystem(1, secondaryRollerA, secondaryRollerB, 2,
+				14, frontIntakeDeploy, true);
+		// Class object for the front intake.
+		backIntake  = new IntakeSystem(1, secondaryRollerA, secondaryRollerB, 2,
 				backIntakeDeploy, false); 
 
+		// Set all the solenoids 
 		gearToggle = false;
 		frontIntakeToggle = false;
 		backIntakeToggle = false;
-
 		armPistonToggle = false;
 
 		//Shooter
 		shooter = new ShooterSystem(2, 5, 8, shotAlignerUp, shotAlignerDown,
 				armPiston);
 
-		shortShot = false;
+		// Booleans 
+		shortShot      = false;
 		shotKillSwitch = false;
+		bumperShot     = false;
+		randomNum      = false;
 		
 		//PID
 		PID = new CitrusPID();
@@ -190,34 +227,43 @@ public:
 		//Buttons 
 		//NOTE: ALWAYS ADD NEW BUTTON TO UpdateAllButtons()
 		//Gearshift buttons 
-		b_gearUp = new CitrusButton(driverL, 2);
-		b_gearDown = new CitrusButton(driverR, 2);
-		b_testGearToggle = new CitrusButton(k_btestGearToggle);
+		b_gearUp				  = new CitrusButton(driverL, 2);
+		b_gearDown				  = new CitrusButton(driverR, 2);
+		b_testGearToggle		  = new CitrusButton(k_btestGearToggle);
 		//Intake buttons
-		b_frontIntakePickup = new CitrusButton(k_bfrontIntakePickup);
-		b_backIntakePickup = new CitrusButton(k_bbackIntakePickup);
-		b_frontIntakeDeployToggle
-				= new CitrusButton(k_bfrontIntakeDeployToggle);
-		b_backIntakeDeployToggle = new CitrusButton(k_bbackIntakeDeployToggle);
-		b_reverseIntake = new CitrusButton(k_breverseIntake);
-		b_humanLoad = new CitrusButton(k_bhumanLoad);
-		b_runSecondary = new CitrusButton(k_brunSecondary);
+		b_frontIntakePickup 	  = new CitrusButton(k_bfrontIntakePickup);
+		b_backIntakePickup		  = new CitrusButton(k_bbackIntakePickup);
+		b_frontIntakeDeployToggle = new CitrusButton(k_bfrontIntakeDeployToggle);
+		b_backIntakeDeployToggle  = new CitrusButton(k_bbackIntakeDeployToggle);
+		b_reverseIntake    		  = new CitrusButton(k_breverseIntake);
+		b_humanLoad 			  = new CitrusButton(k_bhumanLoad);
+		b_runSecondary 			  = new CitrusButton(k_brunSecondary);
 		//Shooter buttons
-		b_shotAlignLong = new CitrusButton(k_bshotAlignLong);
-		b_shotAlignShort = new CitrusButton(k_bshotAlignShort);
-		b_shortShoot = new CitrusButton(k_bshortShoot);
-		b_longShoot = new CitrusButton(k_blongShoot);
-		b_shooterPrime = new CitrusButton(k_bshooterPrime);
-		b_pulseSecondary = new CitrusButton(k_bpulseSecondary);
-		b_foldFlower = new CitrusButton(k_bfoldFlower);
-		b_armPistonToggle = new CitrusButton(k_barmPistonToggle);
-		b_killShotL = new CitrusButton(k_bkillShotL);
-		b_killShotR = new CitrusButton(k_bkillShotR);
-		b_toggleShotAlign = new CitrusButton(k_btoggleShotAlign);
-		b_notShooting = new CitrusButton(driverR, 8);
-		b_notShooting2 = new CitrusButton(driverR, 9);
+		b_shotAlignLong			  = new CitrusButton(k_bshotAlignLong);
+		b_shotAlignShort		  = new CitrusButton(k_bshotAlignShort);
+		b_shortShoot 			  = new CitrusButton(k_bshortShoot);
+		b_longShoot 			  = new CitrusButton(k_blongShoot);
+		b_shooterPrime 			  = new CitrusButton(k_bshooterPrime);
+		b_pulseSecondary 		  = new CitrusButton(k_bpulseSecondary);
+		b_foldFlower 			  = new CitrusButton(k_bfoldFlower);
+		b_armPistonToggle 		  = new CitrusButton(k_barmPistonToggle);
+		b_killShotL				  = new CitrusButton(k_bkillShotL);
+		b_killShotR 		 	  = new CitrusButton(k_bkillShotR);
+		b_toggleShotAlign		  = new CitrusButton(k_btoggleShotAlign);
+		b_notShooting 			  = new CitrusButton(driverR, 8);
+		b_notShooting2 			  = new CitrusButton(driverR, 9);
+		b_reverseHumanLoad 	 	  = new CitrusButton(k_breverseHumanLoad);
 	}
 
+	
+	
+	///////////////////////////
+	//
+	//	UPDATE ALL BUTTONS
+	//
+	///////////////////////////
+	
+	
 	void UpdateAllButtons() {
 		//gearshift
 		b_gearUp->Update();
@@ -245,9 +291,21 @@ public:
 		b_toggleShotAlign->Update();
 		b_notShooting->Update();
 		b_notShooting2->Update();
+		b_reverseHumanLoad->Update();
 	}
 
+	
+	
+	///////////////////////////
+	//
+	//	DISABLED MODE
+	//
+	///////////////////////////
+	
+	
 	void DisabledInit() {
+		
+		bumperShot = false;
 		
 		shooter->Reset();
 
@@ -272,546 +330,181 @@ public:
 		//currentSensor->EndLog();
 		
 	}
+	
+	
+	
 	void DisabledPeriodic() {
+		
 		table->PutNumber("Enabled", 0); // 0 means not enabled, 1 means it is
 		drivetrain->TankDrive(0.0, 0.0); //stop
+		bumperShot = false; 
 	}
+	
+	
+	
+	///////////////////////////
+	//
+	//	AUTONOMOUS MODE
+	//
+	///////////////////////////
+	
+	
 	void AutonomousInit() {
+		
 		spitShortSwap->Set(true); //fingers on the shooter used to controll the ball
+		driverStationLCD->Clear(); // Clears all user messages from the driver console
+		driverStationLCD->UpdateLCD(); // Must update for changes to the driver console to apply
+		//table->PutNumber("Enabled", 1); //TODO needs to be added back in for vision processing
+		randomNum = true;
+		
+		//Random Number generator!
+		//if ((1 + (rand() % 20)) % 2 ) { //TODO add in == 0 to make sure that it actually varies
+			randomNum = true; // If it's an even number, the routine will go right, then left
+		//}
+		//else {
+			//randomNum = false; // If it's an odd number, the routine will gp left, then right
+		//}
+		
+		// Clear the driver station before autonomous
 		driverStationLCD->Clear();
+		driverStationLCD->Printf((DriverStationLCD::Line) 1, 2, "%d", randomNum);
 		driverStationLCD->UpdateLCD();
-		//table->PutNumber("Enabled", 1);
+
 		
-		table->PutString("Direction: ", "MERP"); //MERP so that we get an error if timing with network tables doesn't work
-		//leftEncoder->Start();
-		//rightEncoder->Start();
-		gearDown->Set(true);
+		//MERP so that we get an error if timing with network tables doesn't work
+		table->PutString("Direction: ", "MERP"); 
+		
+		gearDown->Set(true); // Start in low gear
 		gearUp->Set(false);
-		bool allDone;
 		
+		bool allDone; // Loop control for the auto loops. 
+		
+		// Start encoders at 0.0
 		rightEncoder->Reset();
 		leftEncoder->Reset();
+		
+		
 		//beginning of long chain to determine which auto we are running
 		//for running motors: -1 to 1 input range
 		//This applies to several of these: sorry for messy code, not all of them work
-		if (driverStation->GetDigitalIn(1))
+		/*
+		 * 
+		 * Auto 1: Long shot from distance, short shot. A goalie avoidance for 2 ball. Random.
+		 * 		Start on 
+		 * Auto 2: 3 ball auto. Needs to be tested. 
+		 * Auto 3: Long shot close up, and short shot. Goalie 2 ball avoidance. Random.
+		 * Auto 4: One ball vision, straight. 
+		 * Auto 5: 3 ball auto, working. Testing?
+		 * Auto 6: 2 ball vision. Start on the left side of the field.
+		 * Auto 7: Straight 2 ball. Starting point doesn't matter.
+		 * Auto 8: Random juking 2 shot. Starts in the middle of the field, chooses a direction.
+		 * 
+		 * 
+		 */
+		// TODO needs to be tested
+		if (driverStation->GetDigitalIn(1)) // AUTO NUMBER 1
 		{
-			FunAuto(drivetrain, leftEncoder, rightEncoder);
 			printf("in DIO 1\n");
-			//ThreeShotGoalie3(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder, shotTimer, drivetrain, spitShortSwap); //goalie avoidance 3 ball
-		} else if (driverStation->GetDigitalIn(2)) 
-		{ /*Summary: 
-		1. deploy intakes and prep to load top
-		2. load top
-		3. prime shooter and play with variables
-		4. shoot
-		5. load front
-		6. shoot   (do driving during most of the routine)
-		7. load back
-		8. shoot */
-			backIntake->DeployIntake();
-			frontIntake->DeployIntake();
-			LoadTopAutoPrep(autoTimer, shooter);
-			while (LoadTopAutoConditions(autoTimer, this)) {
-
-				backIntake->BackRollerAutoSlow();
-				frontIntake->FrontRollerAutoSlow();
-				secondaryRollers->Run();
-			}
-			LoadTopAutoEnd(secondaryRollers, frontIntake, backIntake);
-			shooter->ShooterPrime(true);
-			backIntake->BackRollerAutoSlow();
-			frontIntake->FrontRollerAutoSlow();
-			bool shootPrep = false;
-			bool doneShooting = false;
-			bool stopSecondary = false;
-			bool backintakeup = false;
-			bool allDone = false;
-			bool doneDriving = false;
-			while ((ShootAutoConditions(shooter, this)
-					|| DriveForwardShootAutoConditions(autoTimer, this,
-							rightEncoder) || !allDone)&& IsAutonomous()) 
-			{
-				//first
-				if(shotTimer->Get() < 1.4)
-				{
-					if (rightEncoder->Get() > -1400) {
-						secondaryRollers->RunAt(1.0);
-					} else if (!stopSecondary) {
-						stopSecondary = true;
-						secondaryRollers->Stop();
-					}
-				}
-				
-				if(!shootPrep && rightEncoder->Get() < -2800)//1550)
-				{
-					backIntake->ReverseSlow();
-				}
-				else if(!shootPrep)
-				{
-					if(!shootPrep && rightEncoder->Get() > -1000 && shotTimer->Get() < 1.4)
-					{
-						backIntake->RunAt(0.45);
-					}
-					else if(!shootPrep && rightEncoder->Get() > -2800)
-					{
-						backIntake->RunAt(0.4);
-					}
-				}
-				
-				//second
-				if (!shootPrep && rightEncoder->Get() < -3000)//1750) //3 feet forward?
-				{
-					shotTimer->Start();
-					shotTimer->Reset();
-					ShootAutoPrep(frontIntake, backIntake, shooter,
-							secondaryRollers, spitShortSwap, true);
-					shootPrep = true;
-				}
-				if (shootPrep && ShootAutoConditions(shooter, this)) {
-					ShootAutoInLoop(shooter);
-				} else if (shootPrep && !doneShooting) {
-					ShootAutoEnd();
-				}
-				
-				//Drivetrain.
-				//third
-				if (shotTimer->Get() > 1.4) { //&& < 0.3
-					if (!backintakeup) {
-						secondaryRollers->Undeploy();
-						//frontIntake->UndeployIntake();
-						backintakeup = true;
-					}
-					if(shotTimer->Get() < 3.0)
-					{
-						drivetrain->TankDrive(0.4, 0.4);
-					}
-					else
-					{
-						drivetrain->TankDrive(0.0, 0.0);
-					}
-					backIntake->BackRollerLoad();
-					secondaryRollers->Pulse();
-				}
-
-				//First
-				else if (rightEncoder->Get() > -3300)
-				{
-					DriveForwardAutoInLoop(drivetrain);
-				} else if (!doneDriving) {
-					DriveForwardAutoEnd(drivetrain);
-					doneDriving = true;
-				}
-				if (shotTimer->Get() > 3.4)//4.2)
-				{
-					secondaryRollers->Stop();
-					DriveForwardAutoEnd(drivetrain);
-					allDone = true;
-					break;
-				}
-
-			}
-			drivetrain->TankDrive(0.0, 0.0);
-			frontIntake->DeployIntake();
-			backIntake->DeployIntake();
-			Wait(0.5);
-			ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers,
-					spitShortSwap, true);
-			autoTimer->Stop();
-			autoTimer->Reset();
-			autoTimer->Start();
-			backintakeup = false;
-			bool shotDone = false;
-			while ((ShootAutoConditions(shooter, this) || autoTimer->Get()
-					< 2.4) && IsAutonomous()) { //3.0
-				if (ShootAutoConditions(shooter, this)) {
-					ShootAutoInLoop(shooter);
-				} else if (!shotDone) {
-					ShootAutoEnd();
-					shotDone = false;
-				}
-				if (autoTimer->Get() > 0.2) {
-					if (!backintakeup) {
-						secondaryRollers->Undeploy();
-						frontIntake->DeployIntake();
-						backIntake->UndeployIntake();
-						backintakeup = true;
-					}
-					if (autoTimer->Get() < 0.5) { //Doing a little dance to get the ball in
-						drivetrain->TankDrive(0.7, 0.7);
-					} else if (autoTimer->Get() < 0.9) {
-						drivetrain->TankDrive(-0.7, -0.7);
-					} else {
-						drivetrain->TankDrive(0.0, 0.0);
-					}
-
-					if (autoTimer->Get() < 0.9) {
-						frontIntake->FrontRollerLoad();
-					}
-					else if (autoTimer->Get() > 0.9) {
-						if (autoTimer->Get() > 1.1) {
-							frontIntake->UndeployIntake();
-						}
-						backIntake->ReverseSlow();
-						frontIntake->Stop();
-					}
-
-					secondaryRollers->Pulse();
-				}
-			}
-			LoadTopAutoEnd(secondaryRollers, frontIntake, backIntake);
-			Wait(0.3);
-			ShootShortAuto(frontIntake, backIntake, shooter, autoTimer,
-					secondaryRollers, spitShortSwap, this);
-			autoTimer->Stop();
+			RightLeftShot(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder,
+					leftEncoder, shotTimer, drivetrain, spitShortSwap, driverStation, randomNum);
 			
-		} else if (driverStation->GetDigitalIn(3)) {
-			ThreeShotGoalieRightLeft(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers,
-					allDone, rightEncoder, shotTimer, drivetrain, spitShortSwap);
+//			LongShortRandomGoalie (backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers,
+//					allDone, rightEncoder, leftEncoder, shotTimer, drivetrain, driverStation, 
+//					randomNum, spitShortSwap); //goalie avoidance 2 ball
+		} 
+		
+		// TODO Test
+		else if (driverStation->GetDigitalIn(2)) // AUTO NUMBER 2
+		{ 
+//			ThreeBallStraight(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, 
+//					rightEncoder, leftEncoder, shotTimer, drivetrain, driverStation, spitShortSwap);
+			LeftRightShot(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder,
+					leftEncoder, shotTimer, drivetrain, driverStation, randomNum, spitShortSwap);
+						
+		} 
+		
+		// TODO needs to be tested
+		else if (driverStation->GetDigitalIn(3)) { // AUTO NUMBER 3
 			
-		} else if (driverStation->GetDigitalIn(4)) {
+			//LeftRightLeftShot(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder,
+				//	leftEncoder, shotTimer, drivetrain, driverStation, randomNum, spitShortSwap);
+			LeftRightLeftShot(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder,
+					leftEncoder, shotTimer, drivetrain, spitShortSwap, driverStation, randomNum);
+									
+			
+			//CloseLongShortRandomGoalie(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone,
+			//		rightEncoder, leftEncoder, shotTimer, drivetrain, spitShortSwap, driverStation, randomNum);
+			
+			
+		} 
+		// TODO Reliable. One shot hot. 
+		else if (driverStation->GetDigitalIn(4)) { // AUTO NUMBER 4
 			printf("In GetDigitalIn 4");
 			OneShotShort(frontIntake, backIntake, shooter, drivetrain,
 					autoTimer, turnTimer, spitShortSwap, secondaryRollers,
 					this, rightEncoder, driverStationLCD, table, 1.0);
 			
-		} else if (driverStation->GetDigitalIn(5)) { 
-			table->PutNumber("Enabled", 1);
-			backIntake->DeployIntake();
-			frontIntake->DeployIntake();
-			LoadTopAutoPrep(autoTimer, shooter);
-			int encoderStartValue = 0;
-			while (LoadTopAutoConditions(autoTimer, this)) {
-
-				backIntake->BackRollerAutoSlow();
-				frontIntake->FrontRollerAutoSlow();
-				secondaryRollers->Run();
-			}
-			LoadTopAutoEnd(secondaryRollers, frontIntake, backIntake);
-			float direction = ReceiveVisionProcessing(table);
-			if(direction == 0.0)
-			{
-				driverStationLCD->Printf((DriverStationLCD::Line)3, 1, "VISION ERROR");
-				direction = 1.0;
-			}
-			shooter->ShooterPrime(true);
-			backIntake->BackRollerAutoSlow();
-			frontIntake->FrontRollerAutoSlow();
-			bool shootPrep = false;
-			bool doneShooting = false;
-			bool stopSecondary = false;
-			bool backintakeup = false;
-			bool allDone = false;
-			bool doneDriving = false;
-			bool startedSecondTurn = false;
-			bool finishedSecondTurn = false;
-			while (ShootAutoConditions(shooter, this)
-					|| DriveForwardShootAutoConditions(autoTimer, this, rightEncoder) 
-					|| !allDone) 
-			{
-				driverStationLCD->Printf((DriverStationLCD::Line) 0, 1, "Left: %d", leftEncoder->Get());
-				driverStationLCD->Printf((DriverStationLCD::Line) 1, 1, "Right: %d", rightEncoder->Get());
-				driverStationLCD->Printf((DriverStationLCD::Line) 2, 1, "Start Value: %d", encoderStartValue);
-				
-				//first
-				
-				if(direction == 2.0)
-				{
-					if (rightEncoder->Get() > -1000) 
-					{
-						secondaryRollers->Pulse();
-					} 
-					else if (!stopSecondary) 
-					{
-						stopSecondary = true;
-						secondaryRollers->Stop();
-					}
-				}
-				
-				if(direction == 1.0)
-				{
-					if (leftEncoder->Get() > -1000)
-					{
-						secondaryRollers->Pulse();
-					} 
-					else if (!stopSecondary) 
-					{
-						stopSecondary = true;
-						secondaryRollers->Stop();
-					}
-				}
-
-				if (direction == 2.0)
-				{
-					if(!shootPrep && rightEncoder->Get() < -1900)
-					{
-						backIntake->ReverseSlow();
-					}
-					else if(!shootPrep)
-					{
-						backIntake->BackRollerAutoSlow();
-					}
-				}
-				
-				if(direction == 1.0)
-				{
-					if(!shootPrep && leftEncoder->Get() < -1900)
-					{
-						backIntake->ReverseSlow();
-					}
-					else if(!shootPrep)
-					{
-						backIntake->BackRollerAutoSlow();
-					}
-				}
-				
-				//second
-				if(direction == 1.0)
-				{
-					if (!shootPrep && leftEncoder->Get() < -2000) //3 feet forward?
-					{
-						shotTimer->Start();
-						shotTimer->Reset();
-						ShootAutoPrep(frontIntake, backIntake, shooter,
-								secondaryRollers, spitShortSwap, true);
-						shootPrep = true;
-					}
-				}
-				if(direction == 2.0)
-				{
-					if (!shootPrep && rightEncoder->Get() < -2000) //3 feet forward?
-					{
-						shotTimer->Start();
-						shotTimer->Reset();
-						ShootAutoPrep(frontIntake, backIntake, shooter,
-								secondaryRollers, spitShortSwap, true);
-						shootPrep = true;
-					}
-				}
-				
-				if (shootPrep && ShootAutoConditions(shooter, this)) {
-					ShootAutoInLoop(shooter);
-					printf("Shot");
-				} else if (shootPrep && !doneShooting) {
-					ShootAutoEnd();
-				}
-				//third
-								
-				if (shotTimer->Get() > 1.4) {
-					driverStationLCD->Printf((DriverStationLCD::Line) 5, 1, "  NOT!");
-					if (!backintakeup) {
-						secondaryRollers->Undeploy();
-						backintakeup = true;
-					}
-					
-					if(shotTimer->Get() < 3.0)
-					{
-						drivetrain->TankDrive(-0.6, -0.6);
-					}
-					else
-					{
-						drivetrain->TankDrive(0.0, 0.0);
-					}
-					//frontIntake->FrontRollerLoad();
-					backIntake->BackRollerLoad();
-					printf("load");
-					
-					secondaryRollers->Pulse();
-				}
-				else if(shotTimer->Get() > 0.3)
-				{
-					if(!startedSecondTurn)
-					{
-						if(direction == 1.0)
-						{
-							encoderStartValue = leftEncoder->Get();
-						}
-						if(direction == 2.0)
-						{
-							encoderStartValue = rightEncoder->Get();
-						}
-						startedSecondTurn = true;
-					}
-
-					if(direction == 1.0)
-					{
-						if(leftEncoder->Get() - encoderStartValue > -480) 
-						//for directions
-						{
-
-							driverStationLCD->Printf((DriverStationLCD::Line) 4, 1, "Turn");
-
-							drivetrain->TankDrive(-0.8, 0.4);
-						}
-						else
-						{
-							finishedSecondTurn = true;
-							drivetrain->TankDrive(0.0, 0.0);
-						}
-					}
-					
-					else if(direction == 2.0)
-					{
-						if(rightEncoder->Get() - encoderStartValue > -480)
-							//for directions
-						{
-
-							driverStationLCD->Printf((DriverStationLCD::Line) 4, 1, "Turn");
-							
-							drivetrain->TankDrive(0.4, -0.8);
-						}
-						else
-						{
-							finishedSecondTurn = true;
-							drivetrain->TankDrive(0.0, 0.0);
-						}
-					}
-				}
-
-				//first
-				else if (((direction == 2.0 &&rightEncoder->Get() > -3300) ||
-						(direction == 1.0 &&leftEncoder->Get() > -3300)) &&
-						(!startedSecondTurn || finishedSecondTurn))
-				{
-					
-					if(direction == 2.0)
-					{
-						if(rightEncoder->Get() > -14)
-						{
-							driverStationLCD->Printf((DriverStationLCD::Line) 5, 1, "Drive %d", leftEncoder->Get());
-							drivetrain->TankDrive(-0.8, 0.0);
-						}
-						else
-						{
-							drivetrain->TankDrive(-0.8, -0.8);
-						}
-					}
-					if(direction == 1.0)
-					{
-						if(leftEncoder->Get() > -14) 
-						{
-							driverStationLCD->Printf((DriverStationLCD::Line) 5, 1, "Drive %d", leftEncoder->Get());
-							drivetrain->TankDrive(0.0, -0.8);
-						}
-						else
-						{
-							drivetrain->TankDrive(-0.8, -0.8);
-						}
-					}
-				} 
-				else if (!doneDriving) {
-					drivetrain->TankDrive(0.0, 0.0);
-					doneDriving = true;
-				}
-				if (shotTimer->Get() > 3.2)//3.0)//4.2)
-				{
-					printf("Shot timer > 4.2");
-					secondaryRollers->Stop();
-					drivetrain->TankDrive(0.0, 0.0);
-					allDone = true;
-					break;
-					
-				}
-				driverStationLCD->UpdateLCD();
-								
-			}driverStationLCD->Printf((DriverStationLCD::Line) 5, 1, "  NOT!");
-			driverStationLCD->UpdateLCD();
-
-			drivetrain->TankDrive(0.0, 0.0);
-			frontIntake->DeployIntake();
-			backIntake->DeployIntake();
-			Wait(0.5);
-			ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers,
-					spitShortSwap, true);
-			autoTimer->Stop();
-			autoTimer->Reset();
-			autoTimer->Start();
-			backintakeup = false;
-			bool shotDone = false;
-			while ((ShootAutoConditions(shooter, this) || autoTimer->Get()
-					< 2.8) && IsAutonomous()) 
-			{
-				if (ShootAutoConditions(shooter, this)) 
-				{
-					ShootAutoInLoop(shooter);
-				} 
-				else if (!shotDone) 
-				{
-					ShootAutoEnd();
-					shotDone = false;
-				}
-				if (autoTimer->Get() > 0.2) 
-				{
-					if (!backintakeup) 
-					{
-						secondaryRollers->Undeploy();
-						//frontIntake->UndeployIntake();
-						frontIntake->DeployIntake();
-						backIntake->UndeployIntake();
-						backintakeup = true;
-					}
-					if (autoTimer->Get() < 0.5) 
-					{
-						drivetrain->TankDrive(0.7, 0.7);
-					}
-					else if (autoTimer->Get() < 0.9) 
-					{
-						drivetrain->TankDrive(-0.7, -0.7);
-					} 
-					else 
-					{
-						drivetrain->TankDrive(0.0, 0.0);
-					}
-
-					if (autoTimer->Get() < 0.9) 
-					{
-						frontIntake->FrontRollerLoad();
-					}
-					else if (autoTimer->Get() > 0.9) 
-					{
-						if (autoTimer->Get() > 1.1) 
-						{
-							frontIntake->UndeployIntake();
-						}
-						backIntake->ReverseSlow();
-						frontIntake->Stop();
-					}
-
-					secondaryRollers->Pulse();
-				}
-			}
-			LoadTopAutoEnd(secondaryRollers, frontIntake, backIntake);
-			Wait(0.3);
-			ShootShortAuto(frontIntake, backIntake, shooter, autoTimer,
-					secondaryRollers, spitShortSwap, this);
-			autoTimer->Stop();
 		} 
-		else if (driverStation->GetDigitalIn(6)) {
+		
+		// TODO Test
+		else if (driverStation->GetDigitalIn(5)) { // AUTO NUMBER 5
+			DriveForward(frontIntake, backIntake, shooter, drivetrain, autoTimer, shotTimer, spitShortSwap, 
+					secondaryRollers, this, rightEncoder, driverStationLCD, table, 1.0);
+//			ThreeBallVision(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone,
+//					rightEncoder, leftEncoder, shotTimer, drivetrain, driverStation, spitShortSwap, table, 
+//					driverStationLCD);
+		} 
+		
+		// TODO Test
+		else if (driverStation->GetDigitalIn(6)) { // AUTO NUMBER 6
 			float direction = 1.0; //TODO Put back to receive vision processing and not manualy set the hot goal
 			TwoShotShortVision(frontIntake, backIntake, shooter,
 					drivetrain, autoTimer, autoTimer2,spitShortSwap,
 					secondaryRollers, this,rightEncoder, leftEncoder, driverStation, direction, table);
-					
-			
 		} 
-		else if (driverStation->GetDigitalIn(7)) {
+		
+		// TODO Reliable
+		else if (driverStation->GetDigitalIn(7)) { // AUTO NUMBER 7
 			printf("In GetDigitalIn 7");
 			TwoShotShortShort(frontIntake, backIntake, shooter, drivetrain,
 					autoTimer, shotTimer, spitShortSwap, secondaryRollers,
 					this, rightEncoder, driverStation);
 		} 		
-		 else if (driverStation->GetDigitalIn(8))
+		
+		// TODO needs to be tested
+		 else if (driverStation->GetDigitalIn(8)) // AUTO NUMBER 8
 		 {
-			 ThreeShotGoalieLeftRight(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder, shotTimer, drivetrain, spitShortSwap);
+			 RightLeftRightShot (backIntake, frontIntake, autoTimer, shooter, this,
+					 secondaryRollers, allDone, rightEncoder, leftEncoder, shotTimer, drivetrain,
+					 spitShortSwap, randomNum, driverStation);
+			 //ThreeShotGoalieLeftRight(backIntake, frontIntake, autoTimer, shooter, this, secondaryRollers, allDone, rightEncoder, shotTimer, drivetrain, spitShortSwap);
 		 }
 	}
+	
+	
+	
+	// Runs all throughout autonomous
 	void AutonomousPeriodic() {
+		//print this for troubleshooting
 		//printf("Gyro: %f, Gyro Rate: %f\n", gyro->GetAngle(), gyro->GetRate());
 	}
+	
+	
+	
+	///////////////////////////
+	//
+	//	TELEOPERTAED MODE
+	//
+	///////////////////////////
+	
+	
+	
+	// Runs once at the beginning of teleop
 	void TeleopInit() {
 			
 		spitShortSwap->Set(true);
-
+		bumperShot = false;
+		
 		compressor->Start();
 
 
@@ -819,8 +512,13 @@ public:
 		gearUp->Set(!gearToggle);
 		gearDown->Set(gearToggle);
 
-		}
+	}
+	
+	
+	// Runs all throughout teleop
 	void TeleopPeriodic() {
+		
+		// For the thermal sensors (not in use at the moment)
 		currentSensor->LogHeat(b);
 		currentSensor->LogEncoders(leftEncoder, rightEncoder);
 		/*for (int i = 0; i < 5; i++) { //for putting the current log on the driverstation.
@@ -836,16 +534,26 @@ public:
 		///driverStationLCD->Printf((DriverStationLCD::Line)4, 1, "H:%f", currentSensor->CheckHeat(b));
 
 		dataTable->PutNumber("Enabled", 1);
+		//For troubleshooting
 		//printf("Left Encoder: %d Right Encoder: %d", leftEncoder->Get(), rightEncoder->Get());
 		//printf("Front prox: %d, back prox: %d\n", frontIntake->ProximityTriggered(), backIntake->ProximityTriggered());
 		//printf("2 Proximity sensor: %d\n", frontIntake->ProximityTriggered());
 
 
 		//Drive.
+		
+		// Normal drive code, ramps up and down accordingly
 		//runDrivetrain(driverL->GetY(), driverR->GetY(), drivetrain);
+		
+		// The shift code allows for the drivetrain to auto shift to avoid blowing the main breakrer
 		runDrivetrainShift(driverL->GetY(), driverR->GetY(), drivetrain, 0.2, gearUp, gearDown, leftEncoder, rightEncoder);
+		
+		// Pring the voltage for testing the shifting code
 		//currentSensor->VoltageMonitor(gearUp, gearDown, currentSensor, a, driverStationLCD);
 
+		
+		
+		// Prints the encoder values so Brycen can't say it's a programming issue. 
 		driverStationLCD->Printf((DriverStationLCD::Line) 3, 1,
 				"Left Encoder: %f", leftEncoder->GetRate());
 		driverStationLCD->Printf((DriverStationLCD::Line) 4, 1,
@@ -854,161 +562,316 @@ public:
 				"%f", manipulator->GetRawAxis(2));
 		driverStationLCD->UpdateLCD();
 		
+		
+		
+		// BUTTONS! 
+		// Controls everything else besides the drivetrain. 
+		
+		
+		// GEARS
+		// Gearshifting buttons. Are named accordingly
 		if (b_gearUp->ButtonClicked()) {
+			// Gear up
 			gearUp->Set(false);
 			gearDown->Set(true);
 		}
 		if (b_gearDown->ButtonClicked()) {
+			// Gear down
 			gearUp->Set(true);
 			gearDown->Set(false);
 		}
 
+		
+		// INTAKES RUNNING
+		// Intaking and reversing, including human loading
+		// Includes secondary rollers
+		
+		// While the button is held down, load through the front intake
 		if (b_frontIntakePickup->ButtonPressed()) {
-			//intakes to hold the ball using proxy sensors
+			
+			// If the override isn't being held down, deploy the intake
 			if (b_frontIntakePickup->ButtonClicked()
-					&& manipulator->GetRawAxis(2) < 0.5) {
+					&& manipulator->GetRawAxis(6) < 0.5) {
 				frontIntake->DeployIntake();
 			}
+			// Set the fingers so the ball can settle correctly
 			if (b_frontIntakePickup->ButtonClicked()) {
 				spitShortSwap->Set(true);
 			}
-			if (manipulator->GetRawAxis(2) > 0.5) {
+			// If the override is being used, ingore the proxy and manually toggle the intake up
+			if (manipulator->GetRawAxis(6) > 0.5) {
 				frontIntake->FrontRollerLoad();
-			} else {
+			} 
+			// If no override, automatically bring intake up once proxy is triggered
+			else {
 				frontIntake->FrontPickup(driverStation);
 			}
+			
+			// Bring secondary rollers in, and run them to suck down the ball
 			secondaryRollers->Undeploy();
 			secondaryRollers->Run();
+			
+			bumperShot = false;
 		}
-		//activates pickup for back intake
+		// While this button is held down, load through the back intake
 		else if (b_backIntakePickup->ButtonPressed()) {
 			//Pickup is here b/c we are unsure of how it'll interact w/ the stops
-			if (b_backIntakePickup->ButtonClicked() && manipulator->GetRawAxis(
-					2) < 0.5) {
+			
+			// If the override isn't being held down, deploy the intake 
+			if (b_backIntakePickup->ButtonClicked() && manipulator->GetRawAxis(6) < 0.5) {
+				// This so the stops go down and the ball can load
 				shortShot = true;
 				shooter->ShooterPrime(shortShot);
+
 				backIntake->DeployIntake();
 
+				// Also set so the ball can load over the catapult
 				spitShortSwap->Set(true);
 			}
-			if (manipulator->GetRawAxis(2) > 0.5) {
+			
+			// If the override is being held, ignore the proxy and manually toggle the intake up
+			if (manipulator->GetRawAxis(6) > 0.5) {
 				backIntake->BackRollerLoad();
-			} else {
+			} 
+			// If no override, automatically bring the intake up once proxy is triggered
+			else {
 				backIntake->Pickup(manipulator, driverStation);
 			}
+			// Bring the secondary rollers in and run them to suck the ball down
 			secondaryRollers->Undeploy();
 			secondaryRollers->Run();
-		} else if (b_reverseIntake->ButtonPressed()) {
-			//intake reverses
+			bumperShot = false;
+		} 
+		// Reverses the back intake to spit the ball back
+		else if (b_reverseIntake->ButtonPressed()) 
+		{
+			
 			if (b_reverseIntake->ButtonClicked()) {
+				// Set the fingers down so the ball can roll over the catapult
 				shortShot = true;
 				shooter->ShooterPrime(shortShot);
 				spitShortSwap->Set(false);
 			}
-			//secondaryRollers->ReverseSlow();
-			//secondaryRollers->Run();
+			// Run the secondary rollers opposite to spin the ball
 			secondaryRollerA->Set(1.0);
 			secondaryRollerB->Set(1.0);
+			// Run the back intake in reverse
 			backIntake->Reverse();
-		} else if (b_humanLoad->ButtonPressed()) {
-			HPReceive(secondaryRollers, frontIntake, backIntake, shooter);
-		} else if (b_runSecondary->ButtonPressed()) {
+			bumperShot = false;
+		} 
+		else if (b_humanLoad->ButtonPressed()) 
+		{
+			if(b_reverseHumanLoad->ButtonPressed())
+			{
+				// If HPReverse has been triggered, pop the ball out the top
+				HPReverse(secondaryRollers, frontIntake, backIntake, shooter);
+				// Set true for the bank/bumper shot
+				bumperShot = true;
+			}
+			else
+			{
+				// Otherwise, just suck the ball down from the top
+				HPReceive(secondaryRollers, frontIntake, backIntake, shooter);
+				bumperShot = false;
+			}
+		}
+		else if (b_runSecondary->ButtonPressed()) 
+		{
+			// Suck the ball down
 			secondaryRollers->Run();
-		} else {
+			bumperShot = false;
+		} 
+		else 
+		{
+			// Don't run anything at all!
 			frontIntake->Stop();
 			backIntake->Stop();
 			secondaryRollers->Stop();
 		}
 
+		
+		// Set the long fingers back up
 		if (b_reverseIntake->ButtonReleased()) {
 			spitShortSwap->Set(true);
 		}
 
-		//toggles the front intake up and down
-		if (b_frontIntakeDeployToggle->ButtonClicked()) {
+		
+		
+		// INTAKES TOGGLING
+		// Controls teh intakes moving up and down
+		
+		// Toggles the intakes up and down
+		if (b_frontIntakeDeployToggle->ButtonClicked()) 
+		{
+			bumperShot = false;
 			frontIntake->ToggleIntake();
-			if (!frontIntake->DeployState()) {
+			if (!frontIntake->DeployState()) 
+			{
 				secondaryRollers->Undeploy();
 			}
 		}
 
 		//toggles the back intake up and down
-		if (b_backIntakeDeployToggle->ButtonClicked()) {
+		if (b_backIntakeDeployToggle->ButtonClicked()) 
+		{
+			bumperShot = false;
 			backIntake->ToggleIntake();
-			if (!frontIntake->DeployState()) {
+			if (!frontIntake->DeployState()) // TODO check to see if this should be back intake
+			{
 				secondaryRollers->Undeploy();
 			}
 		}
-		//Arm piston toggle
-		if (b_armPistonToggle->ButtonClicked()) {
+		
+		
+		// SECONDARY ROLLERS
+		
+		// Toggle the secondary rollers
+		if (b_armPistonToggle->ButtonClicked()) 
+		{
+			
 			secondaryRollers->ToggleArms();
 		}
-
-		if (b_longShoot->ButtonClicked()) {
-			frontIntake->DeployIntake();
-			backIntake->DeployIntake();
+		
+		// Pulse the rollers to properly settle the ball
+		if (b_pulseSecondary->ButtonPressed()) {
+			if (b_pulseSecondary->ButtonClicked()) {
+				// Bring the intakes in if they aren't already
+				secondaryRollers->Undeploy();
+			}
+			// Pulse the intakes, basicaly running them on at off at 0.2 sec intervals
+			secondaryRollers->Pulse();
+			bumperShot = false;
 		}
-		if (b_longShoot->ButtonReleased()) {
-			if (!shotKillSwitch) {
+
+		
+		// SHOOTER
+		
+		// For the long shot
+		if (b_longShoot->ButtonClicked()) 
+		{
+			// If true, prep for bumper shot and DON'T set the intakes down. They hold the ball
+			if(bumperShot)
+			{
+				//spitShortSwap->Set(false);
+				frontIntake->UndeployIntake();
+				backIntake->UndeployIntake();
+			}
+			// Otherwise set the down because the ball is settled
+			else
+			{
+				frontIntake->DeployIntake();
+				backIntake->DeployIntake();
+			}
+		}
+		
+		// Once released, begin to shoot
+		if (b_longShoot->ButtonReleased()) 
+		{
+			if (bumperShot)
+			{
+				secondaryRollers->Undeploy();
+				backIntake->Reverse();
+				//frontIntake->FrontRollerLoad();
+				//spitShortSwap->Set(false);
+			}
+			if (!shotKillSwitch) 
+			{
+				secondaryRollers->Deploy();
+				shooter->BeginShooterFire();
+			}
+			
+			shotKillSwitch = false;
+			bumperShot = false;
+		}
+		
+		// Set down the intakes for the short shot
+		if (b_shortShoot->ButtonClicked()) 
+		{	
+			frontIntake->DeployIntake();
+			backIntake->DeployIntake();	
+			bumperShot = false;
+		}
+		
+		// Once released, begin to shoot
+		if (b_shortShoot->ButtonReleased()) 
+		{
+			if (!shotKillSwitch) 
+			{
 				secondaryRollers->Deploy();
 				shooter->BeginShooterFire();
 			}
 			shotKillSwitch = false;
-		}
-		if (b_shortShoot->ButtonClicked()) {
-			frontIntake->DeployIntake();
-			backIntake->DeployIntake();
-		}
-		if (b_shortShoot->ButtonReleased()) {
-			if (!shotKillSwitch) {
-				secondaryRollers->Deploy();
-				shooter->BeginShooterFire();
-			}
-			shotKillSwitch = false;
+			bumperShot = false;
 		}
 
+		// Prepping the catapult for a long shot
 		if (b_shotAlignLong->ButtonClicked()) {
-			shortShot = false;
-			shooter->ShooterPrime(shortShot);
-			spitShortSwap->Set(false);
+			// For the bumper shot
+			if(bumperShot){
+				// Set all of the fingers up 
+				shooter->ShooterPrime(false);
+				spitShortSwap->Set(true);
+			}
+			else {
+				// Set the longest fingers up, shorter ones down
+				shortShot = false;
+				shooter->ShooterPrime(shortShot);
+				spitShortSwap->Set(false);
+			}	
 		}
+		
+		// Prepping the catapult for a short shot
 		if (b_shotAlignShort->ButtonClicked()) {
 			shortShot = true;
 			spitShortSwap->Set(true);
 			shooter->ShooterPrime(shortShot);
 		}
 
+		// If the kill shot is pressed, CANCEL THE SHOT!
 		if (b_killShotL->ButtonClicked() || b_killShotR->ButtonClicked()) {
 			shotKillSwitch = true;
+			bumperShot = false;
 			secondaryRollers->Undeploy();
 		}
 
+		// Set this so the catapult stays up and doesn't retract automatically
+		// aka, the "fire and disable"
 		if (b_notShooting->ButtonPressed() || b_notShooting2->ButtonPressed()) {
 			shooter->currentlyShooting = false;
 		}
 
+		
+		
+		// ACTUAL SHOT
 		shooter->ShooterFire();
 
+		
+		
+		// Retract shooter
+		// Run the talons so the shooter is brought back automatically
+		// Use after on re-enabling after shooting at disabling 
 		if (b_shooterPrime->ButtonPressed()) {
 			shooter->ShooterReturn();
 		}
 
-		if (b_pulseSecondary->ButtonPressed()) {
-			if (b_pulseSecondary->ButtonClicked()) {
-				secondaryRollers->Undeploy();
-			}
-			secondaryRollers->Pulse();
-		}
-
+		
+		// Bring everything in 
 		if (b_foldFlower->ButtonClicked()) {
 			secondaryRollers->Undeploy();
 			backIntake->UndeployIntake();
 			frontIntake->UndeployIntake();
 		}
 		
-		
+		// UPDATE ALL THE BUTTONS
 		UpdateAllButtons();
 	}
+	
+	///////////////////////////
+	//
+	//	TEST MODE
+	//
+	///////////////////////////
+	
 	void TestInit() {
 		//gyro->CalibrateRate();
 		leftEncoder->Reset();
@@ -1016,6 +879,8 @@ public:
 		//leftEncoder->Start();
 		//rightEncoder->Start();
 	}
+	
+	
 	void TestPeriodic() {
 		driverStationLCD->Printf((DriverStationLCD::Line) 0, 1,
 				"Front Prox: %d", frontIntake->ProximityTriggered());
