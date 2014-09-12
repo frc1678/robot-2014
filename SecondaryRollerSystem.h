@@ -84,6 +84,24 @@ public:
 		}
 	}
 	
+	void ReversePulse()
+	{
+		float time = pulseTimer->Get();
+		if(time < 0.15)
+		{
+			Reverse();
+		}
+		else
+		{
+			Stop();
+			if(time >= 0.3)
+			{
+				pulseTimer->Reset();
+			}
+		}
+		
+	}
+	
 	void RunSlow()
 	{
 		secondaryRollerA->Set(-0.4 * rollerK);
