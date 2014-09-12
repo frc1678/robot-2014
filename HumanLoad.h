@@ -17,4 +17,14 @@ void HPReceive(SecondaryRollerSystem *secondaryRollers,
 		back->Reverse();
 }
 
+void HPReverse(SecondaryRollerSystem *secondaryRollers, 
+		IntakeSystem *frontIntake, IntakeSystem *backIntake, ShooterSystem *shooter)
+{
+	shooter->ShooterPrime(false);
+	secondaryRollers->ReversePulse();
+	frontIntake->FrontRollerLoad();
+	backIntake->BackRollerSlow();
+	
+}
+
 #endif
