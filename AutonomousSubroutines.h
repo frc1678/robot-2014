@@ -449,7 +449,7 @@ void ShortShootTwoForwardAuto(IntakeSystem *frontIntake, IntakeSystem *backIntak
 	DriveForwardAutoEnd(drivetrain);
 	ShootAutoEnd();
 }
-void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
+void MultiAutoLoop (IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		ShooterSystem *shooter, RobotDrive *drivetrain, Timer *autoTimer, Timer *shotTimer,
 		SecondaryRollerSystem *secondaryRollers, Solenoid *spitShortSwap,
 		IterativeRobot *me, Encoder *rightEncoder, DriverStation *driverStation)
@@ -499,6 +499,8 @@ void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 			ShootAutoPrep(frontIntake, backIntake, shooter, secondaryRollers, spitShortSwap, true);
 			shootPrep = true;
 		}
+
+
 		if(shootPrep && ShootAutoConditions(shooter, me))
 		{
 			ShootAutoInLoop(shooter);
@@ -507,6 +509,8 @@ void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 		{
 			ShootAutoEnd();
 		}
+
+
 		//third
 		if(shotTimer->Get() > 1.0)//1.9) 
 		{
@@ -517,6 +521,7 @@ void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 				backIntake->UndeployIntake();
 				backintakeup = true;
 			}
+
 			if(shotTimer->Get() < 3.0)
 			{
 				drivetrain->TankDrive(0.4, 0.4);
@@ -525,6 +530,7 @@ void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 			{
 				drivetrain->TankDrive(0.0, 0.0);
 			}
+			
 			//frontIntake->FrontRollerLoad();
 			if(shotTimer->Get() > 1.5)
 			{
@@ -548,6 +554,8 @@ void MultiAutoLoop(IntakeSystem *frontIntake, IntakeSystem *backIntake,
 			DriveForwardAutoEnd(drivetrain);
 			doneDriving = true;
 		}
+
+
 		if(shotTimer->Get() > 3.7)//3.0)//4.2)
 		{
 			printf("Shot timer > 4.2");
