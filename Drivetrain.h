@@ -98,6 +98,42 @@ void runDrivetrain(float stickLeftInput, float stickRightInput, RobotDrive *driv
 	printf("left: %f, right; %f\n", useleft, useright);
 }
 
+void trigDrive(double raw1, double raw2, RobotDrive *drivetrain) 
+//raw1 and raw2 should probably be raw manipulator inputs (axis 1 and axis 2) values between -1 and 1
+{
+	
+/* ASCII art!!!!!!
+ /-||-\
+|  ||  |
+ \____/
+(sqrt(2)/2,sqrt(2)/2)
+
+ /----\
+|---   |
+ \____/
+(-.4, .4)
+
+ /\---\
+|  \   |
+ \____/
+~(0,.52)
+
+ /----\
+|   /  |
+ \/___/
+ ~(-.52, 0)   *|* I think *|*
+*/
+	
+	float RDT = 0;
+	float LDT = 0;
+	double K = (0.5/(sqrt(2)/2)); //This way, when the stick is at 45 degrees, the output to the drievtrain is 1.
+
+	LDT = (((raw1 * K) + (raw2 * K)/2)) ; //TODO numbers
+	RDT = (((raw1 * K) - (raw2 * K)/2)) ; //TODO numbers
+	
+	driveTrain->TankDrive(LDT, RDT);
+}
+
 void runDrivetrain(float stickLeftInput, float stickRightInput, RobotDrive *drivetrain)
 {
 	runDrivetrain(stickLeftInput, stickRightInput, drivetrain, 0.2);
