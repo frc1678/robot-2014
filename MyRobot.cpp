@@ -292,6 +292,9 @@ public:
 		b_notShooting->Update();
 		b_notShooting2->Update();
 		b_reverseHumanLoad->Update();
+		//i hate everything
+		b_frontIntakePickup->Update(manipulator->GetRawAxis(3) > 0.5);
+		b_backIntakePickup->Update(manipulator->GetRawAxis(3) < -0.5);
 	}
 
 	
@@ -559,7 +562,7 @@ public:
 		driverStationLCD->Printf((DriverStationLCD::Line) 4, 1,
 				"Right Encoder: %f", rightEncoder->GetRate());
 		driverStationLCD->Printf((DriverStationLCD::Line) 2, 1, 
-				"%f", manipulator->GetRawAxis(2));
+				"%f", manipulator->GetRawAxis(3));
 		driverStationLCD->UpdateLCD();
 		
 		
@@ -587,15 +590,15 @@ public:
 		// Includes secondary rollers
 		
 		// While the button is held down, load through the front intake
-		if (b_frontIntakePickup->ButtonPressed()) {
+		if (b_frontIntakePickup->ButtonPressed(manipulator->GetRawAxis(3) > 0.5)) {
 			
 			// If the override isn't being held down, deploy the intake
-			if (b_frontIntakePickup->ButtonClicked()
+			if (b_frontIntakePickup->ButtonClicked(manipulator->GetRawAxis(3) > 0.5)
 					&& manipulator->GetRawAxis(6) < 0.5) {
 				frontIntake->DeployIntake();
 			}
 			// Set the fingers so the ball can settle correctly
-			if (b_frontIntakePickup->ButtonClicked()) {
+			if (b_frontIntakePickup->ButtonClicked(manipulator->GetRawAxis(3) > 0.5)) {
 				spitShortSwap->Set(true);
 			}
 			// If the override is being used, ingore the proxy and manually toggle the intake up
@@ -614,11 +617,11 @@ public:
 			bumperShot = false;
 		}
 		// While this button is held down, load through the back intake
-		else if (b_backIntakePickup->ButtonPressed()) {
+		else if (b_backIntakePickup->ButtonPressed(manipulator->GetRawAxis(3) < -0.5)) {
 			//Pickup is here b/c we are unsure of how it'll interact w/ the stops
 			
 			// If the override isn't being held down, deploy the intake 
-			if (b_backIntakePickup->ButtonClicked() && manipulator->GetRawAxis(6) < 0.5) {
+			if (b_backIntakePickup->ButtonClicked(manipulator->GetRawAxis(3) < -0.5) && manipulator->GetRawAxis(6) < 0.5) {
 				// This so the stops go down and the ball can load
 				shortShot = true;
 				shooter->ShooterPrime(shortShot);
